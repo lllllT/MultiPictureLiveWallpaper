@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <PreferenceCategory android:title="@string/pref_cat_screen_title">
+    <Preference
+       android:key="screen.0.file"
+       android:title="@string/pref_picture_screen0_title"
+       android:summary="@string/pref_picture_screen0_summary" />
+    <Preference
+       android:key="screen.1.file"
+       android:title="@string/pref_picture_screen1_title"
+       android:summary="@string/pref_picture_screen1_summary" />
+    <Preference
+       android:key="screen.2.file"
+       android:title="@string/pref_picture_screen2_title"
+       android:summary="@string/pref_picture_screen2_summary" />
+    <Preference
+       android:key="screen.3.file"
+       android:title="@string/pref_picture_screen3_title"
+       android:summary="@string/pref_picture_screen3_summary" />
+    <Preference
+       android:key="screen.4.file"
+       android:title="@string/pref_picture_screen4_title"
+       android:summary="@string/pref_picture_screen4_summary" />
+    <Preference
+       android:key="screen.5.file"
+       android:title="@string/pref_picture_screen5_title"
+       android:summary="@string/pref_picture_screen5_summary" />
+    <Preference
+       android:key="screen.6.file"
+       android:title="@string/pref_picture_screen6_title"
+       android:summary="@string/pref_picture_screen6_summary" />
+  </PreferenceCategory>
+
+  <PreferenceCategory android:title="@string/pref_cat_draw_title">
+    <ListPreference
+       android:key="draw.transition"
+       android:title="@string/pref_draw_transition_title"
+       android:summary="@string/pref_draw_transition_summary"
+       android:entries="@array/pref_draw_transition_entries"
+       android:entryValues="@array/pref_draw_transition_entryvalues"
+       android:defaultValue="slide" />
+  </PreferenceCategory>
+
+</PreferenceScreen>

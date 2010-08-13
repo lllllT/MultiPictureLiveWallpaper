@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">MultiPicture Live Wallpaper</string>
+  <string name="app_description">Show differecnt pictures for each screen.</string>
+
+  <string name="pref_cat_screen_title">Screen Setting</string>
+
+  <string name="pref_picture_screen0_title">Screen 1</string>
+  <string name="pref_picture_screen1_title">Screen 2</string>
+  <string name="pref_picture_screen2_title">Screen 3</string>
+  <string name="pref_picture_screen3_title">Screen 4</string>
+  <string name="pref_picture_screen4_title">Screen 5</string>
+  <string name="pref_picture_screen5_title">Screen 6</string>
+  <string name="pref_picture_screen6_title">Screen 7</string>
+
+  <string name="pref_picture_screen0_summary">Picture to set Screen 1</string>
+  <string name="pref_picture_screen1_summary">Picture to set Screen 2</string>
+  <string name="pref_picture_screen2_summary">Picture to set Screen 3</string>
+  <string name="pref_picture_screen3_summary">Picture to set Screen 4</string>
+  <string name="pref_picture_screen4_summary">Picture to set Screen 5</string>
+  <string name="pref_picture_screen5_summary">Picture to set Screen 6</string>
+  <string name="pref_picture_screen6_summary">Picture to set Screen 7</string>
+
+  <string name="pref_cat_draw_title">Drawing Setting</string>
+
+  <string name="pref_draw_transition_title">Transition</string>
+  <string name="pref_draw_transition_summary">Transition when screen switching</string>
+
+  <string name="str_pic_not_set">Picture not set: Screen %d</string>
+</resources>
