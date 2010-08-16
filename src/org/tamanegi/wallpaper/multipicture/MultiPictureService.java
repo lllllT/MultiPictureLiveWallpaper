@@ -271,15 +271,21 @@ public class MultiPictureService extends WallpaperService
         {
             folder_trans_progress = -1;
 
-            if(pic != null) {
-                int cnt = xcnt * ycnt;
-                for(int i = 0; i < cnt; i++) {
-                    if(pic[i].prev_bmp != null) {
-                        pic[i].prev_bmp.recycle();
-                        pic[i].prev_bmp = null;
-                    }
-                    pic[i].prev_rect = null;
+            if(pic == null) {
+                return;
+            }
+
+            int cnt = xcnt * ycnt;
+            for(int i = 0; i < cnt; i++) {
+                if(pic[i] == null) {
+                    continue;
                 }
+
+                if(pic[i].prev_bmp != null) {
+                    pic[i].prev_bmp.recycle();
+                    pic[i].prev_bmp = null;
+                }
+                pic[i].prev_rect = null;
             }
         }
 
@@ -519,8 +525,9 @@ public class MultiPictureService extends WallpaperService
             screen_transition = TransitionType.valueOf(
                 pref.getString("draw.transition", "slide"));
 
-            folder_transition = TransitionType.valueOf(
-                pref.getString("folder.transition", "fade_inout"));
+            /*folder_transition = TransitionType.valueOf(
+              pref.getString("folder.transition", "fade_inout"));*/
+            folder_transition = TransitionType.none; // force none for oom
             use_recursive = pref.getBoolean("folder.recursive", true);
             change_tap = pref.getBoolean("folder.changetap", true);
             change_duration = Integer.parseInt(
@@ -718,48 +725,50 @@ public class MultiPictureService extends WallpaperService
 
             int cnt = xcnt * ycnt;
             for(int i = 0; i < cnt; i++) {
-                if(pic[i] != null && pic[i].type == ScreenType.folder) {
-                    int fcnt = pic[i].file_list.size();
-                    int idx_base = (int)(Math.random() * fcnt);
-                    for(int j = 0; j < fcnt; j++) {
-                        int idx = (idx_base + j) % fcnt;
-                        if(idx == pic[i].cur_file_idx) {
-                            continue;
-                        }
-
-                        Bitmap prev_bmp = pic[i].bmp;
-                        Rect prev_rect = pic[i].rect;
-                        if(loadBitmap(pic[i], pic[i].file_list.get(idx))) {
-                            pic[i].cur_file_idx = idx;
-
-                            if(pic[i].prev_bmp != null) {
-                                pic[i].prev_bmp.recycle();
-                            }
-
-                            if(folder_transition != TransitionType.none) {
-                                pic[i].prev_bmp = prev_bmp;
-                                pic[i].prev_rect = prev_rect;
-                            }
-                            else {
-                                if(prev_bmp != null) {
-                                    prev_bmp.recycle();
-                                }
-                                pic[i].prev_bmp = null;
-                                pic[i].prev_rect = null;
-                            }
-
-                            break;
-                        }
-                    }
-                }
+                rotateFolderBitmap(pic[i]);
             }
 
             folder_trans_progress = FOLDER_TRANSITION_STEP;
             postDurationCallback();
             postStepCallback();
+        }
 
-            // force GC to free unused bitmaps
-            System.gc();
+        private void rotateFolderBitmap(PictureInfo info)
+        {
+            if(info != null && info.type == ScreenType.folder) {
+                int fcnt = info.file_list.size();
+                int idx_base = (int)(Math.random() * fcnt);
+                for(int i = 0; i < fcnt; i++) {
+                    int idx = (idx_base + i) % fcnt;
+                    if(idx == info.cur_file_idx) {
+                        continue;
+                    }
+
+                    Bitmap prev_bmp = info.bmp;
+                    Rect prev_rect = info.rect;
+                    if(loadBitmap(info, info.file_list.get(idx))) {
+                        info.cur_file_idx = idx;
+
+                        if(info.prev_bmp != null) {
+                            info.prev_bmp.recycle();
+                        }
+
+                        if(folder_transition != TransitionType.none) {
+                            info.prev_bmp = prev_bmp;
+                            info.prev_rect = prev_rect;
+                        }
+                        else {
+                            if(prev_bmp != null) {
+                                prev_bmp.recycle();
+                            }
+                            info.prev_bmp = null;
+                            info.prev_rect = null;
+                        }
+
+                        break;
+                    }
+                }
+            }
         }
     }
 }
