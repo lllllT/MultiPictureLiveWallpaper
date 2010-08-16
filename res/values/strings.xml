@@ -5,26 +5,39 @@
 
   <string name="pref_cat_screen_title">Screen Setting</string>
 
-  <string name="pref_picture_screen0_title">Screen 1</string>
-  <string name="pref_picture_screen1_title">Screen 2</string>
-  <string name="pref_picture_screen2_title">Screen 3</string>
-  <string name="pref_picture_screen3_title">Screen 4</string>
-  <string name="pref_picture_screen4_title">Screen 5</string>
-  <string name="pref_picture_screen5_title">Screen 6</string>
-  <string name="pref_picture_screen6_title">Screen 7</string>
+  <string name="pref_picture_screen_each_title">Screen Type</string>
+  <string name="pref_picture_screen_each_summary">Type of each screens.</string>
 
-  <string name="pref_picture_screen0_summary">Picture to set Screen 1</string>
-  <string name="pref_picture_screen1_summary">Picture to set Screen 2</string>
-  <string name="pref_picture_screen2_summary">Picture to set Screen 3</string>
-  <string name="pref_picture_screen3_summary">Picture to set Screen 4</string>
-  <string name="pref_picture_screen4_summary">Picture to set Screen 5</string>
-  <string name="pref_picture_screen5_summary">Picture to set Screen 6</string>
-  <string name="pref_picture_screen6_summary">Picture to set Screen 7</string>
+  <string name="pref_picture_screen_title">Screen %d</string>
+  <string name="pref_picture_screen_init_summary">Picture to set Screen %d.</string>
+  <string name="pref_picture_screen_val1_summary">Picture to set Screen %d.\n%s</string>
+  <string name="pref_picture_screen_val2_summary">Picture to set Screen %d.\n%s : %s</string>
+
+  <string name="pref_picture_screen_default_title">Default Screen Type</string>
+  <string name="pref_picture_screen_default_init_summary">Default type of screen to select pictures.</string>
+  <string name="pref_picture_screen_default_val2_summary">Default type of screen to select pictures.\n%s : %s</string>
 
   <string name="pref_cat_draw_title">Drawing Setting</string>
 
-  <string name="pref_draw_transition_title">Transition</string>
-  <string name="pref_draw_transition_summary">Transition when screen switching</string>
+  <string name="pref_draw_transition_title">Screen Transition</string>
+  <string name="pref_draw_transition_summary">Transition type when use switching screen.</string>
+
+  <string name="pref_cat_folder_title">Picture Folder</string>
+
+  <string name="pref_folder_transition_title">Folder Picture Transition</string>
+  <string name="pref_folder_transition_summary">Transition type when use changing picture from folder.</string>
+
+  <string name="pref_folder_recursive_title">Search folder recursively</string>
+  <string name="pref_folder_recursive_summary">When using Picture Folder, use pictures under specified folder recursively.</string>
+
+  <string name="pref_folder_changetap_title">Double Tap to change picture</string>
+  <string name="pref_folder_changetap_summary">When double tap, change picture from folder.</string>
+
+  <string name="pref_folder_duration_title">Picture change interval</string>
+  <string name="pref_folder_duration_summary">Interval to change picture from folder.</string>
+
+  <string name="folder_picker_title">Select Folder</string>
+  <string name="folder_up">../ (Up folder)</string>
 
   <string name="str_pic_not_set">Picture not set: Screen %d</string>
 </resources>

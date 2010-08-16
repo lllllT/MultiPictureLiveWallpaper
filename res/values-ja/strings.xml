@@ -5,26 +5,39 @@
 
   <string name="pref_cat_screen_title">画面設定</string>
 
-  <string name="pref_picture_screen0_title">画面1</string>
-  <string name="pref_picture_screen1_title">画面2</string>
-  <string name="pref_picture_screen2_title">画面3</string>
-  <string name="pref_picture_screen3_title">画面4</string>
-  <string name="pref_picture_screen4_title">画面5</string>
-  <string name="pref_picture_screen5_title">画面6</string>
-  <string name="pref_picture_screen6_title">画面7</string>
+  <string name="pref_picture_screen_each_title">画面タイプ</string>
+  <string name="pref_picture_screen_each_summary">各画面の画像選択方法。</string>
 
-  <string name="pref_picture_screen0_summary">画面1に設定する画像</string>
-  <string name="pref_picture_screen1_summary">画面2に設定する画像</string>
-  <string name="pref_picture_screen2_summary">画面3に設定する画像</string>
-  <string name="pref_picture_screen3_summary">画面4に設定する画像</string>
-  <string name="pref_picture_screen4_summary">画面5に設定する画像</string>
-  <string name="pref_picture_screen5_summary">画面6に設定する画像</string>
-  <string name="pref_picture_screen6_summary">画面7に設定する画像</string>
+  <string name="pref_picture_screen_title">画面%d</string>
+  <string name="pref_picture_screen_init_summary">画面%dの画像タイプ。</string>
+  <string name="pref_picture_screen_val1_summary">画面%dの画像タイプ。\n%s</string>
+  <string name="pref_picture_screen_val2_summary">画面%dの画像タイプ。\n%s : %s</string>
+
+  <string name="pref_picture_screen_default_title">デフォルト画面タイプ</string>
+  <string name="pref_picture_screen_default_init_summary">画像選択方法のデフォルト設定。</string>
+  <string name="pref_picture_screen_default_val2_summary">画像選択方法のデフォルト設定。\n%s : %s</string>
 
   <string name="pref_cat_draw_title">描画方法</string>
 
-  <string name="pref_draw_transition_title">切り換え方法</string>
-  <string name="pref_draw_transition_summary">画面変更時の切り替え方法</string>
+  <string name="pref_draw_transition_title">画面変更時の切替方法</string>
+  <string name="pref_draw_transition_summary">画面を変更する時の画像切替方法。</string>
+
+  <string name="pref_cat_folder_title">フォルダ指定</string>
+
+  <string name="pref_folder_transition_title">フォルダ内画像切替方法</string>
+  <string name="pref_folder_transition_summary">画像フォルダ指定の場合に、画像をフォルダ内の別の画像に変更する時の切替方法。</string>
+
+  <string name="pref_folder_recursive_title">再帰的にフォルダ検索</string>
+  <string name="pref_folder_recursive_summary">画像フォルダの場合は、再帰的に指定されたフォルダ以下の画像を使用する。</string>
+
+  <string name="pref_folder_changetap_title">ダブルタップで画像変更</string>
+  <string name="pref_folder_changetap_summary">画像フォルダ指定の場合、ダブルタップで画像を変更する。</string>
+
+  <string name="pref_folder_duration_title">画像変更頻度</string>
+  <string name="pref_folder_duration_summary">画像フォルダ指定の場合、自動的に別の画像に変更する時間間隔。</string>
+
+  <string name="folder_picker_title">フォルダを選択</string>
+  <string name="folder_up">../ (上のフォルダ)</string>
 
   <string name="str_pic_not_set">画像未設定: 画面%d</string>
 </resources>

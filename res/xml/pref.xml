@@ -2,34 +2,18 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
   <PreferenceCategory android:title="@string/pref_cat_screen_title">
-    <Preference
-       android:key="screen.0.file"
-       android:title="@string/pref_picture_screen0_title"
-       android:summary="@string/pref_picture_screen0_summary" />
-    <Preference
-       android:key="screen.1.file"
-       android:title="@string/pref_picture_screen1_title"
-       android:summary="@string/pref_picture_screen1_summary" />
-    <Preference
-       android:key="screen.2.file"
-       android:title="@string/pref_picture_screen2_title"
-       android:summary="@string/pref_picture_screen2_summary" />
-    <Preference
-       android:key="screen.3.file"
-       android:title="@string/pref_picture_screen3_title"
-       android:summary="@string/pref_picture_screen3_summary" />
-    <Preference
-       android:key="screen.4.file"
-       android:title="@string/pref_picture_screen4_title"
-       android:summary="@string/pref_picture_screen4_summary" />
-    <Preference
-       android:key="screen.5.file"
-       android:title="@string/pref_picture_screen5_title"
-       android:summary="@string/pref_picture_screen5_summary" />
-    <Preference
-       android:key="screen.6.file"
-       android:title="@string/pref_picture_screen6_title"
-       android:summary="@string/pref_picture_screen6_summary" />
+    <!-- insert ListPreference at runtime -->
+    <PreferenceScreen
+       android:key="screen.cat"
+       android:title="@string/pref_picture_screen_each_title"
+       android:summary="@string/pref_picture_screen_each_summary" />
+    <ListPreference
+       android:key="screen.default.type"
+       android:title="@string/pref_picture_screen_default_title"
+       android:summary="@string/pref_picture_screen_default_init_summary"
+       android:entries="@array/pref_picture_screen_default_type_entries"
+       android:entryValues="@array/pref_picture_screen_type_entryvalues"
+       android:defaultValue="file" />
   </PreferenceCategory>
 
   <PreferenceCategory android:title="@string/pref_cat_draw_title">
@@ -40,6 +24,33 @@
        android:entries="@array/pref_draw_transition_entries"
        android:entryValues="@array/pref_draw_transition_entryvalues"
        android:defaultValue="slide" />
+  </PreferenceCategory>
+
+  <PreferenceCategory android:title="@string/pref_cat_folder_title">
+    <CheckBoxPreference
+       android:key="folder.recursive"
+       android:title="@string/pref_folder_recursive_title"
+       android:summary="@string/pref_folder_recursive_summary"
+       android:defaultValue="true" />
+    <ListPreference
+       android:key="folder.transition"
+       android:title="@string/pref_folder_transition_title"
+       android:summary="@string/pref_folder_transition_summary"
+       android:entries="@array/pref_folder_transition_entries"
+       android:entryValues="@array/pref_folder_transition_entryvalues"
+       android:defaultValue="fade_inout" />
+    <CheckBoxPreference
+       android:key="folder.changetap"
+       android:title="@string/pref_folder_changetap_title"
+       android:summary="@string/pref_folder_changetap_summary"
+       android:defaultValue="true" />
+    <ListPreference
+       android:key="folder.duration"
+       android:title="@string/pref_folder_duration_title"
+       android:summary="@string/pref_folder_duration_summary"
+       android:entries="@array/pref_folder_duration_entries"
+       android:entryValues="@array/pref_folder_duration_entryvalues"
+       android:defaultValue="60" />
   </PreferenceCategory>
 
 </PreferenceScreen>
