@@ -10,6 +10,7 @@ import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
+import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.net.Uri;
@@ -46,10 +47,8 @@ public class MultiPictureService extends WallpaperService
     {
         private ScreenType type;
         private Bitmap bmp;
-        private Rect rect;
 
         private Bitmap prev_bmp;
-        private Rect prev_rect;
 
         private ArrayList<String> file_list;
         private int cur_file_idx;
@@ -285,7 +284,6 @@ public class MultiPictureService extends WallpaperService
                     pic[i].prev_bmp.recycle();
                     pic[i].prev_bmp = null;
                 }
-                pic[i].prev_rect = null;
             }
         }
 
@@ -508,12 +506,11 @@ public class MultiPictureService extends WallpaperService
                     }
 
                     paint.setAlpha(alpha_prev);
-                    c.drawBitmap(pic[idx].prev_bmp,
-                                 pic[idx].prev_rect, screen_rect, paint);
+                    c.drawBitmap(pic[idx].prev_bmp, null, screen_rect, paint);
                 }
 
                 paint.setAlpha(alpha_cur);
-                c.drawBitmap(pic[idx].bmp, pic[idx].rect, screen_rect, paint);
+                c.drawBitmap(pic[idx].bmp, null, screen_rect, paint);
             }
         }
 
@@ -635,22 +632,39 @@ public class MultiPictureService extends WallpaperService
                 // calc geometry of subset to draw
                 int bw = bmp.getWidth();
                 int bh = bmp.getHeight();
-                double bxs = (double)width / bw;
-                double bys = (double)height / bh;
-                double bscale = Math.max(bxs, bys);
+                float bxs = (float)width / bw;
+                float bys = (float)height / bh;
+                float bscale = Math.max(bxs, bys);
 
+                int src_x, src_y, src_w, src_h;
                 if(bxs > bys) {
-                    int ch = (int)((bh * bscale) - height);
-                    int ch2 = (int)(ch / 2 / bscale);
-                    info.rect = new Rect(0, ch2, bw, bh - ch2);
+                    int ch = (int)(((bh * bscale) - height) / bscale);
+                    src_x = 0;
+                    src_y = ch / 2;
+                    src_w = bw;
+                    src_h = bh - ch;
                 }
                 else {
-                    int cw = (int)(bw * bscale) - width;
-                    int cw2 = (int)(cw / 2 / bscale);
-                    info.rect = new Rect(cw2, 0, bw - cw2, bh);
+                    int cw = (int)(((bw * bscale) - width) / bscale);
+                    src_x = cw / 2;
+                    src_y = 0;
+                    src_w = bw - cw;
+                    src_h = bh;
                 }
 
-                info.bmp = bmp;
+                if(bscale < 1) {
+                    Matrix mat = new Matrix();
+                    mat.setScale(bscale, bscale);
+
+                    info.bmp = Bitmap.createBitmap(
+                        bmp, src_x, src_y, src_w, src_h, mat, true);
+                }
+                else {
+                    info.bmp = Bitmap.createBitmap(
+                        bmp, src_x, src_y, src_w, src_h);
+                }
+                bmp.recycle();
+
                 return true;
             }
             catch(IOException e) {
@@ -745,7 +759,6 @@ public class MultiPictureService extends WallpaperService
                     }
 
                     Bitmap prev_bmp = info.bmp;
-                    Rect prev_rect = info.rect;
                     if(loadBitmap(info, info.file_list.get(idx))) {
                         info.cur_file_idx = idx;
 
@@ -755,14 +768,12 @@ public class MultiPictureService extends WallpaperService
 
                         if(folder_transition != TransitionType.none) {
                             info.prev_bmp = prev_bmp;
-                            info.prev_rect = prev_rect;
                         }
                         else {
                             if(prev_bmp != null) {
                                 prev_bmp.recycle();
                             }
                             info.prev_bmp = null;
-                            info.prev_rect = null;
                         }
 
                         break;
