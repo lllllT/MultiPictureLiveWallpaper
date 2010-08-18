@@ -14,6 +14,7 @@ import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -30,8 +31,8 @@ public class MultiPictureService extends WallpaperService
     private static final int LEFT_BOTTOM = 3;
     private static final int RIGHT_BOTTOM = 4;
 
-    private static final int FOLDER_TRANSITION_STEP = 10;
-    private static final int FOLDER_TRANSITION_DURATION = 1000; // msec
+    private static final int RELOAD_STEP = 10;
+    private static final int RELOAD_DURATION = 500; // msec
 
     private static enum TransitionType
     {
@@ -47,8 +48,6 @@ public class MultiPictureService extends WallpaperService
     {
         private ScreenType type;
         private Bitmap bmp;
-
-        private Bitmap prev_bmp;
 
         private ArrayList<String> file_list;
         private int cur_file_idx;
@@ -72,12 +71,15 @@ public class MultiPictureService extends WallpaperService
         private float ycur = 0f;
 
         private boolean is_change_pending = false;
-        private int folder_trans_progress = -1;
+
+        private int reload_progress = -1;       // [-1...RELOAD_STEP]
+        private int rotate_progress = -1;       // [-1...RELOAD_STEP]
+        private int fadein_progress = 0;        // [ 0...RELOAD_STEP]
+        private boolean clear_setting_required = false;
 
         private PictureInfo pic[];
         private ScreenType default_type;
         private TransitionType screen_transition;
-        private TransitionType folder_transition;
         private boolean use_recursive;
         private boolean change_tap;
         private int change_duration;
@@ -86,7 +88,7 @@ public class MultiPictureService extends WallpaperService
         private Paint text_paint;
 
         private Runnable change_duration_callback;
-        private Runnable change_step_callback;
+        private Runnable fadein_callback;
 
         private SharedPreferences pref;
         private GestureDetector gdetector;
@@ -124,21 +126,23 @@ public class MultiPictureService extends WallpaperService
 
             handler = new Handler();
             change_duration_callback = new ChangeDurationCallback();
-            change_step_callback = new ChangeStepCallback();
+            fadein_callback = new FadeInCallback();
 
             // init conf
-            pic = null;                         // load later
+            clearPictureSetting();
             loadGlobalSetting();
 
             // for double tap
             setTouchEventsEnabled(true);
+
+            // todo: prepare to receive ACTION_MEDIA_MOUNTED
         }
 
         @Override
         public void onSharedPreferenceChanged(SharedPreferences pref,
                                               String key)
         {
-            pic = null;
+            clearPictureSetting();
             loadGlobalSetting();
         }
 
@@ -152,7 +156,7 @@ public class MultiPictureService extends WallpaperService
             if(xn != xcnt || yn != ycnt) {
                 xcnt = xn;
                 ycnt = yn;
-                pic = null;
+                clearPictureSetting();
             }
 
             xcur = (xstep <= 0 ? 0 : xoffset / xstep);
@@ -165,11 +169,12 @@ public class MultiPictureService extends WallpaperService
         public void onVisibilityChanged(boolean visible)
         {
             if(is_change_pending) {
-                rotateFolderBitmap();
                 is_change_pending = false;
+                new AsyncRotateFolderBitmap().execute();
             }
-
-            drawMain();
+            else {
+                drawMain();
+            }
         }
 
         @Override
@@ -181,7 +186,7 @@ public class MultiPictureService extends WallpaperService
             if(this.width != width || this.height != height) {
                 this.width = width;
                 this.height = height;
-                pic = null;
+                clearPictureSetting();
             }
 
             drawMain();
@@ -200,8 +205,7 @@ public class MultiPictureService extends WallpaperService
             public boolean onDoubleTap(MotionEvent ev)
             {
                 if(change_tap) {
-                    rotateFolderBitmap();
-                    drawMain();
+                    new AsyncRotateFolderBitmap().execute();
                 }
 
                 return true;
@@ -214,8 +218,7 @@ public class MultiPictureService extends WallpaperService
             public void run()
             {
                 if(isVisible()) {
-                    rotateFolderBitmap();
-                    drawMain();
+                    new AsyncRotateFolderBitmap().execute();
                 }
                 else {
                     is_change_pending = true;
@@ -233,58 +236,37 @@ public class MultiPictureService extends WallpaperService
             }
         }
 
-        private class ChangeStepCallback implements Runnable
+        private class FadeInCallback implements Runnable
         {
             @Override
             public void run()
             {
-                if(isVisible()) {
-                    folder_trans_progress -= 1;
-                    postStepCallback();
-
-                    if(folder_trans_progress < 0) {
-                        clearFolderTransition();
-                    }
-
-                    drawMain();
+                if(! isVisible()) {
+                    fadein_progress = 0;
+                    return;
                 }
-                else {
-                    clearFolderTransition();
+
+                fadein_progress -= 1;
+                drawMain();
+
+                if(fadein_progress > 0) {
+                    handler.postDelayed(fadein_callback,
+                                        RELOAD_DURATION / RELOAD_STEP);
                 }
             }
         }
 
-        private void postStepCallback()
+        private void startFadeInDraw()
         {
-            handler.removeCallbacks(change_step_callback);
-
-            if(folder_transition != TransitionType.none &&
-               folder_trans_progress >= 0) {
-                handler.postDelayed(
-                    change_step_callback,
-                    FOLDER_TRANSITION_DURATION / FOLDER_TRANSITION_STEP);
-            }
-        }
-
-        private void clearFolderTransition()
-        {
-            folder_trans_progress = -1;
-
-            if(pic == null) {
+            if(! isVisible()) {
+                fadein_progress = 0;
                 return;
             }
 
-            int cnt = xcnt * ycnt;
-            for(int i = 0; i < cnt; i++) {
-                if(pic[i] == null) {
-                    continue;
-                }
+            fadein_progress = RELOAD_STEP;
+            handler.postDelayed(fadein_callback, RELOAD_DURATION / RELOAD_STEP);
 
-                if(pic[i].prev_bmp != null) {
-                    pic[i].prev_bmp.recycle();
-                    pic[i].prev_bmp = null;
-                }
-            }
+            drawMain();
         }
 
         private void drawMain()
@@ -293,17 +275,20 @@ public class MultiPictureService extends WallpaperService
                 return;
             }
 
+            if(reload_progress >= 0 || rotate_progress >= 0) {
+                return;
+            }
+
             if(pic == null) {
-                loadPictureSetting();
+                new AsyncLoadPictureSetting().execute();
+                return;
             }
 
             SurfaceHolder holder = getSurfaceHolder();
-
             Canvas c = null;
             try {
                 c = holder.lockCanvas();
                 if(c != null) {
-                    c.drawColor(0xff000000);
                     drawPicture(c);
                 }
             }
@@ -316,6 +301,8 @@ public class MultiPictureService extends WallpaperService
 
         private void drawPicture(Canvas c)
         {
+            c.drawColor(0xff000000);
+
             int xn = (int)xcur;
             int yn = (int)ycur;
             float xf = xcur - xn;
@@ -359,11 +346,9 @@ public class MultiPictureService extends WallpaperService
             }
             else if(screen_transition == TransitionType.fade_inout) {
                 screen_rect = new Rect(0, 0, width, height);
-                if(xf * yf < 0.5) {
+                alpha = (int)((xf * yf - 0.5) * 255 * 2);
+                if(alpha < 0) {
                     alpha = 0;
-                }
-                else {
-                    alpha = (int)(xf * yf * 255 * 2);
                 }
             }
             else if(screen_transition == TransitionType.slide) {
@@ -464,6 +449,8 @@ public class MultiPictureService extends WallpaperService
                 alpha = 255;
             }
 
+            alpha = alpha * (RELOAD_STEP - fadein_progress) / RELOAD_STEP;
+
             if(pic[idx] == null || pic[idx].bmp == null) {
                 text_paint.setAlpha(alpha);
                 c.save();
@@ -475,41 +462,7 @@ public class MultiPictureService extends WallpaperService
                 c.restore();
             }
             else {
-                int alpha_cur = alpha;
-                int alpha_prev = 0;
-
-                if(pic[idx].prev_bmp != null &&
-                   folder_trans_progress >= 0) {
-                    if(folder_transition == TransitionType.crossfade) {
-                        alpha_cur = alpha *
-                            (FOLDER_TRANSITION_STEP - folder_trans_progress) /
-                            FOLDER_TRANSITION_STEP;
-                        alpha_prev = alpha *
-                            folder_trans_progress / FOLDER_TRANSITION_STEP;
-                    }
-                    else if(folder_transition == TransitionType.fade_inout) {
-                        alpha_cur = alpha *
-                            (FOLDER_TRANSITION_STEP / 2 -
-                             folder_trans_progress) /
-                            FOLDER_TRANSITION_STEP;
-                        alpha_prev = alpha *
-                            (folder_trans_progress -
-                             FOLDER_TRANSITION_STEP / 2) /
-                            FOLDER_TRANSITION_STEP;
-
-                        if(alpha_cur < 0) {
-                            alpha_cur = 0;
-                        }
-                        if(alpha_prev < 0) {
-                            alpha_prev = 0;
-                        }
-                    }
-
-                    paint.setAlpha(alpha_prev);
-                    c.drawBitmap(pic[idx].prev_bmp, null, screen_rect, paint);
-                }
-
-                paint.setAlpha(alpha_cur);
+                paint.setAlpha(alpha);
                 c.drawBitmap(pic[idx].bmp, null, screen_rect, paint);
             }
         }
@@ -522,13 +475,208 @@ public class MultiPictureService extends WallpaperService
             screen_transition = TransitionType.valueOf(
                 pref.getString("draw.transition", "slide"));
 
-            /*folder_transition = TransitionType.valueOf(
-              pref.getString("folder.transition", "fade_inout"));*/
-            folder_transition = TransitionType.none; // force none for oom
             use_recursive = pref.getBoolean("folder.recursive", true);
             change_tap = pref.getBoolean("folder.changetap", true);
             change_duration = Integer.parseInt(
                 pref.getString("folder.duration", "60"));
+        }
+
+        private void clearPictureSetting()
+        {
+            if(reload_progress >= 0 || rotate_progress >= 0) {
+                clear_setting_required = true;
+                return;
+            }
+            clear_setting_required = false;
+
+            if(pic == null) {
+                return;
+            }
+
+            for(PictureInfo info : pic) {
+                if(info == null) {
+                    continue;
+                }
+
+                if(info.bmp != null) {
+                    info.bmp.recycle();
+                }
+            }
+
+            pic = null;
+        }
+
+        private abstract class AsyncTransitionDraw
+            extends AsyncTask<Void, Void, Void>
+            implements Runnable
+        {
+            private Bitmap cur_screen;
+
+            protected void saveCurrentScreen()
+            {
+                if(pic == null) {
+                    cur_screen = null;
+                    return;
+                }
+
+                cur_screen = Bitmap.createBitmap(
+                    width, height, Bitmap.Config.ARGB_8888);
+                Canvas c = new Canvas(cur_screen);
+                drawPicture(c);
+            }
+
+            protected void drawCurrentScreen(int progress)
+            {
+                SurfaceHolder holder = getSurfaceHolder();
+                Canvas c = null;
+                try {
+                    c = holder.lockCanvas();
+                    if(c != null) {
+                        c.drawColor(0xff000000);
+                        if(cur_screen != null) {
+                            paint.setAlpha(0xff * progress / RELOAD_STEP);
+                            c.drawBitmap(cur_screen, null,
+                                         new Rect(0, 0, width, height), paint);
+                        }
+                    }
+                }
+                finally {
+                    if(c != null) {
+                        holder.unlockCanvasAndPost(c);
+                    }
+                }
+            }
+        }
+
+        private class AsyncLoadPictureSetting extends AsyncTransitionDraw
+        {
+            private boolean is_complete = false;
+
+            @Override
+            protected void onPreExecute()
+            {
+                if(reload_progress >= 0 || rotate_progress >= 0) {
+                    cancel(false);
+                    return;
+                }
+
+                reload_progress = RELOAD_STEP - fadein_progress;
+                rotate_progress = -1;
+                fadein_progress = 0;
+
+                saveCurrentScreen();
+
+                handler.removeCallbacks(fadein_callback);
+                handler.postDelayed(this, RELOAD_DURATION / RELOAD_STEP);
+            }
+
+            @Override
+            protected Void doInBackground(Void... args)
+            {
+                loadPictureSetting();
+                return null;
+            }
+
+            @Override
+            public void run()
+            {
+                if(is_complete) {
+                    startRedraw();
+                    return;
+                }
+
+                reload_progress -= 1;
+                drawCurrentScreen(reload_progress);
+
+                if(reload_progress > 0) {
+                    handler.postDelayed(this, RELOAD_DURATION / RELOAD_STEP);
+                }
+            }
+
+            @Override
+            protected void onPostExecute(Void result)
+            {
+                is_complete = true;
+
+                if(reload_progress <= 0) {
+                    startRedraw();
+                }
+            }
+
+            private void startRedraw()
+            {
+                reload_progress = -1;
+
+                if(clear_setting_required) {
+                    clearPictureSetting();
+                }
+
+                startFadeInDraw();
+            }
+        }
+
+        private class AsyncRotateFolderBitmap extends AsyncTransitionDraw
+        {
+            private boolean is_complete = false;
+
+            @Override
+            protected void onPreExecute()
+            {
+                if(reload_progress >= 0 || rotate_progress >= 0) {
+                    cancel(false);
+                    return;
+                }
+
+                rotate_progress = RELOAD_STEP - fadein_progress;
+                fadein_progress = 0;
+
+                saveCurrentScreen();
+
+                handler.removeCallbacks(fadein_callback);
+                handler.postDelayed(this, RELOAD_DURATION / RELOAD_STEP);
+            }
+
+            @Override
+            protected Void doInBackground(Void... args)
+            {
+                rotateFolderBitmap();
+                return null;
+            }
+
+            @Override
+            public void run()
+            {
+                rotate_progress -= 1;
+                drawCurrentScreen(rotate_progress);
+
+                if(rotate_progress > 0) {
+                    handler.postDelayed(this, RELOAD_DURATION / RELOAD_STEP);
+                }
+                else if(is_complete) {
+                    startRedraw();
+                }
+            }
+
+            @Override
+            protected void onPostExecute(Void result)
+            {
+                is_complete = true;
+
+                if(rotate_progress <= 0) {
+                    startRedraw();
+                }
+            }
+
+            private void startRedraw()
+            {
+                rotate_progress = -1;
+
+                if(clear_setting_required) {
+                    clearPictureSetting();
+                }
+
+                startFadeInDraw();
+            }
         }
 
         private void loadPictureSetting()
@@ -613,8 +761,6 @@ public class MultiPictureService extends WallpaperService
                 // read picture
                 opt = new BitmapFactory.Options();
                 opt.inDither = true;
-                opt.inPurgeable = true;
-                opt.inInputShareable = true;
                 opt.inSampleSize = ratio;
 
                 Bitmap bmp;
@@ -658,12 +804,13 @@ public class MultiPictureService extends WallpaperService
 
                     info.bmp = Bitmap.createBitmap(
                         bmp, src_x, src_y, src_w, src_h, mat, true);
+                    bmp.recycle();
                 }
                 else {
                     info.bmp = Bitmap.createBitmap(
                         bmp, src_x, src_y, src_w, src_h);
+                    // do not recycle() for 'bmp'
                 }
-                bmp.recycle();
 
                 return true;
             }
@@ -742,9 +889,7 @@ public class MultiPictureService extends WallpaperService
                 rotateFolderBitmap(pic[i]);
             }
 
-            folder_trans_progress = FOLDER_TRANSITION_STEP;
             postDurationCallback();
-            postStepCallback();
         }
 
         private void rotateFolderBitmap(PictureInfo info)
@@ -762,18 +907,8 @@ public class MultiPictureService extends WallpaperService
                     if(loadBitmap(info, info.file_list.get(idx))) {
                         info.cur_file_idx = idx;
 
-                        if(info.prev_bmp != null) {
-                            info.prev_bmp.recycle();
-                        }
-
-                        if(folder_transition != TransitionType.none) {
-                            info.prev_bmp = prev_bmp;
-                        }
-                        else {
-                            if(prev_bmp != null) {
-                                prev_bmp.recycle();
-                            }
-                            info.prev_bmp = null;
+                        if(prev_bmp != null) {
+                            prev_bmp.recycle();
                         }
 
                         break;
