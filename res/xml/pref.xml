@@ -32,15 +32,6 @@
        android:title="@string/pref_folder_recursive_title"
        android:summary="@string/pref_folder_recursive_summary"
        android:defaultValue="true" />
-    <!--
-    <ListPreference
-       android:key="folder.transition"
-       android:title="@string/pref_folder_transition_title"
-       android:summary="@string/pref_folder_transition_summary"
-       android:entries="@array/pref_folder_transition_entries"
-       android:entryValues="@array/pref_folder_transition_entryvalues"
-       android:defaultValue="fade_inout" />
-    -->
     <CheckBoxPreference
        android:key="folder.changetap"
        android:title="@string/pref_folder_changetap_title"
@@ -53,6 +44,19 @@
        android:entries="@array/pref_folder_duration_entries"
        android:entryValues="@array/pref_folder_duration_entryvalues"
        android:defaultValue="60" />
+  </PreferenceCategory>
+
+  <PreferenceCategory android:title="@string/pref_cat_advanced">
+    <CheckBoxPreference
+       android:key="workaround.htcsense"
+       android:title="@string/pref_workaround_htcsense_title"
+       android:summary="@string/pref_workaround_htcsense_summary"
+       android:defaultValue="true" />
+    <CheckBoxPreference
+       android:key="reload.extmedia.mounted"
+       android:title="@string/pref_reload_extmedia_mounted_title"
+       android:summary="@string/pref_reload_extmedia_mounted_summary"
+       android:defaultValue="true" />
   </PreferenceCategory>
 
 </PreferenceScreen>

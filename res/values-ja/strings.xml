@@ -36,6 +36,14 @@
   <string name="pref_folder_duration_title">画像変更頻度</string>
   <string name="pref_folder_duration_summary">画像フォルダ指定の場合、自動的に別の画像に変更する時間間隔。</string>
 
+  <string name="pref_cat_advanced">高度な設定</string>
+
+  <string name="pref_workaround_htcsense_title">HTC Sense 用の回避策を有効にする</string>
+  <string name="pref_workaround_htcsense_summary">HTC Sense で利用する際に、画面変更で画像が切替わらない場合の回避策を有効にする。</string>
+
+  <string name="pref_reload_extmedia_mounted_title">マウント時に画像再読み込み</string>
+  <string name="pref_reload_extmedia_mounted_summary">外部メディア (SDカード等) をマウントした時に画像を再読み込みする。</string>
+
   <string name="folder_picker_title">フォルダを選択</string>
   <string name="folder_up">../ (上のフォルダ)</string>
 

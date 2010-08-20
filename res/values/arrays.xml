@@ -25,6 +25,10 @@
     <item>CrossFade</item>
     <item>Fade In/Out</item>
     <item>Zoom In/Out</item>
+    <item>Card</item>
+    <item>3D Slide</item>
+    <item>3D Rotation</item>
+    <item>Random</item>
   </string-array>
 
   <string-array name="pref_draw_transition_entryvalues">
@@ -33,19 +37,10 @@
     <item>crossfade</item>
     <item>fade_inout</item>
     <item>zoom_inout</item>
-  </string-array>
-
-  <!-- changing folder picture transition -->
-  <string-array name="pref_folder_transition_entries">
-    <item>None</item>
-    <item>CrossFade</item>
-    <item>Fade In/Out</item>
-  </string-array>
-
-  <string-array name="pref_folder_transition_entryvalues">
-    <item>none</item>
-    <item>crossfade</item>
-    <item>fade_inout</item>
+    <item>card</item>
+    <item>slide_3d</item>
+    <item>rotation_3d</item>
+    <item>random</item>
   </string-array>
 
   <!-- folder duration -->
