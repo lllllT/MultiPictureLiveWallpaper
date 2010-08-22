@@ -46,7 +46,7 @@
   <!-- clip ratio -->
   <string-array name="pref_draw_clipratio_entries">
     <item>Fit to Fullscreen</item>
-    <item>Medium clipping</item>
+    <item>Medium crop</item>
     <item>Show Entire Picture</item>
   </string-array>
 
