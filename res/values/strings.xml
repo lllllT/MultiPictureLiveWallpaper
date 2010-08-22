@@ -9,9 +9,10 @@
   <string name="pref_picture_screen_each_summary">Type of each screens.</string>
 
   <string name="pref_picture_screen_title">Screen %d</string>
-  <string name="pref_picture_screen_init_summary">Picture to set Screen %d.</string>
-  <string name="pref_picture_screen_val1_summary">Picture to set Screen %d.\n%s</string>
-  <string name="pref_picture_screen_val2_summary">Picture to set Screen %d.\n%s : %s</string>
+  <string name="pref_picture_screen_base_summary">Picture of Screen %d.</string>
+  <string name="pref_picture_screen_left_summary">Picture of Screen %d.  (Leftmost screen)</string>
+  <string name="pref_picture_screen_val1_summary">\n%s</string>
+  <string name="pref_picture_screen_val2_summary">\n%s : %s</string>
 
   <string name="pref_picture_screen_default_title">Default Screen Type</string>
   <string name="pref_picture_screen_default_init_summary">Default type of screen to select pictures.</string>
@@ -22,10 +23,13 @@
   <string name="pref_draw_transition_title">Screen Transition</string>
   <string name="pref_draw_transition_summary">Transition type when use switching screen.</string>
 
-  <string name="pref_cat_folder_title">Picture Folder</string>
+  <string name="pref_draw_clipratio_title">Clip/Resize ratio</string>
+  <string name="pref_draw_clipratio_summary">How may clip picture to fit screen size.</string>
 
-  <string name="pref_folder_transition_title">Folder Picture Transition</string>
-  <string name="pref_folder_transition_summary">Transition type when use changing picture from folder.</string>
+  <string name="pref_draw_reflection_title">Show reflection</string>
+  <string name="pref_draw_reflection_summary">Show reflection at bottom of the picture.</string>
+
+  <string name="pref_cat_folder_title">Picture Folder</string>
 
   <string name="pref_folder_recursive_title">Search folder recursively</string>
   <string name="pref_folder_recursive_summary">When using Picture Folder, use pictures under specified folder recursively.</string>

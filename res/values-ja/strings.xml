@@ -9,9 +9,10 @@
   <string name="pref_picture_screen_each_summary">各画面の画像選択方法。</string>
 
   <string name="pref_picture_screen_title">画面%d</string>
-  <string name="pref_picture_screen_init_summary">画面%dの画像タイプ。</string>
-  <string name="pref_picture_screen_val1_summary">画面%dの画像タイプ。\n%s</string>
-  <string name="pref_picture_screen_val2_summary">画面%dの画像タイプ。\n%s : %s</string>
+  <string name="pref_picture_screen_base_summary">画面%dの画像タイプ。</string>
+  <string name="pref_picture_screen_left_summary">画面%dの画像タイプ。(一番左の画面)</string>
+  <string name="pref_picture_screen_val1_summary">\n%s</string>
+  <string name="pref_picture_screen_val2_summary">\n%s : %s</string>
 
   <string name="pref_picture_screen_default_title">デフォルト画面タイプ</string>
   <string name="pref_picture_screen_default_init_summary">画像選択方法のデフォルト設定。</string>
@@ -22,10 +23,13 @@
   <string name="pref_draw_transition_title">画面変更時の切替方法</string>
   <string name="pref_draw_transition_summary">画面を変更する時の画像切替方法。</string>
 
-  <string name="pref_cat_folder_title">フォルダ指定</string>
+  <string name="pref_draw_clipratio_title">切り抜き/リサイズ方法</string>
+  <string name="pref_draw_clipratio_summary">画面サイズに合わせるために画像をどの程度切り抜きするか。</string>
 
-  <string name="pref_folder_transition_title">フォルダ内画像切替方法</string>
-  <string name="pref_folder_transition_summary">画像フォルダ指定の場合に、画像をフォルダ内の別の画像に変更する時の切替方法。</string>
+  <string name="pref_draw_reflection_title">反射を表示する</string>
+  <string name="pref_draw_reflection_summary">画像の下側に反射を表示する。</string>
+
+  <string name="pref_cat_folder_title">フォルダ指定</string>
 
   <string name="pref_folder_recursive_title">再帰的にフォルダ検索</string>
   <string name="pref_folder_recursive_summary">画像フォルダの場合は、再帰的に指定されたフォルダ以下の画像を使用する。</string>

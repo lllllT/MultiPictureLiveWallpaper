@@ -62,7 +62,7 @@ public class MultiPictureSetting extends PreferenceActivity
             item.setTitle(title);
             item.setDialogTitle(title);
             item.setSummary(
-                getString(R.string.pref_picture_screen_init_summary, i + 1));
+                getString(R.string.pref_picture_screen_base_summary, i + 1));
             item.setEntries(R.array.pref_picture_screen_type_entries);
             item.setEntryValues(R.array.pref_picture_screen_type_entryvalues);
             item.setDefaultValue((is_file_val_exist ? "file" : "use_default"));
@@ -133,27 +133,36 @@ public class MultiPictureSetting extends PreferenceActivity
         CharSequence entry = item.getEntry();
         String type_val = item.getValue();
 
+        StringBuilder summary = new StringBuilder();
+        summary.append(
+            getString((idx == 0 ?
+                       R.string.pref_picture_screen_left_summary :
+                       R.string.pref_picture_screen_base_summary),
+                      idx + 1));
+
         if(type_val != null) {
             if("file".equals(type_val)) {
                 String file_key = String.format(SCREEN_FILE_KEY, idx);
                 String file_val = pref.getString(file_key, "");
-                item.setSummary(
+                summary.append(
                     getString(R.string.pref_picture_screen_val2_summary,
-                              idx + 1, entry, getUriFileName(file_val)));
+                              entry, getUriFileName(file_val)));
             }
             else if("folder".equals(type_val)) {
                 String folder_key = String.format(SCREEN_FOLDER_KEY, idx);
                 String folder_val = pref.getString(folder_key, "");
-                item.setSummary(
+                summary.append(
                     getString(R.string.pref_picture_screen_val2_summary,
-                              idx + 1, entry, folder_val));
+                              entry, folder_val));
             }
             else if("use_default".equals(type_val)) {
-                item.setSummary(
+                summary.append(
                     getString(R.string.pref_picture_screen_val1_summary,
-                              idx + 1, entry));
+                              entry));
             }
         }
+
+        item.setSummary(summary);
     }
 
     private void updateDefaultTypeSummary(ListPreference item)

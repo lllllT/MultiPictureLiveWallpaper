@@ -25,6 +25,13 @@
     <item>ランダム</item>
   </string-array>
 
+  <!-- clip ratio -->
+  <string-array name="pref_draw_clipratio_entries">
+    <item>フルスクリーンに合わせる</item>
+    <item>中くらいに切り抜き</item>
+    <item>画像全体を表示</item>
+  </string-array>
+
   <!-- folder duration -->
   <string-array name="pref_folder_duration_entries">
     <item>1分</item>

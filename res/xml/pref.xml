@@ -24,6 +24,18 @@
        android:entries="@array/pref_draw_transition_entries"
        android:entryValues="@array/pref_draw_transition_entryvalues"
        android:defaultValue="slide" />
+    <ListPreference
+       android:key="draw.clipratio"
+       android:title="@string/pref_draw_clipratio_title"
+       android:summary="@string/pref_draw_clipratio_summary"
+       android:entries="@array/pref_draw_clipratio_entries"
+       android:entryValues="@array/pref_draw_clipratio_entryvalues"
+       android:defaultValue="1.0" />
+    <CheckBoxPreference
+       android:key="draw.reflection"
+       android:title="@string/pref_draw_reflection_title"
+       android:summary="@string/pref_draw_reflection_summary"
+       android:defaultValue="true" />
   </PreferenceCategory>
 
   <PreferenceCategory android:title="@string/pref_cat_folder_title">
