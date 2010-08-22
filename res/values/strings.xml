@@ -23,8 +23,8 @@
   <string name="pref_draw_transition_title">Screen Transition</string>
   <string name="pref_draw_transition_summary">Transition type when use switching screen.</string>
 
-  <string name="pref_draw_clipratio_title">Clip/Resize ratio</string>
-  <string name="pref_draw_clipratio_summary">How may clip picture to fit screen size.</string>
+  <string name="pref_draw_clipratio_title">Crop/Resize ratio</string>
+  <string name="pref_draw_clipratio_summary">How may crop pictures to fit screen size.</string>
 
   <string name="pref_draw_reflection_title">Show reflection</string>
   <string name="pref_draw_reflection_summary">Show reflection at bottom of the picture.</string>
