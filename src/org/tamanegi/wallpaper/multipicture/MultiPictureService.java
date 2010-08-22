@@ -447,6 +447,7 @@ public class MultiPictureService extends WallpaperService
 
             Matrix matrix = new Matrix();
             int alpha = 255;
+            boolean fill_background = false;
 
             if(cur_transition == TransitionType.none) {
                 if(dx <= -0.5 || dx > 0.5 ||
@@ -480,6 +481,7 @@ public class MultiPictureService extends WallpaperService
                 int sy = (dy < 0 ? 0 : (int)(height * dy));
                 matrix.postTranslate(sx, sy);
                 alpha = 255;
+                fill_background = true;
             }
             else if(cur_transition == TransitionType.slide_3d) {
                 Camera camera = new Camera();
@@ -491,6 +493,8 @@ public class MultiPictureService extends WallpaperService
                 final float center = 0.3f;
                 matrix.preTranslate(-width * center, -height * center);
                 matrix.postTranslate(width * center, height * center);
+
+                alpha = Math.min((int)((Math.min(dx, dy) + 1) * 0xff), 0xff);
             }
             else if(cur_transition == TransitionType.rotation_3d) {
                 if(dx <= -0.5 || dx > 0.5 ||
@@ -530,6 +534,15 @@ public class MultiPictureService extends WallpaperService
                                     height * (1 - yratio) / 2);
                 matrix.preScale(width * xratio / bmp.getWidth(),
                                 height * yratio / bmp.getHeight());
+
+                if(fill_background) {
+                    c.save();
+                    c.concat(matrix);
+                    c.drawRect(-width * (1 - xratio) / 2,
+                               -height * (1 - yratio) / 2,
+                               width, height, paint);
+                    c.restore();
+                }
                 c.drawBitmap(bmp, matrix, paint);
 
                 if(show_reflection) {
