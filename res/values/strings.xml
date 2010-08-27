@@ -18,6 +18,10 @@
   <string name="pref_picture_screen_default_init_summary">Default type of screen to select pictures.</string>
   <string name="pref_picture_screen_default_val2_summary">Default type of screen to select pictures.\n%s : %s</string>
 
+  <string name="pref_picture_screen_bucket_title">Album</string>
+  <string name="pref_picture_screen_no_bucket_exist_msg">Album is not exists.</string>
+  <string name="pref_picture_screen_no_bucket_select_msg">Album is not selected.</string>
+
   <string name="pref_cat_draw_title">Drawing Setting</string>
 
   <string name="pref_draw_transition_title">Screen Transition</string>
@@ -35,10 +39,10 @@
   <string name="pref_folder_recursive_summary">When using Picture Folder, use pictures under specified folder recursively.</string>
 
   <string name="pref_folder_changetap_title">Double Tap to change picture</string>
-  <string name="pref_folder_changetap_summary">When double tap, change picture from folder.</string>
+  <string name="pref_folder_changetap_summary">When double tap, change picture from folder or album.</string>
 
   <string name="pref_folder_duration_title">Picture change interval</string>
-  <string name="pref_folder_duration_summary">Interval to change picture from folder.</string>
+  <string name="pref_folder_duration_summary">Interval to change picture from folder or album.</string>
 
   <string name="pref_cat_advanced">Advanced Settings</string>
 

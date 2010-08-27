@@ -9,10 +9,12 @@ import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Camera;
@@ -64,7 +66,7 @@ public class MultiPictureService extends WallpaperService
 
     private static enum ScreenType
     {
-        file, folder, use_default
+        file, folder, buckets, use_default
     }
 
     private static class PictureInfo
@@ -174,7 +176,7 @@ public class MultiPictureService extends WallpaperService
             receiver = new Receiver();
 
             filter = new IntentFilter();
-            filter.addAction(Intent.ACTION_MEDIA_MOUNTED);
+            filter.addAction(Intent.ACTION_MEDIA_SCANNER_FINISHED);
             filter.addDataScheme(ContentResolver.SCHEME_FILE);
             registerReceiver(receiver, filter);
 
@@ -281,10 +283,10 @@ public class MultiPictureService extends WallpaperService
                     // change by interval
                     new AsyncRotateFolderBitmap().execute();
                 }
-                else if(Intent.ACTION_MEDIA_MOUNTED.equals(
+                else if(Intent.ACTION_MEDIA_SCANNER_FINISHED.equals(
                             intent.getAction())) {
                     if(reload_extmedia_mounted) {
-                        // reload by media mounted
+                        // reload by media scanner finished
                         clearPictureSetting();
                         drawMain();
                     }
@@ -865,6 +867,8 @@ public class MultiPictureService extends WallpaperService
                 String.format(MultiPictureSetting.SCREEN_FILE_KEY, idx), null);
             String folder = pref.getString(
                 String.format(MultiPictureSetting.SCREEN_FOLDER_KEY, idx), "");
+            String bucket = pref.getString(
+                String.format(MultiPictureSetting.SCREEN_BUCKET_KEY, idx), "");
 
             ScreenType type =
                 ((type_str == null && fname != null) ? ScreenType.file :
@@ -877,6 +881,8 @@ public class MultiPictureService extends WallpaperService
                 folder = pref.getString(
                     MultiPictureSetting.DEFAULT_FOLDER_KEY,
                     Environment.getExternalStorageDirectory().getPath());
+                bucket = pref.getString(
+                    MultiPictureSetting.DEFAULT_BUCKET_KEY, "");
             }
 
             PictureInfo info = new PictureInfo();
@@ -887,6 +893,11 @@ public class MultiPictureService extends WallpaperService
             }
             else if(type == ScreenType.folder) {
                 info.file_list = listFolderFile(new File(folder));
+                info.bmp = null;
+                info.cur_file_idx = -1;
+            }
+            else if(type == ScreenType.buckets) {
+                info.file_list = listBucketPicture(bucket.split(" "));
                 info.bmp = null;
                 info.cur_file_idx = -1;
             }
@@ -1045,6 +1056,39 @@ public class MultiPictureService extends WallpaperService
             return list;
         }
 
+        private ArrayList<String> listBucketPicture(String[] bucket)
+        {
+            ArrayList<String> list = new ArrayList<String>();
+
+            Uri uri = MultiPictureSetting.IMAGE_LIST_URI;
+            for(String id : bucket) {
+                Cursor cur = resolver.query(
+                    uri,
+                    MultiPictureSetting.IMAGE_LIST_COLUMNS,
+                    MultiPictureSetting.IMAGE_LIST_WHERE,
+                    new String[] { id },
+                    null);
+                if(cur == null) {
+                    continue;
+                }
+
+                try {
+                    if(cur.moveToFirst()) {
+                        do {
+                            list.add(ContentUris.withAppendedId(
+                                         uri,
+                                         cur.getLong(0)).toString());
+                        } while(cur.moveToNext());
+                    }
+                }
+                finally {
+                    cur.close();
+                }
+            }
+
+            return list;
+        }
+
         private boolean isNeedRotateFolderBitmap()
         {
             if(pic == null) {
@@ -1052,7 +1096,8 @@ public class MultiPictureService extends WallpaperService
             }
 
             for(PictureInfo info : pic) {
-                if(info.type == ScreenType.folder) {
+                if(info.type == ScreenType.folder ||
+                   info.type == ScreenType.buckets) {
                     return true;
                 }
             }
@@ -1075,7 +1120,9 @@ public class MultiPictureService extends WallpaperService
 
         private void rotateFolderBitmap(PictureInfo info)
         {
-            if(info != null && info.type == ScreenType.folder) {
+            if(info != null &&
+               (info.type == ScreenType.folder ||
+                info.type == ScreenType.buckets)) {
                 int fcnt = info.file_list.size();
                 int idx_base = (int)(Math.random() * fcnt);
                 for(int i = 0; i < fcnt; i++) {

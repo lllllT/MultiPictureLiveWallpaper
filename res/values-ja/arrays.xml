@@ -4,12 +4,14 @@
   <string-array name="pref_picture_screen_type_entries">
     <item>単一画像</item>
     <item>画像フォルダ</item>
+    <item>アルバム</item>
     <item>デフォルト設定と同じ</item>
   </string-array>
 
   <string-array name="pref_picture_screen_default_type_entries">
     <item>単一画像</item>
     <item>画像フォルダ</item>
+    <item>アルバム</item>
   </string-array>
 
   <!-- switching transition -->

@@ -4,17 +4,20 @@
   <string-array name="pref_picture_screen_type_entries">
     <item>Single Picture</item>
     <item>Picture Folder</item>
+    <item>Album</item>
     <item>Same as Default Setting</item>
   </string-array>
 
   <string-array name="pref_picture_screen_default_type_entries">
     <item>Single Picture</item>
     <item>Picture Folder</item>
+    <item>Album</item>
   </string-array>
 
   <string-array name="pref_picture_screen_type_entryvalues">
     <item>file</item>
     <item>folder</item>
+    <item>buckets</item>
     <item>use_default</item>
   </string-array>
 

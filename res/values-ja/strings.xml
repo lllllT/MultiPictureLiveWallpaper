@@ -18,6 +18,10 @@
   <string name="pref_picture_screen_default_init_summary">画像選択方法のデフォルト設定。</string>
   <string name="pref_picture_screen_default_val2_summary">画像選択方法のデフォルト設定。\n%s : %s</string>
 
+  <string name="pref_picture_screen_bucket_title">アルバム</string>
+  <string name="pref_picture_screen_no_bucket_exist_msg">アルバムが存在しません。</string>
+  <string name="pref_picture_screen_no_bucket_select_msg">アルバムが選択されていません。</string>
+
   <string name="pref_cat_draw_title">描画方法</string>
 
   <string name="pref_draw_transition_title">画面変更時の切替方法</string>
@@ -35,10 +39,10 @@
   <string name="pref_folder_recursive_summary">画像フォルダの場合は、再帰的に指定されたフォルダ以下の画像を使用する。</string>
 
   <string name="pref_folder_changetap_title">ダブルタップで画像変更</string>
-  <string name="pref_folder_changetap_summary">画像フォルダ指定の場合、ダブルタップで画像を変更する。</string>
+  <string name="pref_folder_changetap_summary">画像フォルダまたはアルバム指定の場合、ダブルタップで画像を変更する。</string>
 
   <string name="pref_folder_duration_title">画像変更頻度</string>
-  <string name="pref_folder_duration_summary">画像フォルダ指定の場合、自動的に別の画像に変更する時間間隔。</string>
+  <string name="pref_folder_duration_summary">画像フォルダまたはアルバム指定の場合、自動的に別の画像に変更する時間間隔。</string>
 
   <string name="pref_cat_advanced">高度な設定</string>
 

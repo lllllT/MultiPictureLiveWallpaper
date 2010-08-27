@@ -1,6 +1,10 @@
 package org.tamanegi.wallpaper.multipicture;
 
+import java.util.Arrays;
+
+import android.app.AlertDialog;
 import android.content.ContentResolver;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
@@ -12,6 +16,7 @@ import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 
 public class MultiPictureSetting extends PreferenceActivity
@@ -19,10 +24,32 @@ public class MultiPictureSetting extends PreferenceActivity
     public static final String SCREEN_TYPE_KEY = "screen.%d.type";
     public static final String SCREEN_FILE_KEY = "screen.%d.file";
     public static final String SCREEN_FOLDER_KEY = "screen.%d.folder";
+    public static final String SCREEN_BUCKET_KEY = "screen.%d.bucket";
 
     public static final String DEFAULT_TYPE_KEY = "screen.default.type";
     public static final String DEFAULT_FILE_KEY = "screen.default.file";
     public static final String DEFAULT_FOLDER_KEY = "screen.default.folder";
+    public static final String DEFAULT_BUCKET_KEY = "screen.default.bucket";
+
+    public static final Uri IMAGE_BUCKET_URI =
+        MediaStore.Images.Media.EXTERNAL_CONTENT_URI.
+        buildUpon().appendQueryParameter("distinct", "true").build();
+    public static final String[] IMAGE_BUCKET_COLUMNS = {
+        MediaStore.Images.ImageColumns.BUCKET_ID,
+        MediaStore.Images.ImageColumns.BUCKET_DISPLAY_NAME
+    };
+    public static final String IMAGE_BUCKET_SORT_ORDER =
+        "upper(" + MediaStore.Images.ImageColumns.BUCKET_DISPLAY_NAME +
+        ") ASC";
+
+    public static final Uri IMAGE_LIST_URI =
+        MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+    public static final String[] IMAGE_LIST_COLUMNS = {
+        MediaStore.Images.ImageColumns._ID,
+        MediaStore.Images.ImageColumns.BUCKET_ID
+    };
+    public static final String IMAGE_LIST_WHERE =
+        MediaStore.Images.ImageColumns.BUCKET_ID + " = ?";
 
     private static final int SCREEN_COUNT = 7;
 
@@ -155,6 +182,13 @@ public class MultiPictureSetting extends PreferenceActivity
                     getString(R.string.pref_picture_screen_val2_summary,
                               entry, folder_val));
             }
+            else if("buckets".equals(type_val)) {
+                String bucket_key = String.format(SCREEN_BUCKET_KEY, idx);
+                String bucket_val = pref.getString(bucket_key, "");
+                summary.append(
+                    getString(R.string.pref_picture_screen_val2_summary,
+                              entry, getBucketNames(bucket_val)));
+            }
             else if("use_default".equals(type_val)) {
                 summary.append(
                     getString(R.string.pref_picture_screen_val1_summary,
@@ -182,6 +216,12 @@ public class MultiPictureSetting extends PreferenceActivity
                 item.setSummary(
                     getString(R.string.pref_picture_screen_default_val2_summary,
                               entry, folder_val));
+            }
+            else if("buckets".equals(type_val)) {
+                String bucket_val = pref.getString(DEFAULT_BUCKET_KEY, "");
+                item.setSummary(
+                    getString(R.string.pref_picture_screen_default_val2_summary,
+                              entry, getBucketNames(bucket_val)));
             }
         }
     }
@@ -212,6 +252,37 @@ public class MultiPictureSetting extends PreferenceActivity
         return str;
     }
 
+    private String getBucketNames(String str)
+    {
+        BucketItem[] buckets = getBuckets();
+        if(buckets == null) {
+            return str;
+        }
+
+        String[] val_ids = str.split(" ");
+        StringBuilder names = new StringBuilder();
+
+        for(int i = 0; i < val_ids.length; i++) {
+            if(i != 0) {
+                names.append(", ");
+            }
+
+            boolean found = false;
+            for(BucketItem item : buckets) {
+                if(val_ids[i].equals(item.id)) {
+                    names.append(item.name);
+                    found = true;
+                    break;
+                }
+            }
+            if(! found) {
+                names.append(val_ids[i]);
+            }
+        }
+
+        return names.toString();
+    }
+
     private void startFilePickerActivity(Preference item, int idx)
     {
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
@@ -238,6 +309,148 @@ public class MultiPictureSetting extends PreferenceActivity
         cur_idx = idx;
     }
 
+    private BucketItem[] getBuckets()
+    {
+        Cursor cur = resolver.query(IMAGE_BUCKET_URI,
+                                    IMAGE_BUCKET_COLUMNS, null, null,
+                                    IMAGE_BUCKET_SORT_ORDER);
+        if(cur == null) {
+            return null;
+        }
+
+        try {
+            int cnt = cur.getCount();
+            if(cnt < 1) {
+                return null;
+            }
+
+            BucketItem[] list = new BucketItem[cnt];
+            cur.moveToFirst();
+            for(int i = 0; i < cnt; i++) {
+                list[i] = new BucketItem();
+                list[i].id = cur.getString(0);
+                list[i].name = cur.getString(1);
+                cur.moveToNext();
+            }
+
+            return list;
+        }
+        finally {
+            cur.close();
+        }
+    }
+
+    private void startBucketPickerDialog(final Preference item, final int idx,
+                                         String bucket_val)
+    {
+        final BucketItem[] buckets = getBuckets();
+        if(buckets == null) {
+            showWarnMessage(R.string.pref_picture_screen_bucket_title,
+                            R.string.pref_picture_screen_no_bucket_exist_msg);
+            return;
+        }
+
+        final boolean[] checked = new boolean[buckets.length];
+        if("buckets".equals(((ListPreference)item).getValue()) &&
+           bucket_val != null) {
+            String[] val_ids = bucket_val.split(" ");
+            for(int i = 0; i < buckets.length; i++) {
+                for(String val : val_ids) {
+                    if(val.equals(buckets[i].id)) {
+                        checked[i] = true;
+                        break;
+                    }
+                }
+            }
+        }
+        else {
+            Arrays.fill(checked, true);
+        }
+
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.pref_picture_screen_bucket_title)
+            .setMultiChoiceItems(
+                buckets, checked,
+                new DialogInterface.OnMultiChoiceClickListener() {
+                    public void onClick(DialogInterface dialog,
+                                        int which, boolean isChecked) {
+                        checked[which] = isChecked;
+                    }
+                })
+            .setPositiveButton(
+                android.R.string.yes,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int button) {
+                        dialog.dismiss();
+                        applyBucketValue((ListPreference)item, idx,
+                                         buckets, checked);
+                    }
+                })
+            .setNegativeButton(
+                android.R.string.no,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int button) {
+                        dialog.dismiss();
+                    }
+                })
+            .show();
+    }
+
+    private void applyBucketValue(ListPreference item, int idx,
+                                  BucketItem[] buckets, boolean[] checked)
+    {
+        boolean c = false;
+        for(boolean check : checked) {
+            c = (c || check);
+        }
+        if(! c) {
+            showWarnMessage(R.string.pref_picture_screen_bucket_title,
+                            R.string.pref_picture_screen_no_bucket_select_msg);
+            return;
+        }
+
+        String type_val = "buckets";
+        String data_key = (idx >= 0 ?
+                           String.format(SCREEN_BUCKET_KEY, idx) :
+                           DEFAULT_BUCKET_KEY);
+
+        StringBuilder data_val = new StringBuilder();
+        for(int i = 0; i < buckets.length; i++) {
+            if(checked[i]) {
+                data_val.append(buckets[i].id).append(" ");
+            }
+        }
+
+        SharedPreferences.Editor editor =
+            PreferenceManager.getDefaultSharedPreferences(this).edit();
+        editor.putString(data_key, data_val.toString().trim());
+        editor.commit();
+
+        item.setValue(type_val);
+        if(idx >= 0) {
+            updateScreenTypeSummary(item, idx);
+        }
+        else {
+            updateDefaultTypeSummary(item);
+        }
+    }
+
+    private void showWarnMessage(int title_id, int msg_id)
+    {
+        new AlertDialog.Builder(this)
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .setTitle(title_id)
+            .setMessage(msg_id)
+            .setPositiveButton(
+                android.R.string.ok,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int button) {
+                        dialog.dismiss();
+                    }
+                })
+            .show();
+    }
+
     private class OnScreenTypeChangeListener
         implements Preference.OnPreferenceChangeListener
     {
@@ -260,6 +473,13 @@ public class MultiPictureSetting extends PreferenceActivity
                 String folder_val = pref.getString(folder_key, null);
 
                 startFolderPickerActivity(item, idx, folder_val);
+                return false;
+            }
+            else if("buckets".equals(val)) {
+                String bucket_key = String.format(SCREEN_BUCKET_KEY, idx);
+                String bucket_val = pref.getString(bucket_key, null);
+
+                startBucketPickerDialog(item, idx, bucket_val);
                 return false;
             }
             else if("use_default".equals(val)) {
@@ -287,15 +507,50 @@ public class MultiPictureSetting extends PreferenceActivity
                 return false;
             }
             else if("folder".equals(val)) {
-                String folder_val =
-                    pref.getString(DEFAULT_FOLDER_KEY, null);
+                String folder_val = pref.getString(DEFAULT_FOLDER_KEY, null);
 
                 startFolderPickerActivity(item, -1, folder_val);
+                return false;
+            }
+            else if("buckets".equals(val)) {
+                String bucket_val = pref.getString(DEFAULT_BUCKET_KEY, null);
+
+                startBucketPickerDialog(item, -1, bucket_val);
                 return false;
             }
             else {
                 return false;
             }
+        }
+    }
+
+    private class BucketItem implements CharSequence
+    {
+        private String id;
+        private String name;
+
+        @Override
+        public char charAt(int index)
+        {
+            return name.charAt(index);
+        }
+
+        @Override
+        public int length()
+        {
+            return name.length();
+        }
+
+        @Override
+        public CharSequence subSequence(int start, int end)
+        {
+            return name.subSequence(start, end);
+        }
+
+        @Override
+        public String toString()
+        {
+            return name;
         }
     }
 }
