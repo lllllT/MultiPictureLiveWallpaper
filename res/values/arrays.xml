@@ -21,6 +21,54 @@
     <item>use_default</item>
   </string-array>
 
+  <!-- background color -->
+  <string-array name="pref_picture_screen_bgcolor_entries">
+    <item>Black</item>
+    <item>White</item>
+    <item>Gray</item>
+    <item>Light gray</item>
+    <item>Dark gray</item>
+    <item>Red</item>
+    <item>Green</item>
+    <item>Blue</item>
+    <item>Cyan</item>
+    <item>Magenta</item>
+    <item>Yellow</item>
+    <item>Auto detect (slow and maybe inexact)</item>
+    <item>Same as Default Setting</item>
+  </string-array>
+
+  <string-array name="pref_picture_screen_default_bgcolor_entries">
+    <item>Black</item>
+    <item>White</item>
+    <item>Gray</item>
+    <item>Light gray</item>
+    <item>Dark gray</item>
+    <item>Red</item>
+    <item>Green</item>
+    <item>Blue</item>
+    <item>Cyan</item>
+    <item>Magenta</item>
+    <item>Yellow</item>
+    <item>Auto detect (slow and maybe inexact)</item>
+  </string-array>
+
+  <string-array name="pref_picture_screen_bgcolor_entryvalues">
+    <item>black</item>
+    <item>white</item>
+    <item>gray</item>
+    <item>lightgray</item>
+    <item>darkgray</item>
+    <item>red</item>
+    <item>green</item>
+    <item>blue</item>
+    <item>cyan</item>
+    <item>magenta</item>
+    <item>yellow</item>
+    <item>auto_detect</item>
+    <item>use_default</item>
+  </string-array>
+
   <!-- switching transition -->
   <string-array name="pref_draw_transition_entries">
     <item>None</item>

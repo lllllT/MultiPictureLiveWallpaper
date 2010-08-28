@@ -14,6 +14,14 @@
        android:entries="@array/pref_picture_screen_default_type_entries"
        android:entryValues="@array/pref_picture_screen_type_entryvalues"
        android:defaultValue="file" />
+    <ListPreference
+       android:key="screen.default.bgcolor"
+       android:title="@string/pref_picture_screen_default_bgcolor_title"
+       android:summary="@string/pref_picture_screen_default_bgcolor_summary"
+       android:entries="@array/pref_picture_screen_default_bgcolor_entries"
+       android:entryValues="@array/pref_picture_screen_bgcolor_entryvalues"
+       android:defaultValue="black"
+       />
   </PreferenceCategory>
 
   <PreferenceCategory android:title="@string/pref_cat_draw_title">
@@ -48,6 +56,11 @@
        android:key="folder.changetap"
        android:title="@string/pref_folder_changetap_title"
        android:summary="@string/pref_folder_changetap_summary"
+       android:defaultValue="true" />
+    <CheckBoxPreference
+       android:key="folder.random"
+       android:title="@string/pref_folder_random_title"
+       android:summary="@string/pref_folder_random_summary"
        android:defaultValue="true" />
     <ListPreference
        android:key="folder.duration"

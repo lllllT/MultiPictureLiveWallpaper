@@ -49,7 +49,7 @@
   <string name="pref_folder_changetap_title">Double Tap to change picture</string>
   <string name="pref_folder_changetap_summary">When double tap, change picture from folder or album.</string>
 
-  <string name="pref_folder_random_title">Random Select</string>
+  <string name="pref_folder_random_title">Random select</string>
   <string name="pref_folder_random_summary">Select picture randomly, when changing picture from folder or album.</string>
 
   <string name="pref_folder_duration_title">Picture change interval</string>

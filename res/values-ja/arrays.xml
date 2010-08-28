@@ -14,6 +14,38 @@
     <item>アルバム</item>
   </string-array>
 
+  <!-- background color -->
+  <string-array name="pref_picture_screen_bgcolor_entries">
+    <item>黒</item>
+    <item>白</item>
+    <item>灰色</item>
+    <item>明るい灰色</item>
+    <item>暗い灰色</item>
+    <item>赤</item>
+    <item>緑</item>
+    <item>青</item>
+    <item>シアン</item>
+    <item>マゼンタ</item>
+    <item>黄</item>
+    <item>自動検出 (遅くて多分不正確)</item>
+    <item>デフォルト設定と同じ</item>
+  </string-array>
+
+  <string-array name="pref_picture_screen_default_bgcolor_entries">
+    <item>黒</item>
+    <item>白</item>
+    <item>灰色</item>
+    <item>明るい灰色</item>
+    <item>暗い灰色</item>
+    <item>赤</item>
+    <item>緑</item>
+    <item>青</item>
+    <item>シアン</item>
+    <item>マゼンタ</item>
+    <item>黄</item>
+    <item>自動検出 (遅くて多分不正確)</item>
+  </string-array>
+
   <!-- switching transition -->
   <string-array name="pref_draw_transition_entries">
     <item>なし</item>
