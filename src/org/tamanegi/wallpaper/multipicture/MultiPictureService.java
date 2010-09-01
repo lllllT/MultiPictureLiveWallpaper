@@ -3,6 +3,7 @@ package org.tamanegi.wallpaper.multipicture;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -26,6 +27,7 @@ import android.graphics.Color;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
@@ -1061,12 +1063,23 @@ public class MultiPictureService extends WallpaperService
                     return false;
                 }
 
-                int target_width = max_width;
-                int target_height = max_height;
-
                 Uri file = Uri.parse(file_uri);
                 InputStream instream;
                 BitmapFactory.Options opt;
+
+                // orientation
+                int orientation = getPictureOrientation(file_uri);
+
+                int target_width;
+                int target_height;
+                if(orientation != 90 && orientation != 270) {
+                    target_width = max_width;
+                    target_height = max_height;
+                }
+                else {
+                    target_width = max_height;
+                    target_height = max_width;
+                }
 
                 // ask size of picture
                 opt = new BitmapFactory.Options();
@@ -1125,13 +1138,26 @@ public class MultiPictureService extends WallpaperService
                 int src_w = bw - (int)(cw < 0 ? 0 : cw);
                 int src_h = bh - (int)(ch < 0 ? 0 : ch);
 
-                info.xratio = (cw < 0 ? bw * bscale / target_width : 1);
-                info.yratio = (ch < 0 ? bh * bscale / target_height : 1);
+                float xratio = (cw < 0 ? bw * bscale / target_width : 1);
+                float yratio = (ch < 0 ? bh * bscale / target_height : 1);
+                if(orientation != 90 && orientation != 270) {
+                    info.xratio = xratio;
+                    info.yratio = yratio;
+                }
+                else {
+                    info.xratio = yratio;
+                    info.yratio = xratio;
+                }
 
-                if(bscale < 1) {
-                    // down scale and clip
+                if(bscale < 1 || orientation != 0) {
+                    // (down scale or rotate) and clip
                     Matrix mat = new Matrix();
-                    mat.setScale(bscale, bscale);
+                    if(bscale < 1) {
+                        mat.setScale(bscale, bscale);
+                    }
+                    if(orientation != 0) {
+                        mat.preRotate(orientation, bw / 2, bh / 2);
+                    }
 
                     info.bmp = Bitmap.createBitmap(
                         bmp, src_x, src_y, src_w, src_h, mat, true);
@@ -1155,6 +1181,53 @@ public class MultiPictureService extends WallpaperService
             catch(IOException e) {
                 return false;
             }
+        }
+
+        private int getPictureOrientation(String file_uri)
+        {
+            // get from media store
+            Cursor cur = resolver.query(
+                Uri.parse(file_uri),
+                new String[] { MediaStore.Images.ImageColumns.ORIENTATION },
+                null, null, null);
+            if(cur != null) {
+                try {
+                    if(cur.moveToFirst()) {
+                        return cur.getInt(0);
+                    }
+                }
+                finally {
+                    cur.close();
+                }
+            }
+
+            // get from exif tag
+            URI uri = URI.create(file_uri);
+            if(ContentResolver.SCHEME_FILE.equals(uri.getScheme())) {
+                try {
+                    ExifInterface exif =
+                        new ExifInterface(new File(uri).getPath());
+                    int ori = exif.getAttributeInt(
+                        ExifInterface.TAG_ORIENTATION,
+                        ExifInterface.ORIENTATION_NORMAL);
+
+                    if(ori == ExifInterface.ORIENTATION_ROTATE_90) {
+                        return 90;
+                    }
+                    if(ori == ExifInterface.ORIENTATION_ROTATE_180) {
+                        return 180;
+                    }
+                    if(ori == ExifInterface.ORIENTATION_ROTATE_270) {
+                        return 270;
+                    }
+                    return 0;
+                }
+                catch(IOException e) {
+                    // ignore
+                }
+            }
+
+            return 0;
         }
 
         private int detectBackgroundColor(Bitmap bmp,
@@ -1322,8 +1395,7 @@ public class MultiPictureService extends WallpaperService
                     }
                 }
                 else if(file.isFile()) {
-                    String file_uri =
-                        ContentResolver.SCHEME_FILE + "://" + file.getPath();
+                    String file_uri = file.toURI().toString();
                     if(isPictureFile(file_uri)) {
                         list.add(file_uri);
                     }
