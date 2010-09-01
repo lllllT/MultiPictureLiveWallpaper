@@ -49,6 +49,9 @@ public class MultiPictureService extends WallpaperService
 
     private static final int TRANSITION_RANDOM_TIMEOUT = 500; // msec
 
+    private static final int MAX_TOTAL_PIXELS = 4 * 1024 * 1024; // 4MPixels
+    private static final int MAX_DETECT_PIXELS = 8 * 1024; // 8kPixels
+
     private static final String ACTION_CHANGE_PICTURE =
         "org.tamanegi.wallpaper.multipicture.CHANGE_PICTURE";
 
@@ -116,6 +119,10 @@ public class MultiPictureService extends WallpaperService
         private int ycnt = 1;
         private float xcur = 0f;
         private float ycur = 0f;
+
+        private int max_work_pixels;
+        private int max_width;
+        private int max_height;
 
         private boolean is_duration_pending = false;
 
@@ -519,9 +526,9 @@ public class MultiPictureService extends WallpaperService
                 alpha = 255;
             }
             else if(cur_transition == TransitionType.zoom_inout) {
-                float fact = (1 - Math.abs(dx)) * (1 - Math.abs(dy));
+                float fact = Math.min(1 - Math.abs(dx), 1 - Math.abs(dy));
                 matrix.postScale(fact, fact, width / 2f, height / 2f);
-                matrix.postTranslate(width * dx / 2, width * dy / 2);
+                matrix.postTranslate(width * dx / 2, height * dy / 2);
                 alpha = 255;
             }
             else if(cur_transition == TransitionType.card) {
@@ -532,9 +539,13 @@ public class MultiPictureService extends WallpaperService
                 fill_background = true;
             }
             else if(cur_transition == TransitionType.slide_3d) {
+                if(dx > 0.6 || dy > 0.6) {
+                    return;
+                }
+
                 Camera camera = new Camera();
                 final float ratio = 0.8f;
-                camera.translate(dx * width * ratio, dy * height * ratio,
+                camera.translate(dx * width * ratio, dy * height * -ratio,
                                  (dx + dy) * -1000);
                 camera.getMatrix(matrix);
 
@@ -554,7 +565,7 @@ public class MultiPictureService extends WallpaperService
                 Camera camera = new Camera();
                 camera.translate(0, 0, fact * 500);
                 camera.rotateY(dx * 180);
-                camera.rotateX(dy * 180);
+                camera.rotateX(dy * -180);
                 camera.getMatrix(matrix);
 
                 matrix.preTranslate(-width / 2, -height / 2);
@@ -953,6 +964,24 @@ public class MultiPictureService extends WallpaperService
             int cnt = xcnt * ycnt;
             pic = new PictureInfo[cnt];
 
+            // restrict size
+            if(width * height * (cnt + 3) > MAX_TOTAL_PIXELS) {
+                // mw * mh * (cnt + 3) = MAX_TOTAL_PIXELS
+                // mw / mh = width / height
+                //  -> mh = mw * height / width
+                //  -> mw^2 = MAX_TOTAL_PIXELS / (height * (cnt + 3)) * width
+                max_width = (int)
+                    Math.sqrt(MAX_TOTAL_PIXELS / (height * (cnt + 3)) * width);
+                max_height = max_width * height / width;
+                max_work_pixels = MAX_TOTAL_PIXELS / (cnt + 3) * 3;
+            }
+            else {
+                max_width = width;
+                max_height = height;
+                max_work_pixels = MAX_TOTAL_PIXELS - width * height * cnt;
+            }
+
+            // for each screen
             for(int i = 0; i < cnt; i++) {
                 pic[i] = loadPictureInfo(i);
             }
@@ -974,6 +1003,7 @@ public class MultiPictureService extends WallpaperService
                 String.format(MultiPictureSetting.SCREEN_BGCOLOR_KEY, idx),
                 "use_default");
 
+            // type of screen
             ScreenType type =
                 ((type_str == null && fname != null) ? ScreenType.file :
                  type_str == null ? ScreenType.use_default :
@@ -989,9 +1019,24 @@ public class MultiPictureService extends WallpaperService
                     MultiPictureSetting.DEFAULT_BUCKET_KEY, "");
             }
 
+            // allocate info
             PictureInfo info = new PictureInfo();
             info.type = type;
 
+            // background color
+            if("use_default".equals(bgcolor)) {
+                info.detect_bgcolor = detect_bgcolor;
+                info.bgcolor = default_bgcolor;
+            }
+            else if("auto_detect".equals(bgcolor)) {
+                info.detect_bgcolor = true;
+            }
+            else {
+                info.detect_bgcolor = false;
+                info.bgcolor = Color.parseColor(bgcolor);
+            }
+
+            // load bitmap data
             if(type == ScreenType.file) {
                 loadBitmap(info, fname);
             }
@@ -1006,18 +1051,6 @@ public class MultiPictureService extends WallpaperService
                 info.cur_file_idx = -1;
             }
 
-            if("use_default".equals(bgcolor)) {
-                info.detect_bgcolor = detect_bgcolor;
-                info.bgcolor = default_bgcolor;
-            }
-            else if("auto_detect".equals(bgcolor)) {
-                info.detect_bgcolor = true;
-            }
-            else {
-                info.detect_bgcolor = false;
-                info.bgcolor = Color.parseColor(bgcolor);
-            }
-
             return info;
         }
 
@@ -1028,8 +1061,8 @@ public class MultiPictureService extends WallpaperService
                     return false;
                 }
 
-                int target_width = width;
-                int target_height = height;
+                int target_width = max_width;
+                int target_height = max_height;
 
                 Uri file = Uri.parse(file_uri);
                 InputStream instream;
@@ -1052,7 +1085,12 @@ public class MultiPictureService extends WallpaperService
 
                 int xr = opt.outWidth / target_width;
                 int yr = opt.outHeight / target_height;
-                int ratio = Math.min(xr, yr);
+                int ratio = Math.max(Math.min(xr, yr), 1);
+
+                while((opt.outWidth / ratio) *
+                      (opt.outHeight / ratio) > max_work_pixels) {
+                    ratio += 1;
+                }
 
                 // read picture
                 opt = new BitmapFactory.Options();
@@ -1111,9 +1149,6 @@ public class MultiPictureService extends WallpaperService
                     info.bgcolor = detectBackgroundColor(
                         info.bmp, info.xratio, info.yratio);
                 }
-                else {
-                    info.bgcolor = info.bgcolor;
-                }
 
                 return true;
             }
@@ -1128,8 +1163,18 @@ public class MultiPictureService extends WallpaperService
             int w = bmp.getWidth();
             int h = bmp.getHeight();
 
-            int rex = (xratio < 1 ? 20 : 10);
-            int rey = (yratio < 1 ? 20 : 10);
+            // resize if larger than MAX_DETECT_PIXELS
+            int ratio = 1;
+            while(w * h / (ratio * ratio) > MAX_DETECT_PIXELS) {
+                ratio += 1;
+            }
+            w = w / ratio;
+            h = h / ratio;
+            bmp = Bitmap.createScaledBitmap(bmp, w, h, true);
+
+            final int rex = (xratio < 1 ? 200 : 100);
+            final int rey = (yratio < 1 ? 200 : 100);
+            final int eratio = 10;
 
             int[] cnt = new int[0x1000];
 
@@ -1137,20 +1182,20 @@ public class MultiPictureService extends WallpaperService
             Arrays.fill(cnt, 0);
             for(int y = 0; y < h; y++) {
                 int ry = 0;
-                if(y < height / 5) {
-                    ry = (height - y * 5) * rey / height;
+                if(y < h / eratio) {
+                    ry = (h - y * eratio) * rey / h;
                 }
-                else if(y > height * 4 / 5) {
-                    ry = (y * 5 - height * 4) * rey / height;
+                else if(y > h * (eratio - 1) / eratio) {
+                    ry = (y * eratio - h * (eratio - 1)) * rey / h;
                 }
 
                 for(int x = 0; x < w; x++) {
                     int rx = 0;
-                    if(x < width / 5) {
-                        rx = (width - x * 5) * rex / width;
+                    if(x < w / eratio) {
+                        rx = (w - x * eratio) * rex / w;
                     }
-                    else if(x > width * 4 / 5) {
-                        rx = (x * 5 - width * 4) * rex / width;
+                    else if(x > w * (eratio - 1) / eratio) {
+                        rx = (x * eratio - w * (eratio - 1)) * rex / w;
                     }
 
                     int c = bmp.getPixel(x, y);
@@ -1174,33 +1219,33 @@ public class MultiPictureService extends WallpaperService
             Arrays.fill(cnt, 0);
             for(int y = 0; y < h; y++) {
                 int ry = 0;
-                if(y < height / 5) {
-                    ry = (height - y * 5) * rey / height;
+                if(y < h / eratio) {
+                    ry = (h - y * eratio) * rey / h;
                 }
-                else if(y > height * 4 / 5) {
-                    ry = (y * 5 - height * 4) * rey / height;
+                else if(y > h * (eratio - 1) / eratio) {
+                    ry = (y * eratio - h * (eratio - 1)) * rey / h;
                 }
 
                 for(int x = 0; x < w; x++) {
                     int rx = 0;
-                    if(x < width / 5) {
-                        rx = (width - x * 5) * rex / width;
+                    if(x < w / eratio) {
+                        rx = (w - x * eratio) * rex / w;
                     }
-                    else if(x > width * 4 / 5) {
-                        rx = (x * 5 - width * 4) * rex / width;
+                    else if(x > w * (eratio - 1) / eratio) {
+                        rx = (x * eratio - w * (eratio - 1)) * rex / w;
                     }
 
                     int c = bmp.getPixel(x, y);
-                    int cb = (((c >> 12) & 0xf00) |
-                              ((c >>  8) & 0x0f0) |
-                              ((c >>  4) & 0x00f));
+                    int cb = ((c >> 12) & 0xf00 |
+                              (c >>  8) & 0x0f0 |
+                              (c >>  4) & 0x00f);
                     if(cb != base_color) {
                         continue;
                     }
 
-                    int cd = (((c >>  8) & 0xf00) |
-                              ((c >>  4) & 0x0f0) |
-                              ((c >>  0) & 0x00f));
+                    int cd = ((c >>  8) & 0xf00 |
+                              (c >>  4) & 0x0f0 |
+                              (c >>  0) & 0x00f);
 
                     cnt[cd] += 10 + rx + ry;
                 }
@@ -1214,12 +1259,13 @@ public class MultiPictureService extends WallpaperService
                 }
             }
 
-            return (((base_color & 0xf00) << 12) |
-                    ((base_color & 0x0f0) <<  8) |
-                    ((base_color & 0x00f) <<  4) |
-                    ((detail_color & 0xf00) << 8) |
-                    ((detail_color & 0x0f0) << 4) |
-                    ((detail_color & 0x00f) << 0));
+            int color = (((base_color & 0xf00) << 12) |
+                         ((base_color & 0x0f0) <<  8) |
+                         ((base_color & 0x00f) <<  4) |
+                         ((detail_color & 0xf00) << 8) |
+                         ((detail_color & 0x0f0) << 4) |
+                         ((detail_color & 0x00f) << 0));
+            return color;
         }
 
         private boolean isPictureFile(String file_uri)
@@ -1362,10 +1408,32 @@ public class MultiPictureService extends WallpaperService
                 int idx_base = (change_random ?
                                 random.nextInt(fcnt) :
                                 (info.cur_file_idx + 1) % fcnt);
+                int idx_prev = info.cur_file_idx;
+                boolean is_retrying = false;
+
                 for(int i = 0; i < fcnt; i++) {
                     int idx = (idx_base + i) % fcnt;
-                    if(idx == info.cur_file_idx) {
+                    if(idx == idx_prev) {
                         continue;
+                    }
+
+                    boolean same_exists = false;
+                    if(change_random) {
+                        String name = info.file_list.get(idx);
+
+                        for(PictureInfo other_info : pic) {
+                            if(other_info == info) {
+                                break;
+                            }
+                            if(other_info.type != ScreenType.file &&
+                               name.equals(other_info.file_list.get(
+                                               other_info.cur_file_idx))) {
+                                same_exists = true;
+                            }
+                        }
+                        if(is_retrying && same_exists) {
+                            continue;
+                        }
                     }
 
                     Bitmap prev_bmp = info.bmp;
@@ -1374,6 +1442,11 @@ public class MultiPictureService extends WallpaperService
 
                         if(prev_bmp != null) {
                             prev_bmp.recycle();
+                        }
+
+                        if(change_random && (! is_retrying) && same_exists) {
+                            is_retrying = true;
+                            continue;
                         }
 
                         break;
