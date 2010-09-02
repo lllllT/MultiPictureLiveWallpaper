@@ -49,8 +49,8 @@
   <string name="pref_folder_changetap_title">ダブルタップで画像変更</string>
   <string name="pref_folder_changetap_summary">画像フォルダまたはアルバム指定の場合、ダブルタップで画像を変更する。</string>
 
-  <string name="pref_folder_random_title">ランダムに選択</string>
-  <string name="pref_folder_random_summary">画像フォルダまたはアルバム指定の場合、ランダムに画像を選択する。</string>
+  <string name="pref_folder_order_title">選択順序</string>
+  <string name="pref_folder_order_summary">画像フォルダまたはアルバム指定の場合、指定された順序またはランダムに画像を選択する。</string>
 
   <string name="pref_folder_duration_title">画像変更頻度</string>
   <string name="pref_folder_duration_summary">画像フォルダまたはアルバム指定の場合、自動的に別の画像に変更する時間間隔。</string>

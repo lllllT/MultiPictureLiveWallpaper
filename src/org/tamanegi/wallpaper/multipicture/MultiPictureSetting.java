@@ -134,6 +134,16 @@ public class MultiPictureSetting extends PreferenceActivity
             getPreferenceManager().findPreference(DEFAULT_BGCOLOR_KEY);
         def_color.setOnPreferenceChangeListener(on_color_change);
         updateColorSummary(def_color, null);
+
+        // backward compatibility
+        boolean is_random = pref.getBoolean("folder.random", true);
+        String order_val = pref.getString("folder.order", null);
+        if(order_val == null) {
+            ListPreference order = (ListPreference)
+                getPreferenceManager().findPreference("folder.order");
+            order_val = (is_random ? "random" : "name_asc");
+            order.setValue(order_val);
+        }
     }
 
     @Override

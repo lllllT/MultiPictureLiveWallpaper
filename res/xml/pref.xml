@@ -57,11 +57,13 @@
        android:title="@string/pref_folder_changetap_title"
        android:summary="@string/pref_folder_changetap_summary"
        android:defaultValue="true" />
-    <CheckBoxPreference
-       android:key="folder.random"
-       android:title="@string/pref_folder_random_title"
-       android:summary="@string/pref_folder_random_summary"
-       android:defaultValue="true" />
+    <ListPreference
+       android:key="folder.order"
+       android:title="@string/pref_folder_order_title"
+       android:summary="@string/pref_folder_order_summary"
+       android:entries="@array/pref_folder_order_entries"
+       android:entryValues="@array/pref_folder_order_entryvalues"
+       /> <!-- default value is set by MultiPictureSetting#onCreate -->
     <ListPreference
        android:key="folder.duration"
        android:title="@string/pref_folder_duration_title"

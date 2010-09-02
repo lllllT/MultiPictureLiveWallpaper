@@ -107,6 +107,23 @@
     <item>0.0</item>
   </string-array>
 
+  <!-- folder order -->
+  <string-array name="pref_folder_order_entries">
+    <item>Name (ascending order)</item>
+    <item>Name (descending order)</item>
+    <item>Date (oldest first)</item>
+    <item>Date (newest first)</item>
+    <item>Random</item>
+  </string-array>
+
+  <string-array name="pref_folder_order_entryvalues">
+    <item>name_asc</item>
+    <item>name_desc</item>
+    <item>date_asc</item>
+    <item>date_desc</item>
+    <item>random</item>
+  </string-array>
+
   <!-- folder duration -->
   <string-array name="pref_folder_duration_entries">
     <item>1 minute</item>

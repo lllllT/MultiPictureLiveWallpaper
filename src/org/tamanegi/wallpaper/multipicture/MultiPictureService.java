@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Random;
 
@@ -62,12 +63,16 @@ public class MultiPictureService extends WallpaperService
     private static final String[] IMAGE_LIST_COLUMNS = {
         MediaStore.Images.ImageColumns._ID,
         MediaStore.Images.ImageColumns.BUCKET_ID,
-        MediaStore.Images.ImageColumns.DISPLAY_NAME
+        MediaStore.Images.ImageColumns.BUCKET_DISPLAY_NAME,
+        MediaStore.Images.ImageColumns.DISPLAY_NAME,
+        MediaStore.Images.ImageColumns.DATE_TAKEN,
     };
+    private static final int IMAGE_LIST_COL_ID = 0;
+    private static final int IMAGE_LIST_COL_BUCKET_NAME = 2;
+    private static final int IMAGE_LIST_COL_DISPLAY_NAME = 3;
+    private static final int IMAGE_LIST_COL_DATE = 4;
     private static final String IMAGE_LIST_WHERE =
         MediaStore.Images.ImageColumns.BUCKET_ID + " = ?";
-    private static final String IMAGE_LIST_SORT =
-        "upper(" + MediaStore.Images.ImageColumns.DISPLAY_NAME + ") ASC";
 
     private static enum TransitionType
     {
@@ -91,6 +96,11 @@ public class MultiPictureService extends WallpaperService
         file, folder, buckets, use_default
     }
 
+    private static enum OrderType
+    {
+        name_asc, name_desc, date_asc, date_desc, random
+    }
+
     private static class PictureInfo
     {
         private ScreenType type;
@@ -103,6 +113,50 @@ public class MultiPictureService extends WallpaperService
 
         private ArrayList<String> file_list;
         private int cur_file_idx;
+    }
+
+    private static class FileInfo
+    {
+        private String uri;
+        private String comp_name;
+        private long date;
+
+        private static Comparator<FileInfo> getComparator(OrderType type)
+        {
+            if(type == OrderType.name_asc) {
+                return new FileInfoNameComparator();
+            }
+            if(type == OrderType.name_desc) {
+                return Collections.reverseOrder(new FileInfoNameComparator());
+            }
+            if(type == OrderType.date_asc) {
+                return new FileInfoDateComparator();
+            }
+            if(type == OrderType.date_desc) {
+                return Collections.reverseOrder(new FileInfoDateComparator());
+            }
+            return null;
+        }
+    }
+
+    private static class FileInfoNameComparator implements Comparator<FileInfo>
+    {
+        @Override
+        public int compare(FileInfo v1, FileInfo v2)
+        {
+            return v1.comp_name.compareTo(v2.comp_name);
+        }
+    }
+
+    private static class FileInfoDateComparator implements Comparator<FileInfo>
+    {
+        @Override
+        public int compare(FileInfo v1, FileInfo v2)
+        {
+            return (v1.date < v2.date ? -1 :
+                    v1.date > v2.date ?  1 :
+                    0);
+        }
     }
 
     @Override
@@ -146,7 +200,7 @@ public class MultiPictureService extends WallpaperService
         private boolean show_reflection;
         private boolean use_recursive;
         private boolean change_tap;
-        private boolean change_random;
+        private OrderType change_order;
         private int change_duration;
         private boolean enable_workaround_htcsense;
         private boolean reload_extmedia_mounted;
@@ -687,7 +741,12 @@ public class MultiPictureService extends WallpaperService
             // folder setting
             use_recursive = pref.getBoolean("folder.recursive", true);
             change_tap = pref.getBoolean("folder.changetap", true);
-            change_random = pref.getBoolean("folder.random", true);
+            boolean change_random = pref.getBoolean("folder.random", true);
+            String order_val = pref.getString("folder.order", null);
+            if(order_val == null) {
+                order_val = (change_random ? "random" : "name_asc");
+            }
+            change_order = OrderType.valueOf(order_val);
             change_duration = Integer.parseInt(
                 pref.getString("folder.duration", "60"));
 
@@ -1042,13 +1101,28 @@ public class MultiPictureService extends WallpaperService
             if(type == ScreenType.file) {
                 loadBitmap(info, fname);
             }
-            else if(type == ScreenType.folder) {
-                info.file_list = listFolderFile(new File(folder));
-                info.bmp = null;
-                info.cur_file_idx = -1;
-            }
-            else if(type == ScreenType.buckets) {
-                info.file_list = listBucketPicture(bucket.split(" "));
+            else if(type == ScreenType.folder ||
+                    type == ScreenType.buckets) {
+                ArrayList<FileInfo> flist = new ArrayList<FileInfo>();
+                if(type == ScreenType.folder) {
+                    flist = listFolderFile(new File(folder));
+                }
+                else if(type == ScreenType.buckets) {
+                    flist = listBucketPicture(bucket.split(" "));
+                }
+
+                if(change_order != OrderType.random) {
+                    Comparator<FileInfo> comparator =
+                        FileInfo.getComparator(change_order);
+                    Collections.sort(flist, comparator);
+                }
+
+                ArrayList<String> uri_list = new ArrayList<String>();
+                for(FileInfo fi : flist) {
+                    uri_list.add(fi.uri);
+                }
+
+                info.file_list = uri_list;
                 info.bmp = null;
                 info.cur_file_idx = -1;
             }
@@ -1373,20 +1447,14 @@ public class MultiPictureService extends WallpaperService
             }
         }
 
-        private ArrayList<String> listFolderFile(File folder)
+        private ArrayList<FileInfo> listFolderFile(File folder)
         {
-            ArrayList<String> list = new ArrayList<String>();
+            ArrayList<FileInfo> list = new ArrayList<FileInfo>();
 
             File[] files = folder.listFiles();
             if(files == null) {
                 return list;
             }
-
-            Arrays.sort(files, new Comparator<File>() {
-                    public int compare(File v1, File v2) {
-                        return v1.getName().compareToIgnoreCase(v2.getName());
-                    }
-                });
 
             for(File file : files) {
                 if(file.isDirectory()) {
@@ -1395,9 +1463,12 @@ public class MultiPictureService extends WallpaperService
                     }
                 }
                 else if(file.isFile()) {
-                    String file_uri = file.toURI().toString();
-                    if(isPictureFile(file_uri)) {
-                        list.add(file_uri);
+                    FileInfo fi = new FileInfo();
+                    fi.uri = file.toURI().toString();
+                    fi.comp_name = file.getPath();
+                    fi.date = file.lastModified();
+                    if(isPictureFile(fi.uri)) {
+                        list.add(fi);
                     }
                 }
             }
@@ -1405,9 +1476,9 @@ public class MultiPictureService extends WallpaperService
             return list;
         }
 
-        private ArrayList<String> listBucketPicture(String[] bucket)
+        private ArrayList<FileInfo> listBucketPicture(String[] bucket)
         {
-            ArrayList<String> list = new ArrayList<String>();
+            ArrayList<FileInfo> list = new ArrayList<FileInfo>();
 
             Uri uri = IMAGE_LIST_URI;
             for(String id : bucket) {
@@ -1416,7 +1487,7 @@ public class MultiPictureService extends WallpaperService
                     IMAGE_LIST_COLUMNS,
                     IMAGE_LIST_WHERE,
                     new String[] { id },
-                    IMAGE_LIST_SORT);
+                    null);
                 if(cur == null) {
                     continue;
                 }
@@ -1424,9 +1495,17 @@ public class MultiPictureService extends WallpaperService
                 try {
                     if(cur.moveToFirst()) {
                         do {
-                            list.add(ContentUris.withAppendedId(
-                                         uri,
-                                         cur.getLong(0)).toString());
+                            FileInfo fi = new FileInfo();
+                            fi.uri =
+                                ContentUris.withAppendedId(
+                                    uri,
+                                    cur.getLong(IMAGE_LIST_COL_ID)).toString();
+                            fi.comp_name =
+                                cur.getString(IMAGE_LIST_COL_BUCKET_NAME) +
+                                "/" +
+                                cur.getString(IMAGE_LIST_COL_DISPLAY_NAME);
+                            fi.date = cur.getLong(IMAGE_LIST_COL_DATE);
+                            list.add(fi);
                         } while(cur.moveToNext());
                     }
                 }
@@ -1477,7 +1556,7 @@ public class MultiPictureService extends WallpaperService
                     return;
                 }
 
-                int idx_base = (change_random ?
+                int idx_base = (change_order == OrderType.random ?
                                 random.nextInt(fcnt) :
                                 (info.cur_file_idx + 1) % fcnt);
                 int idx_prev = info.cur_file_idx;
@@ -1490,7 +1569,7 @@ public class MultiPictureService extends WallpaperService
                     }
 
                     boolean same_exists = false;
-                    if(change_random) {
+                    if(change_order == OrderType.random) {
                         String name = info.file_list.get(idx);
 
                         for(PictureInfo other_info : pic) {
@@ -1517,7 +1596,8 @@ public class MultiPictureService extends WallpaperService
                             prev_bmp.recycle();
                         }
 
-                        if(change_random && (! is_retrying) && same_exists) {
+                        if(change_order == OrderType.random &&
+                           (! is_retrying) && same_exists) {
                             is_retrying = true;
                             continue;
                         }

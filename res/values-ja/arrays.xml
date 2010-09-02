@@ -66,6 +66,15 @@
     <item>画像全体を表示</item>
   </string-array>
 
+  <!-- folder order -->
+  <string-array name="pref_folder_order_entries">
+    <item>名前 (昇順)</item>
+    <item>名前 (降順)</item>
+    <item>日付 (古い順)</item>
+    <item>日付 (新しい順)</item>
+    <item>ランダム</item>
+  </string-array>
+
   <!-- folder duration -->
   <string-array name="pref_folder_duration_entries">
     <item>1分</item>
