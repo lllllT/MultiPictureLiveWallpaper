@@ -1498,6 +1498,7 @@ public class MultiPictureService extends WallpaperService
                                 break;
                             }
                             if(other_info.type != ScreenType.file &&
+                               other_info.cur_file_idx >= 0 &&
                                name.equals(other_info.file_list.get(
                                                other_info.cur_file_idx))) {
                                 same_exists = true;
