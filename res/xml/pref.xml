@@ -65,12 +65,12 @@
        android:entryValues="@array/pref_folder_order_entryvalues"
        /> <!-- default value is set by MultiPictureSetting#onCreate -->
     <ListPreference
-       android:key="folder.duration"
+       android:key="folder.duration_sec"
        android:title="@string/pref_folder_duration_title"
        android:summary="@string/pref_folder_duration_summary"
        android:entries="@array/pref_folder_duration_entries"
        android:entryValues="@array/pref_folder_duration_entryvalues"
-       android:defaultValue="60" />
+       /> <!-- default value is set by MultiPictureSetting#onCreate -->
   </PreferenceCategory>
 
   <PreferenceCategory android:title="@string/pref_cat_advanced">

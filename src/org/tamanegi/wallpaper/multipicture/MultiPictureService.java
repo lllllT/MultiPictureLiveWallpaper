@@ -19,6 +19,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -32,6 +33,7 @@ import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.os.FileObserver;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
@@ -49,6 +51,8 @@ public class MultiPictureService extends WallpaperService
 
     private static final int RELOAD_STEP = 10;
     private static final int RELOAD_DURATION = 500; // msec
+
+    private static final int CLEAR_DURATION = 5000; // msec
 
     private static final int TRANSITION_RANDOM_TIMEOUT = 500; // msec
 
@@ -98,7 +102,7 @@ public class MultiPictureService extends WallpaperService
 
     private static enum OrderType
     {
-        name_asc, name_desc, date_asc, date_desc, random
+        name_asc, name_desc, date_asc, date_desc, random, shuffle
     }
 
     private static class PictureInfo
@@ -210,6 +214,7 @@ public class MultiPictureService extends WallpaperService
 
         private Runnable draw_picture_callback;
         private Runnable fadein_callback;
+        private Runnable clear_redraw_callback;
 
         private BroadcastReceiver receiver;
 
@@ -219,6 +224,9 @@ public class MultiPictureService extends WallpaperService
         private Random random;
 
         private Handler handler;
+
+        private ArrayList<PictureFolderObserver> folder_observers;
+        private ArrayList<PictureContentObserver> bucket_observers;
 
         private MultiPictureEngine()
         {
@@ -255,6 +263,10 @@ public class MultiPictureService extends WallpaperService
             handler = new Handler();
             draw_picture_callback = new DrawPictureCallback();
             fadein_callback = new FadeInCallback();
+            clear_redraw_callback = new ClearAndReloadCallback();
+
+            folder_observers = new ArrayList<PictureFolderObserver>();
+            bucket_observers = new ArrayList<PictureContentObserver>();
 
             // init conf
             clearPictureSetting();
@@ -379,8 +391,7 @@ public class MultiPictureService extends WallpaperService
                             intent.getAction())) {
                     if(reload_extmedia_mounted) {
                         // reload by media scanner finished
-                        clearPictureSetting();
-                        drawMain();
+                        postDelayedClearAndReload();
                     }
                 }
             }
@@ -399,7 +410,7 @@ public class MultiPictureService extends WallpaperService
 
             if(change_duration > 0) {
                 if(isVisible()) {
-                    int duration_msec = change_duration * 1000 * 60;
+                    int duration_msec = change_duration * 1000;
                     mgr.set(AlarmManager.ELAPSED_REALTIME,
                             SystemClock.elapsedRealtime() + duration_msec,
                             alarm_intent);
@@ -580,6 +591,7 @@ public class MultiPictureService extends WallpaperService
             else if(cur_transition == TransitionType.slide) {
                 matrix.postTranslate(width * dx, height * dy);
                 alpha = 255;
+                fill_background = true;
             }
             else if(cur_transition == TransitionType.zoom_inout) {
                 float fact = Math.min(1 - Math.abs(dx), 1 - Math.abs(dy));
@@ -741,14 +753,22 @@ public class MultiPictureService extends WallpaperService
             // folder setting
             use_recursive = pref.getBoolean("folder.recursive", true);
             change_tap = pref.getBoolean("folder.changetap", true);
-            boolean change_random = pref.getBoolean("folder.random", true);
-            String order_val = pref.getString("folder.order", null);
-            if(order_val == null) {
-                order_val = (change_random ? "random" : "name_asc");
+            {
+                boolean change_random = pref.getBoolean("folder.random", true);
+                String order_val = pref.getString("folder.order", null);
+                if(order_val == null) {
+                    order_val = (change_random ? "random" : "name_asc");
+                }
+                change_order = OrderType.valueOf(order_val);
             }
-            change_order = OrderType.valueOf(order_val);
-            change_duration = Integer.parseInt(
-                pref.getString("folder.duration", "60"));
+            {
+                String min_str = pref.getString("folder.duration", null);
+                String sec_str = pref.getString("folder.duration_sec", null);
+                change_duration =
+                    (sec_str != null ? Integer.parseInt(sec_str) :
+                     min_str != null ? Integer.parseInt(min_str) * 60 :
+                     60 * 60);
+            }
 
             // workaround
             enable_workaround_htcsense = pref.getBoolean(
@@ -759,18 +779,37 @@ public class MultiPictureService extends WallpaperService
                 "reload.extmedia.mounted", true);
         }
 
+        private void postDelayedClearAndReload()
+        {
+            handler.removeCallbacks(clear_redraw_callback);
+            handler.postDelayed(clear_redraw_callback, CLEAR_DURATION);
+        }
+
+        private class ClearAndReloadCallback implements Runnable
+        {
+            @Override
+            public void run()
+            {
+                clearPictureSetting();
+                drawMain();
+            }
+        }
+
         private void clearPictureSetting()
         {
+            // check loading
             if(is_reloading || rotate_progress >= 0) {
                 clear_setting_required = true;
                 return;
             }
             clear_setting_required = false;
 
+            // is already cleared
             if(pic == null) {
                 return;
             }
 
+            // clear for each picture info
             for(PictureInfo info : pic) {
                 if(info == null) {
                     continue;
@@ -781,7 +820,19 @@ public class MultiPictureService extends WallpaperService
                 }
             }
 
+            // clear picture info
             pic = null;
+
+            // clear event listeners
+            for(PictureFolderObserver observer : folder_observers) {
+                observer.stopWatching();
+            }
+            folder_observers.clear();
+
+            for(ContentObserver observer : bucket_observers) {
+                resolver.unregisterContentObserver(observer);
+            }
+            bucket_observers.clear();
         }
 
         private abstract class AsyncProgressDraw
@@ -1099,7 +1150,10 @@ public class MultiPictureService extends WallpaperService
 
             // load bitmap data
             if(type == ScreenType.file) {
-                loadBitmap(info, fname);
+                if(fname != null) {
+                    addContentObserver(Uri.parse(fname), false);
+                    loadBitmap(info, fname);
+                }
             }
             else if(type == ScreenType.folder ||
                     type == ScreenType.buckets) {
@@ -1111,7 +1165,10 @@ public class MultiPictureService extends WallpaperService
                     flist = listBucketPicture(bucket.split(" "));
                 }
 
-                if(change_order != OrderType.random) {
+                if(change_order == OrderType.shuffle) {
+                    Collections.shuffle(flist, random);
+                }
+                else if(change_order != OrderType.random) {
                     Comparator<FileInfo> comparator =
                         FileInfo.getComparator(change_order);
                     Collections.sort(flist, comparator);
@@ -1143,6 +1200,10 @@ public class MultiPictureService extends WallpaperService
 
                 // orientation
                 int orientation = getPictureOrientation(file_uri);
+                if(orientation < 0) {
+                    orientation += ((-orientation) / 360 + 1) * 360;
+                }
+                orientation %= 360;
 
                 int target_width;
                 int target_height;
@@ -1160,6 +1221,9 @@ public class MultiPictureService extends WallpaperService
                 opt.inJustDecodeBounds = true;
 
                 instream = resolver.openInputStream(file);
+                if(instream == null) {
+                    return false;
+                }
                 try {
                     BitmapFactory.decodeStream(instream, null, opt);
                     if(opt.outWidth < 0 || opt.outHeight < 0) {
@@ -1186,6 +1250,9 @@ public class MultiPictureService extends WallpaperService
 
                 Bitmap bmp;
                 instream = resolver.openInputStream(file);
+                if(instream == null) {
+                    return false;
+                }
                 try {
                     bmp = BitmapFactory.decodeStream(instream, null, opt);
                     if(bmp == null) {
@@ -1430,6 +1497,9 @@ public class MultiPictureService extends WallpaperService
                 opt.inJustDecodeBounds = true;
 
                 InputStream instream = resolver.openInputStream(file);
+                if(instream == null) {
+                    return false;
+                }
                 try {
                     BitmapFactory.decodeStream(instream, null, opt);
                     if(opt.outWidth < 0 || opt.outHeight < 0) {
@@ -1449,6 +1519,10 @@ public class MultiPictureService extends WallpaperService
 
         private ArrayList<FileInfo> listFolderFile(File folder)
         {
+            // observer
+            addFolderObserver(folder.getPath());
+
+            // listup
             ArrayList<FileInfo> list = new ArrayList<FileInfo>();
 
             File[] files = folder.listFiles();
@@ -1478,6 +1552,10 @@ public class MultiPictureService extends WallpaperService
 
         private ArrayList<FileInfo> listBucketPicture(String[] bucket)
         {
+            // observer
+            addContentObserver(IMAGE_LIST_URI, true);
+
+            // listup
             ArrayList<FileInfo> list = new ArrayList<FileInfo>();
 
             Uri uri = IMAGE_LIST_URI;
@@ -1605,6 +1683,90 @@ public class MultiPictureService extends WallpaperService
                         break;
                     }
                 }
+            }
+        }
+
+        private void addFolderObserver(String path)
+        {
+            if(! reload_extmedia_mounted) {
+                return;
+            }
+
+            for(PictureFolderObserver observer : folder_observers) {
+                if(observer.getPath().equals(path)) {
+                    return;
+                }
+            }
+
+            PictureFolderObserver observer = new PictureFolderObserver(path);
+            observer.startWatching();
+            folder_observers.add(observer);
+        }
+
+        private class PictureFolderObserver extends FileObserver
+        {
+            private static final int EVENTS =
+                CREATE | DELETE | DELETE_SELF | MODIFY |
+                MOVED_FROM | MOVED_TO | MOVE_SELF;
+
+            private String path;
+
+            private PictureFolderObserver(String path)
+            {
+                super(path, EVENTS);
+                this.path = path;
+            }
+
+            @Override
+            public void onEvent(int event, String path)
+            {
+                if((event & EVENTS) != 0) {
+                    postDelayedClearAndReload();
+                }
+            }
+
+            public String getPath()
+            {
+                return path;
+            }
+        }
+
+        private void addContentObserver(Uri uri, boolean is_bucket)
+        {
+            if(! reload_extmedia_mounted) {
+                return;
+            }
+
+            for(PictureContentObserver observer : bucket_observers) {
+                if(observer.getUri().equals(uri)) {
+                    return;
+                }
+            }
+
+            PictureContentObserver observer = new PictureContentObserver(uri);
+            resolver.registerContentObserver(uri, is_bucket, observer);
+            bucket_observers.add(observer);
+        }
+
+        private class PictureContentObserver extends ContentObserver
+        {
+            private Uri uri;
+
+            private PictureContentObserver(Uri uri)
+            {
+                super(handler);
+                this.uri = uri;
+            }
+
+            @Override
+            public void onChange(boolean selfChange)
+            {
+                postDelayedClearAndReload();
+            }
+
+            public Uri getUri()
+            {
+                return uri;
             }
         }
     }

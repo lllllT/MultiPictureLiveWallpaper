@@ -114,6 +114,7 @@
     <item>Date (oldest first)</item>
     <item>Date (newest first)</item>
     <item>Random</item>
+    <item>Shuffle</item>
   </string-array>
 
   <string-array name="pref_folder_order_entryvalues">
@@ -122,10 +123,14 @@
     <item>date_asc</item>
     <item>date_desc</item>
     <item>random</item>
+    <item>shuffle</item>
   </string-array>
 
   <!-- folder duration -->
   <string-array name="pref_folder_duration_entries">
+    <item>5 seconds</item>
+    <item>10 seconds</item>
+    <item>30 seconds</item>
     <item>1 minute</item>
     <item>2 minutes</item>
     <item>5 minutes</item>
@@ -136,20 +141,29 @@
     <item>6 hours</item>
     <item>12 hours</item>
     <item>24 hours</item>
+    <item>2 days</item>
+    <item>4 days</item>
+    <item>1 week</item>
     <item>Never</item>
   </string-array>
 
   <string-array name="pref_folder_duration_entryvalues">
-    <item>1</item>
-    <item>2</item>
     <item>5</item>
     <item>10</item>
     <item>30</item>
     <item>60</item>
     <item>120</item>
-    <item>360</item>
-    <item>720</item>
-    <item>1440</item>
+    <item>300</item>
+    <item>600</item>
+    <item>1800</item>
+    <item>3600</item>
+    <item>7200</item>
+    <item>21600</item>
+    <item>43200</item>
+    <item>86400</item>
+    <item>172800</item>
+    <item>345600</item>
+    <item>604800</item>
     <item>0</item>
   </string-array>
 </resources>

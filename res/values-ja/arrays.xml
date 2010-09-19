@@ -73,10 +73,14 @@
     <item>日付 (古い順)</item>
     <item>日付 (新しい順)</item>
     <item>ランダム</item>
+    <item>シャッフル</item>
   </string-array>
 
   <!-- folder duration -->
   <string-array name="pref_folder_duration_entries">
+    <item>5秒</item>
+    <item>10秒</item>
+    <item>30秒</item>
     <item>1分</item>
     <item>2分</item>
     <item>5分</item>
@@ -87,6 +91,9 @@
     <item>6時間</item>
     <item>12時間</item>
     <item>24時間</item>
+    <item>2日</item>
+    <item>4日</item>
+    <item>1週間</item>
     <item>なし</item>
   </string-array>
 </resources>

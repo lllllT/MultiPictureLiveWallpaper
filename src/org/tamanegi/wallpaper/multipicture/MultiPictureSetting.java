@@ -144,6 +144,16 @@ public class MultiPictureSetting extends PreferenceActivity
             order_val = (is_random ? "random" : "name_asc");
             order.setValue(order_val);
         }
+
+        String duration_min_str = pref.getString("folder.duration", null);
+        String duration_sec_str = pref.getString("folder.duration_sec", null);
+        if(duration_sec_str == null) {
+            int duration_sec = (duration_min_str == null ? 60 * 60 :
+                                Integer.parseInt(duration_min_str) * 60);
+            ListPreference duration = (ListPreference)
+                getPreferenceManager().findPreference("folder.duration_sec");
+            duration.setValue(Integer.toString(duration_sec));
+        }
     }
 
     @Override
