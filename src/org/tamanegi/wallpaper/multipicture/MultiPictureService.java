@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Random;
 
 import android.app.AlarmManager;
@@ -222,6 +223,7 @@ public class MultiPictureService extends WallpaperService
         private GestureDetector gdetector;
         private ContentResolver resolver;
         private Random random;
+        private HashMap<String, Boolean> path_avail_table;
 
         private Handler handler;
 
@@ -1103,10 +1105,15 @@ public class MultiPictureService extends WallpaperService
                 max_work_pixels = MAX_TOTAL_PIXELS - width * height * cnt;
             }
 
+            // for performance
+            path_avail_table = new HashMap<String, Boolean>();
+
             // for each screen
             for(int i = 0; i < cnt; i++) {
                 pic[i] = loadPictureInfo(i);
             }
+
+            path_avail_table = null;
 
             rotateFolderBitmap();
         }
@@ -1512,6 +1519,11 @@ public class MultiPictureService extends WallpaperService
                     return false;
                 }
 
+                Boolean cache_val = path_avail_table.get(file_uri);
+                if(cache_val != null) {
+                    return cache_val.booleanValue();
+                }
+
                 Uri file = Uri.parse(file_uri);
                 BitmapFactory.Options opt;
 
@@ -1521,11 +1533,13 @@ public class MultiPictureService extends WallpaperService
 
                 InputStream instream = resolver.openInputStream(file);
                 if(instream == null) {
+                    path_avail_table.put(file_uri, false);
                     return false;
                 }
                 try {
                     BitmapFactory.decodeStream(instream, null, opt);
                     if(opt.outWidth < 0 || opt.outHeight < 0) {
+                        path_avail_table.put(file_uri, false);
                         return false;
                     }
                 }
@@ -1533,9 +1547,11 @@ public class MultiPictureService extends WallpaperService
                     instream.close();
                 }
 
+                path_avail_table.put(file_uri, true);
                 return true;
             }
             catch(IOException e) {
+                path_avail_table.put(file_uri, false);
                 return false;
             }
         }
