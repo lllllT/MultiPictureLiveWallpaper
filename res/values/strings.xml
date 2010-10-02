@@ -5,55 +5,51 @@
 
   <string name="pref_cat_screen_title">Screen Settings</string>
 
-  <string name="pref_picture_screen_each_title">Screen Type</string>
-  <string name="pref_picture_screen_each_summary">Type of each screens.</string>
+  <string name="pref_group_screen_default_title">Default settings</string>
+  <string name="pref_group_screen_default_summary">Default settings for unspecified case in individual settings.</string>
 
-  <string name="pref_cat_picture_screen_title">Screen %d</string>
-  <string name="pref_cat_picture_screen_left_title">Screen %d (Leftmost screen)</string>
+  <string name="pref_cat_picture_screen_title">Screen %d settings</string>
+  <string name="pref_cat_picture_screen_summary">Individual settings for screen %d.</string>
+  <string name="pref_cat_picture_screen_left_summary">Individual settings for screen %d. (Leftmost screen)</string>
 
-  <string name="pref_picture_screen_title">Type of Screen %d</string>
-  <string name="pref_picture_screen_base_summary">Picture Type of Screen %d.</string>
-  <string name="pref_picture_screen_val1_summary">\n%s</string>
-  <string name="pref_picture_screen_val2_summary">\n%s : %s</string>
+  <string name="pref_screen_val_summary">\n%s</string>
 
-  <string name="pref_picture_screen_default_title">Default Type of Screen</string>
-  <string name="pref_picture_screen_default_init_summary">Default type of screen to select pictures.</string>
-  <string name="pref_picture_screen_default_val2_summary">Default type of screen to select pictures.\n%s : %s</string>
+  <string name="pref_screen_type_title">Type of screen</string>
+  <string name="pref_screen_type_base_summary">Type of screen to select pictures.</string>
+  <string name="pref_screen_type_val1_summary">\n%s</string>
+  <string name="pref_screen_type_val2_summary">\n%s : %s</string>
 
-  <string name="pref_picture_screen_bucket_title">Album</string>
-  <string name="pref_picture_screen_no_bucket_exist_msg">Album is not exists.</string>
-  <string name="pref_picture_screen_no_bucket_select_msg">Album is not selected.</string>
+  <string name="pref_screen_bucket_title">Album</string>
+  <string name="pref_screen_no_bucket_exist_msg">Album is not exists.</string>
+  <string name="pref_screen_no_bucket_select_msg">Album is not selected.</string>
 
-  <string name="pref_picture_screen_bgcolor_title">Background Color of Screen %d</string>
-  <string name="pref_picture_screen_bgcolor_summary">Background Color of Screen %d.</string>
+  <string name="pref_screen_bgcolor_title">Background Color</string>
+  <string name="pref_screen_bgcolor_summary">Background Color of screen.</string>
 
-  <string name="pref_picture_screen_default_bgcolor_title">Background Color</string>
-  <string name="pref_picture_screen_default_bgcolor_summary">Default Background Color.</string>
+  <string name="pref_screen_clipratio_title">Crop/Resize ratio</string>
+  <string name="pref_screen_clipratio_summary">How may crop picture to fit screen size.</string>
 
-  <string name="pref_cat_draw_title">Drawing Setting</string>
+  <string name="pref_screen_folder_order_title">Selection order</string>
+  <string name="pref_screen_folder_order_summary">Selection order when changing picture from Album or Picture Folder.</string>
 
-  <string name="pref_draw_transition_title">Screen Transition</string>
-  <string name="pref_draw_transition_summary">Transition type when use switching screen.</string>
+  <string name="pref_cat_draw_title">Drawing Settings</string>
 
-  <string name="pref_draw_clipratio_title">Crop/Resize ratio</string>
-  <string name="pref_draw_clipratio_summary">How may crop pictures to fit screen size.</string>
+  <string name="pref_draw_transition_title">Transition type</string>
+  <string name="pref_draw_transition_summary">Transition type when switching screen.</string>
 
   <string name="pref_draw_reflection_title">Show reflection</string>
   <string name="pref_draw_reflection_summary">Show reflection at bottom of the picture.</string>
 
-  <string name="pref_cat_folder_title">Picture Folder/Album</string>
+  <string name="pref_cat_folder_title">Album/Picture Folder</string>
 
   <string name="pref_folder_recursive_title">Search folder recursively</string>
   <string name="pref_folder_recursive_summary">When using Picture Folder, use pictures under specified folder recursively.</string>
 
   <string name="pref_folder_changetap_title">Double Tap to change picture</string>
-  <string name="pref_folder_changetap_summary">When double tap, change picture from folder or album.</string>
-
-  <string name="pref_folder_order_title">Select order</string>
-  <string name="pref_folder_order_summary">Selected in the specified order or randomly, when changing picture from folder or album.</string>
+  <string name="pref_folder_changetap_summary">When double tap, change picture from Album or Picture Folder.</string>
 
   <string name="pref_folder_duration_title">Picture change interval</string>
-  <string name="pref_folder_duration_summary">Interval to change picture from folder or album.</string>
+  <string name="pref_folder_duration_summary">Interval to change picture from Album or Picture Folder</string>
 
   <string name="pref_cat_advanced">Advanced Settings</string>
 
@@ -61,7 +57,7 @@
   <string name="pref_workaround_htcsense_summary">Enable workaround if using with HTC Sense and pictures are not changed when switching screen.</string>
 
   <string name="pref_reload_extmedia_mounted_title">Rescan pictures when modified</string>
-  <string name="pref_reload_extmedia_mounted_summary">Rescan pictures when picture is modified, e.g. external media (SD card, etc) was mounted, file is modified, etc.</string>
+  <string name="pref_reload_extmedia_mounted_summary">Rescan pictures when picture is modified; e.g. external media (SD card, etc) was mounted, file is modified, etc.</string>
 
   <string name="folder_picker_title">Select Folder</string>
   <string name="folder_up">../ (Up folder)</string>

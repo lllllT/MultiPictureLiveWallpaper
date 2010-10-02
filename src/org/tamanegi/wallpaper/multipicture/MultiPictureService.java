@@ -103,7 +103,7 @@ public class MultiPictureService extends WallpaperService
 
     private static enum OrderType
     {
-        name_asc, name_desc, date_asc, date_desc, random, shuffle
+        name_asc, name_desc, date_asc, date_desc, random, shuffle, use_default
     }
 
     private static class PictureInfo
@@ -115,6 +115,10 @@ public class MultiPictureService extends WallpaperService
 
         private boolean detect_bgcolor;
         private int bgcolor;
+
+        private float clip_ratio;
+
+        private OrderType change_order;
 
         private ArrayList<String> file_list;
         private int cur_file_idx;
@@ -199,13 +203,13 @@ public class MultiPictureService extends WallpaperService
         private PictureInfo pic[];
         private ScreenType default_type;
         private TransitionType screen_transition;
-        private float clip_ratio;
-        private boolean detect_bgcolor;
+        private float default_clip_ratio;
+        private boolean default_detect_bgcolor;
         private int default_bgcolor;
         private boolean show_reflection;
         private boolean use_recursive;
         private boolean change_tap;
-        private OrderType change_order;
+        private OrderType default_change_order;
         private int change_duration;
         private boolean enable_workaround_htcsense;
         private boolean reload_extmedia_mounted;
@@ -223,7 +227,7 @@ public class MultiPictureService extends WallpaperService
         private GestureDetector gdetector;
         private ContentResolver resolver;
         private Random random;
-        private HashMap<String, Boolean> path_avail_table;
+        private HashMap<String, Boolean> path_avail_cache;
 
         private Handler handler;
 
@@ -246,6 +250,8 @@ public class MultiPictureService extends WallpaperService
             resolver = getContentResolver();
 
             random = new Random();
+
+            path_avail_cache = new HashMap<String, Boolean>();
 
             // for double tap
             gdetector = new GestureDetector(
@@ -739,14 +745,14 @@ public class MultiPictureService extends WallpaperService
             String bgcolor = pref.getString(
                 MultiPictureSetting.DEFAULT_BGCOLOR_KEY, "black");
             if("auto_detect".equals(bgcolor)) {
-                detect_bgcolor = true;
+                default_detect_bgcolor = true;
             }
             else if("custom".equals(bgcolor)) {
                 default_bgcolor = pref.getInt(
                     MultiPictureSetting.DEFAULT_BGCOLOR_CUSTOM_KEY, 0xff000000);
             }
             else {
-                detect_bgcolor = false;
+                default_detect_bgcolor = false;
                 default_bgcolor = Color.parseColor(bgcolor);
             }
 
@@ -754,7 +760,8 @@ public class MultiPictureService extends WallpaperService
             screen_transition = TransitionType.valueOf(
                 pref.getString("draw.transition", "slide"));
             cur_transition = screen_transition;
-            clip_ratio = Float.valueOf(pref.getString("draw.clipratio", "1.0"));
+            default_clip_ratio = Float.valueOf(
+                pref.getString("draw.clipratio", "1.0"));
             show_reflection = pref.getBoolean("draw.reflection", true);
 
             // folder setting
@@ -766,7 +773,7 @@ public class MultiPictureService extends WallpaperService
                 if(order_val == null) {
                     order_val = (change_random ? "random" : "name_asc");
                 }
-                change_order = OrderType.valueOf(order_val);
+                default_change_order = OrderType.valueOf(order_val);
             }
             {
                 String min_str = pref.getString("folder.duration", null);
@@ -798,6 +805,8 @@ public class MultiPictureService extends WallpaperService
             public void run()
             {
                 clearPictureSetting();
+                path_avail_cache.clear();
+
                 drawMain();
             }
         }
@@ -973,7 +982,7 @@ public class MultiPictureService extends WallpaperService
                 }
 
                 cur_screen = Bitmap.createBitmap(
-                    width, height, Bitmap.Config.ARGB_8888);
+                    width, height, Bitmap.Config.RGB_565);
                 Canvas c = new Canvas(cur_screen);
                 drawPicture(c);
             }
@@ -1105,15 +1114,10 @@ public class MultiPictureService extends WallpaperService
                 max_work_pixels = MAX_TOTAL_PIXELS - width * height * cnt;
             }
 
-            // for performance
-            path_avail_table = new HashMap<String, Boolean>();
-
             // for each screen
             for(int i = 0; i < cnt; i++) {
                 pic[i] = loadPictureInfo(i);
             }
-
-            path_avail_table = null;
 
             rotateFolderBitmap();
         }
@@ -1130,6 +1134,12 @@ public class MultiPictureService extends WallpaperService
                 String.format(MultiPictureSetting.SCREEN_BUCKET_KEY, idx), "");
             String bgcolor = pref.getString(
                 String.format(MultiPictureSetting.SCREEN_BGCOLOR_KEY, idx),
+                "use_default");
+            String clip = pref.getString(
+                String.format(MultiPictureSetting.SCREEN_CLIP_KEY, idx),
+                "use_default");
+            String order = pref.getString(
+                String.format(MultiPictureSetting.SCREEN_ORDER_KEY, idx),
                 "use_default");
 
             // type of screen
@@ -1154,7 +1164,7 @@ public class MultiPictureService extends WallpaperService
 
             // background color
             if("use_default".equals(bgcolor)) {
-                info.detect_bgcolor = detect_bgcolor;
+                info.detect_bgcolor = default_detect_bgcolor;
                 info.bgcolor = default_bgcolor;
             }
             else if("auto_detect".equals(bgcolor)) {
@@ -1170,6 +1180,20 @@ public class MultiPictureService extends WallpaperService
             else {
                 info.detect_bgcolor = false;
                 info.bgcolor = Color.parseColor(bgcolor);
+            }
+
+            // clip ratio
+            if("use_default".equals(clip)) {
+                info.clip_ratio = default_clip_ratio;
+            }
+            else {
+                info.clip_ratio = Float.valueOf(clip);
+            }
+
+            // selection order
+            info.change_order = OrderType.valueOf(order);
+            if(info.change_order == OrderType.use_default) {
+                info.change_order = default_change_order;
             }
 
             // load bitmap data
@@ -1189,12 +1213,12 @@ public class MultiPictureService extends WallpaperService
                     flist = listBucketPicture(bucket.split(" "));
                 }
 
-                if(change_order == OrderType.shuffle) {
+                if(info.change_order == OrderType.shuffle) {
                     Collections.shuffle(flist, random);
                 }
-                else if(change_order != OrderType.random) {
+                else if(info.change_order != OrderType.random) {
                     Comparator<FileInfo> comparator =
-                        FileInfo.getComparator(change_order);
+                        FileInfo.getComparator(info.change_order);
                     Collections.sort(flist, comparator);
                 }
 
@@ -1294,7 +1318,8 @@ public class MultiPictureService extends WallpaperService
                 float bys = (float)target_height / bh;
                 float bmax = Math.max(bxs, bys);
                 float bmin = Math.min(bxs, bys);
-                float bscale = bmax * clip_ratio + bmin * (1 - clip_ratio);
+                float bscale = (bmax * info.clip_ratio +
+                                bmin * (1 - info.clip_ratio));
 
                 float cw = ((bw * bscale) - target_width) / bscale;
                 float ch = ((bh * bscale) - target_height) / bscale;
@@ -1519,7 +1544,7 @@ public class MultiPictureService extends WallpaperService
                     return false;
                 }
 
-                Boolean cache_val = path_avail_table.get(file_uri);
+                Boolean cache_val = path_avail_cache.get(file_uri);
                 if(cache_val != null) {
                     return cache_val.booleanValue();
                 }
@@ -1533,13 +1558,13 @@ public class MultiPictureService extends WallpaperService
 
                 InputStream instream = resolver.openInputStream(file);
                 if(instream == null) {
-                    path_avail_table.put(file_uri, false);
+                    path_avail_cache.put(file_uri, false);
                     return false;
                 }
                 try {
                     BitmapFactory.decodeStream(instream, null, opt);
                     if(opt.outWidth < 0 || opt.outHeight < 0) {
-                        path_avail_table.put(file_uri, false);
+                        path_avail_cache.put(file_uri, false);
                         return false;
                     }
                 }
@@ -1547,11 +1572,11 @@ public class MultiPictureService extends WallpaperService
                     instream.close();
                 }
 
-                path_avail_table.put(file_uri, true);
+                path_avail_cache.put(file_uri, true);
                 return true;
             }
             catch(IOException e) {
-                path_avail_table.put(file_uri, false);
+                path_avail_cache.put(file_uri, false);
                 return false;
             }
         }
@@ -1680,7 +1705,7 @@ public class MultiPictureService extends WallpaperService
                     return;
                 }
 
-                int idx_base = (change_order == OrderType.random ?
+                int idx_base = (info.change_order == OrderType.random ?
                                 random.nextInt(fcnt) :
                                 (info.cur_file_idx + 1) % fcnt);
                 int idx_prev = info.cur_file_idx;
@@ -1693,7 +1718,7 @@ public class MultiPictureService extends WallpaperService
                     }
 
                     boolean same_exists = false;
-                    if(change_order == OrderType.random) {
+                    if(info.change_order == OrderType.random) {
                         String name = info.file_list.get(idx);
 
                         for(PictureInfo other_info : pic) {
@@ -1720,7 +1745,7 @@ public class MultiPictureService extends WallpaperService
                             prev_bmp.recycle();
                         }
 
-                        if(change_order == OrderType.random &&
+                        if(info.change_order == OrderType.random &&
                            (! is_retrying) && same_exists) {
                             is_retrying = true;
                             continue;

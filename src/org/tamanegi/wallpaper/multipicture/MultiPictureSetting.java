@@ -14,9 +14,9 @@ import android.os.Handler;
 import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
-import android.preference.PreferenceCategory;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
+import android.preference.PreferenceScreen;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
 import android.view.View;
@@ -30,6 +30,8 @@ public class MultiPictureSetting extends PreferenceActivity
     public static final String SCREEN_BGCOLOR_KEY = "screen.%d.bgcolor";
     public static final String SCREEN_BGCOLOR_CUSTOM_KEY =
         "screen.%d.bgcolor.custom";
+    public static final String SCREEN_CLIP_KEY = "screen.%d.clipratio";
+    public static final String SCREEN_ORDER_KEY = "screen.%d.order";
 
     public static final String DEFAULT_TYPE_KEY = "screen.default.type";
     public static final String DEFAULT_FILE_KEY = "screen.default.file";
@@ -38,6 +40,8 @@ public class MultiPictureSetting extends PreferenceActivity
     public static final String DEFAULT_BGCOLOR_KEY = "screen.default.bgcolor";
     public static final String DEFAULT_BGCOLOR_CUSTOM_KEY =
         "screen.default.bgcolor.custom";
+    public static final String DEFAULT_CLIP_KEY = "draw.clipratio";
+    public static final String DEFAULT_ORDER_KEY = "folder.order";
 
     public static final Uri IMAGE_BUCKET_URI =
         MediaStore.Images.Media.EXTERNAL_CONTENT_URI.
@@ -78,13 +82,16 @@ public class MultiPictureSetting extends PreferenceActivity
             getPreferenceManager().findPreference("screen.cat");
 
         for(int i = 0; i < SCREEN_COUNT; i++) {
-            // category for each screen
-            PreferenceCategory cat = new PreferenceCategory(this);
-            cat.setTitle(
+            // group for each screen
+            PreferenceScreen sgroup =
+                getPreferenceManager().createPreferenceScreen(this);
+            sgroup.setTitle(
+                getString(R.string.pref_cat_picture_screen_title, i + 1));
+            sgroup.setSummary(
                 getString((i == 0 ?
-                           R.string.pref_cat_picture_screen_left_title :
-                           R.string.pref_cat_picture_screen_title), i + 1));
-            group.addPreference(cat);
+                           R.string.pref_cat_picture_screen_left_summary :
+                           R.string.pref_cat_picture_screen_summary), i + 1));
+            group.addPreference(sgroup);
 
             // screen type
             boolean is_file_val_exist =
@@ -93,52 +100,78 @@ public class MultiPictureSetting extends PreferenceActivity
 
             ListPreference type = new ListPreference(this);
             type.setKey(String.format(SCREEN_TYPE_KEY, i));
-            type.setTitle(
-                getString(R.string.pref_picture_screen_title, i + 1));
+            type.setTitle(R.string.pref_screen_type_title);
             type.setDialogTitle(type.getTitle());
-            type.setSummary(
-                getString(R.string.pref_picture_screen_base_summary, i + 1));
-            type.setEntries(R.array.pref_picture_screen_type_entries);
-            type.setEntryValues(R.array.pref_picture_screen_type_entryvalues);
+            type.setSummary(R.string.pref_screen_type_base_summary);
+            type.setEntries(R.array.pref_screen_type_entries);
+            type.setEntryValues(R.array.pref_screen_type_entryvalues);
             type.setDefaultValue((is_file_val_exist ? "file" : "use_default"));
             type.setOnPreferenceChangeListener(
                 new OnScreenTypeChangeListener(i));
-            cat.addPreference(type);
+            sgroup.addPreference(type);
 
             updateScreenTypeSummary(type, i);
 
             // background color
             ListPreference color = new ListPreference(this);
             color.setKey(String.format(SCREEN_BGCOLOR_KEY, i));
-            color.setTitle(
-                getString(R.string.pref_picture_screen_bgcolor_title, i + 1));
+            color.setTitle(R.string.pref_screen_bgcolor_title);
             color.setDialogTitle(color.getTitle());
-            color.setSummary(
-                getString(R.string.pref_picture_screen_bgcolor_summary, i + 1));
-            color.setEntries(
-                R.array.pref_picture_screen_bgcolor_entries);
-            color.setEntryValues(
-                R.array.pref_picture_screen_bgcolor_entryvalues);
+            color.setSummary(R.string.pref_screen_bgcolor_summary);
+            color.setEntries(R.array.pref_screen_bgcolor_entries);
+            color.setEntryValues(R.array.pref_screen_bgcolor_entryvalues);
             color.setDefaultValue("use_default");
             color.setOnPreferenceChangeListener(
                 new OnColorChangeListener(i));
-            cat.addPreference(color);
+            sgroup.addPreference(color);
 
             updateColorSummary(color, null);
+
+            // clip ratio
+            ListPreference clip = new ListPreference(this);
+            String clip_key = String.format(SCREEN_CLIP_KEY, i);
+            clip.setKey(clip_key);
+            clip.setTitle(R.string.pref_screen_clipratio_title);
+            clip.setDialogTitle(clip.getTitle());
+            clip.setSummary(R.string.pref_screen_clipratio_summary);
+            clip.setEntries(R.array.pref_screen_clipratio_entries);
+            clip.setEntryValues(R.array.pref_screen_clipratio_entryvalues);
+            clip.setDefaultValue("use_default");
+            sgroup.addPreference(clip);
+            setupValueSummary(clip_key, R.string.pref_screen_clipratio_summary);
+
+            // selection order
+            ListPreference order = new ListPreference(this);
+            String order_key = String.format(SCREEN_ORDER_KEY, i);
+            order.setKey(order_key);
+            order.setTitle(R.string.pref_screen_folder_order_title);
+            order.setDialogTitle(order.getTitle());
+            order.setSummary(R.string.pref_screen_folder_order_summary);
+            order.setEntries(R.array.pref_screen_folder_order_entries);
+            order.setEntryValues(R.array.pref_screen_folder_order_entryvalues);
+            order.setDefaultValue("use_default");
+            sgroup.addPreference(order);
+            setupValueSummary(order_key,
+                              R.string.pref_screen_folder_order_summary);
         }
 
         // setup default type item
         ListPreference def_type = (ListPreference)
             getPreferenceManager().findPreference(DEFAULT_TYPE_KEY);
         def_type.setOnPreferenceChangeListener(
-            new OnDefaultTypeChangeListener());
-        updateDefaultTypeSummary(def_type);
+            new OnScreenTypeChangeListener(-1));
+        updateScreenTypeSummary(def_type, -1);
 
         ListPreference def_color = (ListPreference)
             getPreferenceManager().findPreference(DEFAULT_BGCOLOR_KEY);
         def_color.setOnPreferenceChangeListener(
             new OnColorChangeListener(-1));
         updateColorSummary(def_color, null);
+
+        setupValueSummary(DEFAULT_CLIP_KEY,
+                          R.string.pref_screen_clipratio_summary);
+        setupValueSummary(DEFAULT_ORDER_KEY,
+                          R.string.pref_screen_folder_order_summary);
 
         // backward compatibility
         boolean is_random = pref.getBoolean("folder.random", true);
@@ -197,12 +230,7 @@ public class MultiPictureSetting extends PreferenceActivity
         editor.commit();
 
         cur_item.setValue(type_val);
-        if(cur_idx >= 0) {
-            updateScreenTypeSummary(cur_item, cur_idx);
-        }
-        else {
-            updateDefaultTypeSummary(cur_item);
-        }
+        updateScreenTypeSummary(cur_item, cur_idx);
 
         cur_item = null;
         cur_idx = -1;
@@ -214,34 +242,39 @@ public class MultiPictureSetting extends PreferenceActivity
         String type_val = item.getValue();
 
         StringBuilder summary = new StringBuilder();
-        summary.append(
-            getString(R.string.pref_picture_screen_base_summary, idx + 1));
+        summary.append(getString(R.string.pref_screen_type_base_summary));
 
         if(type_val != null) {
             if("file".equals(type_val)) {
-                String file_key = String.format(SCREEN_FILE_KEY, idx);
+                String file_key = (idx >= 0 ?
+                                   String.format(SCREEN_FILE_KEY, idx) :
+                                   DEFAULT_FILE_KEY);
                 String file_val = pref.getString(file_key, "");
                 summary.append(
-                    getString(R.string.pref_picture_screen_val2_summary,
+                    getString(R.string.pref_screen_type_val2_summary,
                               entry, getUriFileName(file_val)));
             }
             else if("folder".equals(type_val)) {
-                String folder_key = String.format(SCREEN_FOLDER_KEY, idx);
+                String folder_key = (idx >= 0 ?
+                                     String.format(SCREEN_FOLDER_KEY, idx) :
+                                     DEFAULT_FOLDER_KEY);
                 String folder_val = pref.getString(folder_key, "");
                 summary.append(
-                    getString(R.string.pref_picture_screen_val2_summary,
+                    getString(R.string.pref_screen_type_val2_summary,
                               entry, folder_val));
             }
             else if("buckets".equals(type_val)) {
-                String bucket_key = String.format(SCREEN_BUCKET_KEY, idx);
+                String bucket_key = (idx >= 0 ?
+                                     String.format(SCREEN_BUCKET_KEY, idx) :
+                                     DEFAULT_BUCKET_KEY);
                 String bucket_val = pref.getString(bucket_key, "");
                 summary.append(
-                    getString(R.string.pref_picture_screen_val2_summary,
+                    getString(R.string.pref_screen_type_val2_summary,
                               entry, getBucketNames(bucket_val)));
             }
             else if("use_default".equals(type_val)) {
                 summary.append(
-                    getString(R.string.pref_picture_screen_val1_summary,
+                    getString(R.string.pref_screen_type_val1_summary,
                               entry));
             }
         }
@@ -249,40 +282,29 @@ public class MultiPictureSetting extends PreferenceActivity
         item.setSummary(summary);
     }
 
-    private void updateDefaultTypeSummary(ListPreference item)
+    private void updateColorSummary(ListPreference item, String val)
     {
-        CharSequence entry = item.getEntry();
-        String type_val = item.getValue();
-
-        if(type_val != null) {
-            if("file".equals(type_val)) {
-                String file_val = pref.getString(DEFAULT_FILE_KEY, "");
-                item.setSummary(
-                    getString(R.string.pref_picture_screen_default_val2_summary,
-                              entry, getUriFileName(file_val)));
-            }
-            else if("folder".equals(type_val)) {
-                String folder_val = pref.getString(DEFAULT_FOLDER_KEY, "");
-                item.setSummary(
-                    getString(R.string.pref_picture_screen_default_val2_summary,
-                              entry, folder_val));
-            }
-            else if("buckets".equals(type_val)) {
-                String bucket_val = pref.getString(DEFAULT_BUCKET_KEY, "");
-                item.setSummary(
-                    getString(R.string.pref_picture_screen_default_val2_summary,
-                              entry, getBucketNames(bucket_val)));
-            }
-        }
+        updateValueSummary(item, R.string.pref_screen_bgcolor_summary, val);
     }
 
-    private void updateColorSummary(ListPreference item, String val)
+    private void updateValueSummary(ListPreference item, int res_id, String val)
     {
         if(val == null) {
             val = item.getValue();
         }
 
-        item.setSummary(item.getEntries()[item.findIndexOfValue(val)]);
+        item.setSummary(
+            getString(res_id) +
+            getString(R.string.pref_screen_val_summary,
+                      item.getEntries()[item.findIndexOfValue(val)]));
+    }
+
+    private void setupValueSummary(String key, int res_id)
+    {
+        ListPreference item = (ListPreference)
+            getPreferenceManager().findPreference(key);
+        item.setOnPreferenceChangeListener(new OnValueChangeListener(res_id));
+        updateValueSummary(item, res_id, null);
     }
 
     private String getUriFileName(String str)
@@ -417,8 +439,8 @@ public class MultiPictureSetting extends PreferenceActivity
     {
         final BucketItem[] buckets = getBuckets();
         if(buckets == null) {
-            showWarnMessage(R.string.pref_picture_screen_bucket_title,
-                            R.string.pref_picture_screen_no_bucket_exist_msg);
+            showWarnMessage(R.string.pref_screen_bucket_title,
+                            R.string.pref_screen_no_bucket_exist_msg);
             return;
         }
 
@@ -440,7 +462,7 @@ public class MultiPictureSetting extends PreferenceActivity
         }
 
         new AlertDialog.Builder(this)
-            .setTitle(R.string.pref_picture_screen_bucket_title)
+            .setTitle(R.string.pref_screen_bucket_title)
             .setMultiChoiceItems(
                 buckets, checked,
                 new DialogInterface.OnMultiChoiceClickListener() {
@@ -476,8 +498,8 @@ public class MultiPictureSetting extends PreferenceActivity
             c = (c || check);
         }
         if(! c) {
-            showWarnMessage(R.string.pref_picture_screen_bucket_title,
-                            R.string.pref_picture_screen_no_bucket_select_msg);
+            showWarnMessage(R.string.pref_screen_bucket_title,
+                            R.string.pref_screen_no_bucket_select_msg);
             return;
         }
 
@@ -499,19 +521,14 @@ public class MultiPictureSetting extends PreferenceActivity
         editor.commit();
 
         item.setValue(type_val);
-        if(idx >= 0) {
-            updateScreenTypeSummary(item, idx);
-        }
-        else {
-            updateDefaultTypeSummary(item);
-        }
+        updateScreenTypeSummary(item, idx);
     }
 
     private void startColorPickerDialog(final Preference item, final int idx)
     {
-        int color = pref.getInt((idx < 0 ?
-                                 DEFAULT_BGCOLOR_CUSTOM_KEY :
-                                 String.format(SCREEN_BGCOLOR_CUSTOM_KEY, idx)),
+        int color = pref.getInt((idx >= 0 ?
+                                 String.format(SCREEN_BGCOLOR_CUSTOM_KEY, idx) :
+                                 DEFAULT_BGCOLOR_CUSTOM_KEY),
                                 0xff000000);
 
         View view = getLayoutInflater().inflate(R.layout.color_picker, null);
@@ -528,12 +545,7 @@ public class MultiPictureSetting extends PreferenceActivity
         picker.setColor(color);
 
         new AlertDialog.Builder(this)
-            .setTitle(
-                (idx < 0 ?
-                 getString(
-                     R.string.pref_picture_screen_default_bgcolor_title) :
-                 getString(
-                     R.string.pref_picture_screen_bgcolor_title, idx + 1)))
+            .setTitle(R.string.pref_screen_bgcolor_title)
             .setView(view)
             .setPositiveButton(
                 android.R.string.yes,
@@ -596,14 +608,18 @@ public class MultiPictureSetting extends PreferenceActivity
                 return false;
             }
             else if("folder".equals(val)) {
-                String folder_key = String.format(SCREEN_FOLDER_KEY, idx);
+                String folder_key = (idx >= 0 ?
+                                     String.format(SCREEN_FOLDER_KEY, idx) :
+                                     DEFAULT_FOLDER_KEY);
                 String folder_val = pref.getString(folder_key, null);
 
                 startFolderPickerActivity(item, idx, folder_val);
                 return false;
             }
             else if("buckets".equals(val)) {
-                String bucket_key = String.format(SCREEN_BUCKET_KEY, idx);
+                String bucket_key = (idx >= 0 ?
+                                     String.format(SCREEN_BUCKET_KEY, idx) :
+                                     DEFAULT_BUCKET_KEY);
                 String bucket_val = pref.getString(bucket_key, null);
 
                 startBucketPickerDialog(item, idx, bucket_val);
@@ -616,34 +632,6 @@ public class MultiPictureSetting extends PreferenceActivity
                         }
                     });
                 return true;
-            }
-            else {
-                return false;
-            }
-        }
-    }
-
-    private class OnDefaultTypeChangeListener
-        implements Preference.OnPreferenceChangeListener
-    {
-        @Override
-        public boolean onPreferenceChange(final Preference item, Object val)
-        {
-            if("file".equals(val)) {
-                startFilePickerActivity(item, -1);
-                return false;
-            }
-            else if("folder".equals(val)) {
-                String folder_val = pref.getString(DEFAULT_FOLDER_KEY, null);
-
-                startFolderPickerActivity(item, -1, folder_val);
-                return false;
-            }
-            else if("buckets".equals(val)) {
-                String bucket_val = pref.getString(DEFAULT_BUCKET_KEY, null);
-
-                startBucketPickerDialog(item, -1, bucket_val);
-                return false;
             }
             else {
                 return false;
@@ -672,6 +660,24 @@ public class MultiPictureSetting extends PreferenceActivity
                 updateColorSummary((ListPreference)item, (String)val);
                 return true;
             }
+        }
+    }
+
+    private class OnValueChangeListener
+        implements Preference.OnPreferenceChangeListener
+    {
+        private int res_id;
+
+        private OnValueChangeListener(int res_id)
+        {
+            this.res_id = res_id;
+        }
+
+        @Override
+        public boolean onPreferenceChange(Preference item, Object val)
+        {
+            updateValueSummary((ListPreference)item, res_id, (String)val);
+            return true;
         }
     }
 

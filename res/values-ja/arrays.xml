@@ -1,21 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <!-- picture selection -->
-  <string-array name="pref_picture_screen_type_entries">
+  <string-array name="pref_screen_type_entries">
     <item>単一画像</item>
     <item>アルバム</item>
     <item>画像フォルダ</item>
     <item>デフォルト設定と同じ</item>
   </string-array>
 
-  <string-array name="pref_picture_screen_default_type_entries">
+  <string-array name="pref_screen_default_type_entries">
     <item>単一画像</item>
     <item>アルバム</item>
     <item>画像フォルダ</item>
   </string-array>
 
   <!-- background color -->
-  <string-array name="pref_picture_screen_bgcolor_entries">
+  <string-array name="pref_screen_bgcolor_entries">
     <item>黒</item>
     <item>白</item>
     <item>灰色</item>
@@ -32,7 +32,7 @@
     <item>デフォルト設定と同じ</item>
   </string-array>
 
-  <string-array name="pref_picture_screen_default_bgcolor_entries">
+  <string-array name="pref_screen_default_bgcolor_entries">
     <item>黒</item>
     <item>白</item>
     <item>灰色</item>
@@ -46,6 +46,40 @@
     <item>黄</item>
     <item>カスタムカラー</item>
     <item>自動検出 (遅くて多分不正確)</item>
+  </string-array>
+
+  <!-- clip ratio -->
+  <string-array name="pref_screen_clipratio_entries">
+    <item>フルスクリーンに合わせる</item>
+    <item>中くらいに切り抜き</item>
+    <item>画像全体を表示</item>
+    <item>デフォルト設定と同じ</item>
+  </string-array>
+
+  <string-array name="pref_screen_default_clipratio_entries">
+    <item>フルスクリーンに合わせる</item>
+    <item>中くらいに切り抜き</item>
+    <item>画像全体を表示</item>
+  </string-array>
+
+  <!-- folder order -->
+  <string-array name="pref_screen_folder_order_entries">
+    <item>名前 (昇順)</item>
+    <item>名前 (降順)</item>
+    <item>日付 (古い順)</item>
+    <item>日付 (新しい順)</item>
+    <item>ランダム</item>
+    <item>シャッフル</item>
+    <item>デフォルト設定と同じ</item>
+  </string-array>
+
+  <string-array name="pref_screen_default_folder_order_entries">
+    <item>名前 (昇順)</item>
+    <item>名前 (降順)</item>
+    <item>日付 (古い順)</item>
+    <item>日付 (新しい順)</item>
+    <item>ランダム</item>
+    <item>シャッフル</item>
   </string-array>
 
   <!-- switching transition -->
@@ -59,23 +93,6 @@
     <item>3Dスライド</item>
     <item>3D回転</item>
     <item>ランダム</item>
-  </string-array>
-
-  <!-- clip ratio -->
-  <string-array name="pref_draw_clipratio_entries">
-    <item>フルスクリーンに合わせる</item>
-    <item>中くらいに切り抜き</item>
-    <item>画像全体を表示</item>
-  </string-array>
-
-  <!-- folder order -->
-  <string-array name="pref_folder_order_entries">
-    <item>名前 (昇順)</item>
-    <item>名前 (降順)</item>
-    <item>日付 (古い順)</item>
-    <item>日付 (新しい順)</item>
-    <item>ランダム</item>
-    <item>シャッフル</item>
   </string-array>
 
   <!-- folder duration -->

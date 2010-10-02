@@ -5,55 +5,51 @@
 
   <string name="pref_cat_screen_title">画面設定</string>
 
-  <string name="pref_picture_screen_each_title">画面タイプ</string>
-  <string name="pref_picture_screen_each_summary">各画面の画像選択方法。</string>
+  <string name="pref_group_screen_default_title">デフォルト設定</string>
+  <string name="pref_group_screen_default_summary">個別設定で指定しなかった場合のデフォルト設定。</string>
 
-  <string name="pref_cat_picture_screen_title">画面%d</string>
-  <string name="pref_cat_picture_screen_left_title">画面%d (一番左の画面)</string>
+  <string name="pref_cat_picture_screen_title">画面%dの設定</string>
+  <string name="pref_cat_picture_screen_summary">画面%dの個別設定。</string>
+  <string name="pref_cat_picture_screen_left_summary">画面%dの設定。(一番左の画面)</string>
 
-  <string name="pref_picture_screen_title">画面%dの画像タイプ</string>
-  <string name="pref_picture_screen_base_summary">画面%dの画像タイプ。</string>
-  <string name="pref_picture_screen_val1_summary">\n%s</string>
-  <string name="pref_picture_screen_val2_summary">\n%s : %s</string>
+  <string name="pref_screen_val_summary">\n%s</string>
 
-  <string name="pref_picture_screen_default_title">デフォルト画面タイプ</string>
-  <string name="pref_picture_screen_default_init_summary">画像選択方法のデフォルト設定。</string>
-  <string name="pref_picture_screen_default_val2_summary">画像選択方法のデフォルト設定。\n%s : %s</string>
+  <string name="pref_screen_type_title">画面タイプ</string>
+  <string name="pref_screen_type_base_summary">表示する画像の選択方法。</string>
+  <string name="pref_screen_type_val1_summary">\n%s</string>
+  <string name="pref_screen_type_val2_summary">\n%s : %s</string>
 
-  <string name="pref_picture_screen_bucket_title">アルバム</string>
-  <string name="pref_picture_screen_no_bucket_exist_msg">アルバムが存在しません。</string>
-  <string name="pref_picture_screen_no_bucket_select_msg">アルバムが選択されていません。</string>
+  <string name="pref_screen_bucket_title">アルバム</string>
+  <string name="pref_screen_no_bucket_exist_msg">アルバムが存在しません。</string>
+  <string name="pref_screen_no_bucket_select_msg">アルバムが選択されていません。</string>
 
-  <string name="pref_picture_screen_bgcolor_title">画面%dの背景色</string>
-  <string name="pref_picture_screen_bgcolor_summary">画面%dの背景色。</string>
+  <string name="pref_screen_bgcolor_title">背景色</string>
+  <string name="pref_screen_bgcolor_summary">画面の背景色。</string>
 
-  <string name="pref_picture_screen_default_bgcolor_title">デフォルト背景色</string>
-  <string name="pref_picture_screen_default_bgcolor_summary">デフォルト背景色。</string>
+  <string name="pref_screen_clipratio_title">切り抜き/リサイズ方法</string>
+  <string name="pref_screen_clipratio_summary">画面サイズに合わせるために画像をどの程度切り抜きするか。</string>
 
-  <string name="pref_cat_draw_title">描画方法</string>
+  <string name="pref_screen_folder_order_title">選択順序</string>
+  <string name="pref_screen_folder_order_summary">画像フォルダまたはアルバム指定の場合の画像選択順序。</string>
+
+  <string name="pref_cat_draw_title">描画設定</string>
 
   <string name="pref_draw_transition_title">画面変更時の切替方法</string>
   <string name="pref_draw_transition_summary">画面を変更する時の画像切替方法。</string>
 
-  <string name="pref_draw_clipratio_title">切り抜き/リサイズ方法</string>
-  <string name="pref_draw_clipratio_summary">画面サイズに合わせるために画像をどの程度切り抜きするか。</string>
-
   <string name="pref_draw_reflection_title">反射を表示する</string>
   <string name="pref_draw_reflection_summary">画像の下側に反射を表示する。</string>
 
-  <string name="pref_cat_folder_title">フォルダ指定/アルバム指定</string>
+  <string name="pref_cat_folder_title">アルバム指定/フォルダ指定</string>
 
   <string name="pref_folder_recursive_title">再帰的にフォルダ検索</string>
   <string name="pref_folder_recursive_summary">画像フォルダの場合は、再帰的に指定されたフォルダ以下の画像を使用する。</string>
 
   <string name="pref_folder_changetap_title">ダブルタップで画像変更</string>
-  <string name="pref_folder_changetap_summary">画像フォルダまたはアルバム指定の場合、ダブルタップで画像を変更する。</string>
-
-  <string name="pref_folder_order_title">選択順序</string>
-  <string name="pref_folder_order_summary">画像フォルダまたはアルバム指定の場合、指定された順序またはランダムに画像を選択する。</string>
+  <string name="pref_folder_changetap_summary">アルバムまたは画像フォルダ指定の場合、ダブルタップで画像を変更する。</string>
 
   <string name="pref_folder_duration_title">画像変更頻度</string>
-  <string name="pref_folder_duration_summary">画像フォルダまたはアルバム指定の場合、自動的に別の画像に変更する時間間隔。</string>
+  <string name="pref_folder_duration_summary">アルバムまたは画像フォルダ指定の場合、自動的に別の画像へ変更する時間間隔。</string>
 
   <string name="pref_cat_advanced">高度な設定</string>
 

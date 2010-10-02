@@ -1,27 +1,44 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-  <PreferenceCategory android:title="@string/pref_cat_screen_title">
-    <!-- insert ListPreference at runtime -->
+  <PreferenceCategory
+     android:key="screen.cat"
+     android:title="@string/pref_cat_screen_title">
+    <!-- insert PreferenceScreen of each screen at runtime -->
     <PreferenceScreen
-       android:key="screen.cat"
-       android:title="@string/pref_picture_screen_each_title"
-       android:summary="@string/pref_picture_screen_each_summary" />
-    <ListPreference
-       android:key="screen.default.type"
-       android:title="@string/pref_picture_screen_default_title"
-       android:summary="@string/pref_picture_screen_default_init_summary"
-       android:entries="@array/pref_picture_screen_default_type_entries"
-       android:entryValues="@array/pref_picture_screen_type_entryvalues"
-       android:defaultValue="file" />
-    <ListPreference
-       android:key="screen.default.bgcolor"
-       android:title="@string/pref_picture_screen_default_bgcolor_title"
-       android:summary="@string/pref_picture_screen_default_bgcolor_summary"
-       android:entries="@array/pref_picture_screen_default_bgcolor_entries"
-       android:entryValues="@array/pref_picture_screen_bgcolor_entryvalues"
-       android:defaultValue="black"
-       />
+       android:title="@string/pref_group_screen_default_title"
+       android:summary="@string/pref_group_screen_default_summary"
+       >
+      <ListPreference
+         android:key="screen.default.type"
+         android:title="@string/pref_screen_type_title"
+         android:summary="@string/pref_screen_type_base_summary"
+         android:entries="@array/pref_screen_default_type_entries"
+         android:entryValues="@array/pref_screen_type_entryvalues"
+         android:defaultValue="file" />
+      <ListPreference
+         android:key="screen.default.bgcolor"
+         android:title="@string/pref_screen_bgcolor_title"
+         android:summary="@string/pref_screen_bgcolor_summary"
+         android:entries="@array/pref_screen_default_bgcolor_entries"
+         android:entryValues="@array/pref_screen_bgcolor_entryvalues"
+         android:defaultValue="black"
+         />
+      <ListPreference
+         android:key="draw.clipratio"
+         android:title="@string/pref_screen_clipratio_title"
+         android:summary="@string/pref_screen_clipratio_summary"
+         android:entries="@array/pref_screen_default_clipratio_entries"
+         android:entryValues="@array/pref_screen_clipratio_entryvalues"
+         android:defaultValue="1.0" />
+      <ListPreference
+         android:key="folder.order"
+         android:title="@string/pref_screen_folder_order_title"
+         android:summary="@string/pref_screen_folder_order_summary"
+         android:entries="@array/pref_screen_default_folder_order_entries"
+         android:entryValues="@array/pref_screen_folder_order_entryvalues"
+         /> <!-- default value is set by MultiPictureSetting#onCreate -->
+    </PreferenceScreen>
   </PreferenceCategory>
 
   <PreferenceCategory android:title="@string/pref_cat_draw_title">
@@ -32,13 +49,6 @@
        android:entries="@array/pref_draw_transition_entries"
        android:entryValues="@array/pref_draw_transition_entryvalues"
        android:defaultValue="slide" />
-    <ListPreference
-       android:key="draw.clipratio"
-       android:title="@string/pref_draw_clipratio_title"
-       android:summary="@string/pref_draw_clipratio_summary"
-       android:entries="@array/pref_draw_clipratio_entries"
-       android:entryValues="@array/pref_draw_clipratio_entryvalues"
-       android:defaultValue="1.0" />
     <CheckBoxPreference
        android:key="draw.reflection"
        android:title="@string/pref_draw_reflection_title"
@@ -57,13 +67,6 @@
        android:title="@string/pref_folder_changetap_title"
        android:summary="@string/pref_folder_changetap_summary"
        android:defaultValue="true" />
-    <ListPreference
-       android:key="folder.order"
-       android:title="@string/pref_folder_order_title"
-       android:summary="@string/pref_folder_order_summary"
-       android:entries="@array/pref_folder_order_entries"
-       android:entryValues="@array/pref_folder_order_entryvalues"
-       /> <!-- default value is set by MultiPictureSetting#onCreate -->
     <ListPreference
        android:key="folder.duration_sec"
        android:title="@string/pref_folder_duration_title"

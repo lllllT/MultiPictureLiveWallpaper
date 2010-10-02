@@ -1,20 +1,20 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
   <!-- picture selection -->
-  <string-array name="pref_picture_screen_type_entries">
+  <string-array name="pref_screen_type_entries">
     <item>Single Picture</item>
     <item>Album</item>
     <item>Picture Folder</item>
     <item>Same as Default Setting</item>
   </string-array>
 
-  <string-array name="pref_picture_screen_default_type_entries">
+  <string-array name="pref_screen_default_type_entries">
     <item>Single Picture</item>
     <item>Album</item>
     <item>Picture Folder</item>
   </string-array>
 
-  <string-array name="pref_picture_screen_type_entryvalues">
+  <string-array name="pref_screen_type_entryvalues">
     <item>file</item>
     <item>buckets</item>
     <item>folder</item>
@@ -22,7 +22,7 @@
   </string-array>
 
   <!-- background color -->
-  <string-array name="pref_picture_screen_bgcolor_entries">
+  <string-array name="pref_screen_bgcolor_entries">
     <item>Black</item>
     <item>White</item>
     <item>Gray</item>
@@ -39,7 +39,7 @@
     <item>Same as Default Setting</item>
   </string-array>
 
-  <string-array name="pref_picture_screen_default_bgcolor_entries">
+  <string-array name="pref_screen_default_bgcolor_entries">
     <item>Black</item>
     <item>White</item>
     <item>Gray</item>
@@ -55,7 +55,7 @@
     <item>Auto detect (slow and maybe inexact)</item>
   </string-array>
 
-  <string-array name="pref_picture_screen_bgcolor_entryvalues">
+  <string-array name="pref_screen_bgcolor_entryvalues">
     <item>black</item>
     <item>white</item>
     <item>gray</item>
@@ -69,6 +69,57 @@
     <item>yellow</item>
     <item>custom</item>
     <item>auto_detect</item>
+    <item>use_default</item>
+  </string-array>
+
+  <!-- clip ratio -->
+  <string-array name="pref_screen_clipratio_entries">
+    <item>Fit to Fullscreen</item>
+    <item>Medium crop</item>
+    <item>Show Entire Picture</item>
+    <item>Same as Default Setting</item>
+  </string-array>
+
+  <string-array name="pref_screen_default_clipratio_entries">
+    <item>Fit to Fullscreen</item>
+    <item>Medium crop</item>
+    <item>Show Entire Picture</item>
+  </string-array>
+
+  <string-array name="pref_screen_clipratio_entryvalues">
+    <item>1.0</item>
+    <item>0.5</item>
+    <item>0.0</item>
+    <item>use_default</item>
+  </string-array>
+
+  <!-- folder order -->
+  <string-array name="pref_screen_folder_order_entries">
+    <item>Name (ascending order)</item>
+    <item>Name (descending order)</item>
+    <item>Date (oldest first)</item>
+    <item>Date (newest first)</item>
+    <item>Random</item>
+    <item>Shuffle</item>
+    <item>Same as Default Setting</item>
+  </string-array>
+
+  <string-array name="pref_screen_default_folder_order_entries">
+    <item>Name (ascending order)</item>
+    <item>Name (descending order)</item>
+    <item>Date (oldest first)</item>
+    <item>Date (newest first)</item>
+    <item>Random</item>
+    <item>Shuffle</item>
+  </string-array>
+
+  <string-array name="pref_screen_folder_order_entryvalues">
+    <item>name_asc</item>
+    <item>name_desc</item>
+    <item>date_asc</item>
+    <item>date_desc</item>
+    <item>random</item>
+    <item>shuffle</item>
     <item>use_default</item>
   </string-array>
 
@@ -95,38 +146,6 @@
     <item>slide_3d</item>
     <item>rotation_3d</item>
     <item>random</item>
-  </string-array>
-
-  <!-- clip ratio -->
-  <string-array name="pref_draw_clipratio_entries">
-    <item>Fit to Fullscreen</item>
-    <item>Medium crop</item>
-    <item>Show Entire Picture</item>
-  </string-array>
-
-  <string-array name="pref_draw_clipratio_entryvalues">
-    <item>1.0</item>
-    <item>0.5</item>
-    <item>0.0</item>
-  </string-array>
-
-  <!-- folder order -->
-  <string-array name="pref_folder_order_entries">
-    <item>Name (ascending order)</item>
-    <item>Name (descending order)</item>
-    <item>Date (oldest first)</item>
-    <item>Date (newest first)</item>
-    <item>Random</item>
-    <item>Shuffle</item>
-  </string-array>
-
-  <string-array name="pref_folder_order_entryvalues">
-    <item>name_asc</item>
-    <item>name_desc</item>
-    <item>date_asc</item>
-    <item>date_desc</item>
-    <item>random</item>
-    <item>shuffle</item>
   </string-array>
 
   <!-- folder duration -->
