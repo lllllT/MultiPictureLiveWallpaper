@@ -67,4 +67,6 @@
   <string name="folder_up">../ (Up folder)</string>
 
   <string name="str_pic_not_set">Picture not set: Screen %d</string>
+
+  <string name="lwp_not_supported">Live Wallpaper may not supported.</string>
 </resources>

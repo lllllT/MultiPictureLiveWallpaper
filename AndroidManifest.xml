@@ -26,6 +26,15 @@
     <activity android:name=".FolderPicker"
               android:label="@string/folder_picker_title" />
 
+    <activity android:name=".LaunchDispatcher"
+              android:label="@string/app_name"
+              android:theme="@android:style/Theme.Translucent.NoTitleBar">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.INFO" />
+      </intent-filter>
+    </activity>
+
   </application>
 
 </manifest>

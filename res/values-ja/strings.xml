@@ -67,4 +67,6 @@
   <string name="folder_up">../ (上のフォルダ)</string>
 
   <string name="str_pic_not_set">画像未設定: 画面%d</string>
+
+  <string name="lwp_not_supported">ライブ壁紙に対応していないようです。</string>
 </resources>

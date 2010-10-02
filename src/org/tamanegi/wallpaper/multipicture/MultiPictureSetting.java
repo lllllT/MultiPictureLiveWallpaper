@@ -19,6 +19,7 @@ import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 import android.provider.OpenableColumns;
+import android.view.View;
 
 public class MultiPictureSetting extends PreferenceActivity
 {
@@ -27,12 +28,16 @@ public class MultiPictureSetting extends PreferenceActivity
     public static final String SCREEN_FOLDER_KEY = "screen.%d.folder";
     public static final String SCREEN_BUCKET_KEY = "screen.%d.bucket";
     public static final String SCREEN_BGCOLOR_KEY = "screen.%d.bgcolor";
+    public static final String SCREEN_BGCOLOR_CUSTOM_KEY =
+        "screen.%d.bgcolor.custom";
 
     public static final String DEFAULT_TYPE_KEY = "screen.default.type";
     public static final String DEFAULT_FILE_KEY = "screen.default.file";
     public static final String DEFAULT_FOLDER_KEY = "screen.default.folder";
     public static final String DEFAULT_BUCKET_KEY = "screen.default.bucket";
     public static final String DEFAULT_BGCOLOR_KEY = "screen.default.bgcolor";
+    public static final String DEFAULT_BGCOLOR_CUSTOM_KEY =
+        "screen.default.bgcolor.custom";
 
     public static final Uri IMAGE_BUCKET_URI =
         MediaStore.Images.Media.EXTERNAL_CONTENT_URI.
@@ -71,8 +76,6 @@ public class MultiPictureSetting extends PreferenceActivity
         // setup screen-N setting item
         PreferenceGroup group = (PreferenceGroup)
             getPreferenceManager().findPreference("screen.cat");
-
-        OnColorChangeListener on_color_change = new OnColorChangeListener();
 
         for(int i = 0; i < SCREEN_COUNT; i++) {
             // category for each screen
@@ -117,7 +120,8 @@ public class MultiPictureSetting extends PreferenceActivity
             color.setEntryValues(
                 R.array.pref_picture_screen_bgcolor_entryvalues);
             color.setDefaultValue("use_default");
-            color.setOnPreferenceChangeListener(on_color_change);
+            color.setOnPreferenceChangeListener(
+                new OnColorChangeListener(i));
             cat.addPreference(color);
 
             updateColorSummary(color, null);
@@ -132,7 +136,8 @@ public class MultiPictureSetting extends PreferenceActivity
 
         ListPreference def_color = (ListPreference)
             getPreferenceManager().findPreference(DEFAULT_BGCOLOR_KEY);
-        def_color.setOnPreferenceChangeListener(on_color_change);
+        def_color.setOnPreferenceChangeListener(
+            new OnColorChangeListener(-1));
         updateColorSummary(def_color, null);
 
         // backward compatibility
@@ -283,10 +288,16 @@ public class MultiPictureSetting extends PreferenceActivity
     private String getUriFileName(String str)
     {
         Uri uri = Uri.parse(str);
-        Cursor cur = resolver.query(
-            uri,
-            new String[] { OpenableColumns.DISPLAY_NAME },
-            null, null, null);
+        Cursor cur = null;
+        try {
+            cur = resolver.query(
+                uri,
+                new String[] { OpenableColumns.DISPLAY_NAME },
+                null, null, null);
+        }
+        catch(Exception e) {
+            // ignore
+        }
         if(cur != null) {
             try {
                 if(cur.moveToFirst()) {
@@ -365,9 +376,16 @@ public class MultiPictureSetting extends PreferenceActivity
 
     private BucketItem[] getBuckets()
     {
-        Cursor cur = resolver.query(IMAGE_BUCKET_URI,
-                                    IMAGE_BUCKET_COLUMNS, null, null,
-                                    IMAGE_BUCKET_SORT_ORDER);
+        Cursor cur;
+        try {
+            cur = resolver.query(IMAGE_BUCKET_URI,
+                                 IMAGE_BUCKET_COLUMNS, null, null,
+                                 IMAGE_BUCKET_SORT_ORDER);
+        }
+        catch(Exception e) {
+            return null;
+        }
+
         if(cur == null) {
             return null;
         }
@@ -489,6 +507,61 @@ public class MultiPictureSetting extends PreferenceActivity
         }
     }
 
+    private void startColorPickerDialog(final Preference item, final int idx)
+    {
+        int color = pref.getInt((idx < 0 ?
+                                 DEFAULT_BGCOLOR_CUSTOM_KEY :
+                                 String.format(SCREEN_BGCOLOR_CUSTOM_KEY, idx)),
+                                0xff000000);
+
+        View view = getLayoutInflater().inflate(R.layout.color_picker, null);
+        final ColorPickerView picker =
+            (ColorPickerView)view.findViewById(R.id.color_picker_picker);
+        final View expl = view.findViewById(R.id.color_picker_explain);
+
+        picker.setOnColorChangeListener(
+            new ColorPickerView.OnColorChangeListener() {
+                @Override public void onColorChange(int color) {
+                    expl.setBackgroundColor(color);
+                }
+            });
+        picker.setColor(color);
+
+        new AlertDialog.Builder(this)
+            .setTitle(
+                (idx < 0 ?
+                 getString(
+                     R.string.pref_picture_screen_default_bgcolor_title) :
+                 getString(
+                     R.string.pref_picture_screen_bgcolor_title, idx + 1)))
+            .setView(view)
+            .setPositiveButton(
+                android.R.string.yes,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int button) {
+                        applyCustomColor((ListPreference)item, idx,
+                                         picker.getColor());
+                    }
+                })
+            .setNegativeButton(android.R.string.no, null)
+            .show();
+    }
+
+    private void applyCustomColor(ListPreference item, int idx, int color)
+    {
+        String val = "custom";
+
+        updateColorSummary(item, val);
+        item.setValue(val);
+
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putInt((idx < 0 ?
+                       DEFAULT_BGCOLOR_CUSTOM_KEY :
+                       String.format(SCREEN_BGCOLOR_CUSTOM_KEY, idx)),
+                      color);
+        editor.commit();
+    }
+
     private void showWarnMessage(int title_id, int msg_id)
     {
         new AlertDialog.Builder(this)
@@ -581,11 +654,24 @@ public class MultiPictureSetting extends PreferenceActivity
     private class OnColorChangeListener
         implements Preference.OnPreferenceChangeListener
     {
+        private int idx;
+
+        private OnColorChangeListener(int idx)
+        {
+            this.idx = idx;
+        }
+
         @Override
         public boolean onPreferenceChange(final Preference item, Object val)
         {
-            updateColorSummary((ListPreference)item, (String)val);
-            return true;
+            if("custom".equals(val)) {
+                startColorPickerDialog(item, idx);
+                return false;
+            }
+            else {
+                updateColorSummary((ListPreference)item, (String)val);
+                return true;
+            }
         }
     }
 

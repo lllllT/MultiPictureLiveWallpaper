@@ -27,6 +27,7 @@
     <item>シアン</item>
     <item>マゼンタ</item>
     <item>黄</item>
+    <item>カスタムカラー</item>
     <item>自動検出 (遅くて多分不正確)</item>
     <item>デフォルト設定と同じ</item>
   </string-array>
@@ -43,6 +44,7 @@
     <item>シアン</item>
     <item>マゼンタ</item>
     <item>黄</item>
+    <item>カスタムカラー</item>
     <item>自動検出 (遅くて多分不正確)</item>
   </string-array>
 

@@ -732,11 +732,16 @@ public class MultiPictureService extends WallpaperService
         {
             // screen type
             default_type = ScreenType.valueOf(
-                pref.getString("screen.default.type", "file"));
+                pref.getString(MultiPictureSetting.DEFAULT_TYPE_KEY, "file"));
 
-            String bgcolor = pref.getString("screen.default.bgcolor", "black");
+            String bgcolor = pref.getString(
+                MultiPictureSetting.DEFAULT_BGCOLOR_KEY, "black");
             if("auto_detect".equals(bgcolor)) {
                 detect_bgcolor = true;
+            }
+            else if("custom".equals(bgcolor)) {
+                default_bgcolor = pref.getInt(
+                    MultiPictureSetting.DEFAULT_BGCOLOR_CUSTOM_KEY, 0xff000000);
             }
             else {
                 detect_bgcolor = false;
@@ -830,7 +835,12 @@ public class MultiPictureService extends WallpaperService
             folder_observers.clear();
 
             for(ContentObserver observer : bucket_observers) {
-                resolver.unregisterContentObserver(observer);
+                try {
+                    resolver.unregisterContentObserver(observer);
+                }
+                catch(Exception e) {
+                    // ignore
+                }
             }
             bucket_observers.clear();
         }
@@ -1143,6 +1153,13 @@ public class MultiPictureService extends WallpaperService
             else if("auto_detect".equals(bgcolor)) {
                 info.detect_bgcolor = true;
             }
+            else if("custom".equals(bgcolor)) {
+                info.detect_bgcolor = false;
+                info.bgcolor = pref.getInt(
+                    String.format(
+                        MultiPictureSetting.SCREEN_BGCOLOR_CUSTOM_KEY, idx),
+                    0xff000000);
+            }
             else {
                 info.detect_bgcolor = false;
                 info.bgcolor = Color.parseColor(bgcolor);
@@ -1327,10 +1344,16 @@ public class MultiPictureService extends WallpaperService
         private int getPictureOrientation(String file_uri)
         {
             // get from media store
-            Cursor cur = resolver.query(
-                Uri.parse(file_uri),
-                new String[] { MediaStore.Images.ImageColumns.ORIENTATION },
-                null, null, null);
+            Cursor cur = null;
+            try {
+                cur = resolver.query(
+                    Uri.parse(file_uri),
+                    new String[] { MediaStore.Images.ImageColumns.ORIENTATION },
+                    null, null, null);
+            }
+            catch(Exception e) {
+                // ignore
+            }
             if(cur != null) {
                 try {
                     if(cur.moveToFirst()) {
@@ -1560,12 +1583,19 @@ public class MultiPictureService extends WallpaperService
 
             Uri uri = IMAGE_LIST_URI;
             for(String id : bucket) {
-                Cursor cur = resolver.query(
-                    uri,
-                    IMAGE_LIST_COLUMNS,
-                    IMAGE_LIST_WHERE,
-                    new String[] { id },
-                    null);
+                Cursor cur;
+                try {
+                    cur = resolver.query(
+                        uri,
+                        IMAGE_LIST_COLUMNS,
+                        IMAGE_LIST_WHERE,
+                        new String[] { id },
+                        null);
+                }
+                catch(Exception e) {
+                    break;
+                }
+
                 if(cur == null) {
                     continue;
                 }
@@ -1743,9 +1773,15 @@ public class MultiPictureService extends WallpaperService
                 }
             }
 
-            PictureContentObserver observer = new PictureContentObserver(uri);
-            resolver.registerContentObserver(uri, is_bucket, observer);
-            bucket_observers.add(observer);
+            try {
+                PictureContentObserver observer =
+                    new PictureContentObserver(uri);
+                resolver.registerContentObserver(uri, is_bucket, observer);
+                bucket_observers.add(observer);
+            }
+            catch(Exception e) {
+                // ignore
+            }
         }
 
         private class PictureContentObserver extends ContentObserver
