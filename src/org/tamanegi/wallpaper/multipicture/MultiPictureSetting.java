@@ -168,14 +168,9 @@ public class MultiPictureSetting extends PreferenceActivity
             new OnColorChangeListener(-1));
         updateColorSummary(def_color, null);
 
-        setupValueSummary(DEFAULT_CLIP_KEY,
-                          R.string.pref_screen_clipratio_summary);
-        setupValueSummary(DEFAULT_ORDER_KEY,
-                          R.string.pref_screen_folder_order_summary);
-
         // backward compatibility
         boolean is_random = pref.getBoolean("folder.random", true);
-        String order_val = pref.getString("folder.order", null);
+        String order_val = pref.getString(DEFAULT_ORDER_KEY, null);
         if(order_val == null) {
             ListPreference order = (ListPreference)
                 getPreferenceManager().findPreference("folder.order");
@@ -192,6 +187,12 @@ public class MultiPictureSetting extends PreferenceActivity
                 getPreferenceManager().findPreference("folder.duration_sec");
             duration.setValue(Integer.toString(duration_sec));
         }
+
+        // for summary
+        setupValueSummary(DEFAULT_CLIP_KEY,
+                          R.string.pref_screen_clipratio_summary);
+        setupValueSummary(DEFAULT_ORDER_KEY,
+                          R.string.pref_screen_folder_order_summary);
     }
 
     @Override
