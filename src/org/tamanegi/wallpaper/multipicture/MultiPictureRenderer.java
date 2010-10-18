@@ -145,6 +145,7 @@ public class MultiPictureRenderer
 
         private ArrayList<String> file_list;
         private int cur_file_idx;
+        private String cur_file_uri;
     }
 
     // offset info
@@ -1340,6 +1341,7 @@ public class MultiPictureRenderer
             if(fname != null) {
                 addContentObserver(Uri.parse(fname), false);
                 loadBitmap(info, fname);
+                info.cur_file_uri = fname;
             }
         }
         else if(type == ScreenType.folder ||
@@ -1811,24 +1813,46 @@ public class MultiPictureRenderer
         }
 
         for(PictureInfo info : pic) {
-            changeFolderPicture(info, only_reread);
+            if(info == null) {
+                continue;
+            }
+
+            if(only_reread) {
+                if(info.cur_file_uri == null) {
+                    continue;
+                }
+
+                Bitmap prev_bmp = info.bmp;
+                if(loadBitmap(info, info.cur_file_uri)) {
+                    if(prev_bmp != null) {
+                        prev_bmp.recycle();
+                    }
+                }
+                else {
+                    if(info.bmp != null) {
+                        info.bmp.recycle();
+                    }
+                    info.bmp = null;
+                }
+            }
+            else {
+                changeFolderPicture(info);
+            }
         }
 
         postDurationCallback();
     }
 
-    private void changeFolderPicture(PictureInfo info, boolean only_reread)
+    private void changeFolderPicture(PictureInfo info)
     {
-        if(info != null &&
-           (info.type == ScreenType.folder ||
-            info.type == ScreenType.buckets)) {
+        if(info.type == ScreenType.folder ||
+           info.type == ScreenType.buckets) {
             int fcnt = info.file_list.size();
             if(fcnt < 1) {
                 return;
             }
 
             int idx_base = (
-                only_reread ? info.cur_file_idx :
                 info.change_order == OrderType.random ? random.nextInt(fcnt) :
                 (info.cur_file_idx + 1) % fcnt);
             int idx_prev = info.cur_file_idx;
@@ -1838,34 +1862,33 @@ public class MultiPictureRenderer
                 int idx = (idx_base + i) % fcnt;
                 boolean same_exists = false;
 
-                if(! only_reread) {
-                    if(idx == idx_prev) {
-                        continue;
+                if(idx == idx_prev) {
+                    continue;
+                }
+
+                if(info.change_order == OrderType.random) {
+                    String name = info.file_list.get(idx);
+
+                    for(PictureInfo other_info : pic) {
+                        if(other_info == info) {
+                            break;
+                        }
+                        if(other_info.type != ScreenType.file &&
+                           other_info.cur_file_idx >= 0 &&
+                           name.equals(other_info.file_list.get(
+                                           other_info.cur_file_idx))) {
+                            same_exists = true;
+                        }
                     }
-
-                    if(info.change_order == OrderType.random) {
-                        String name = info.file_list.get(idx);
-
-                        for(PictureInfo other_info : pic) {
-                            if(other_info == info) {
-                                break;
-                            }
-                            if(other_info.type != ScreenType.file &&
-                               other_info.cur_file_idx >= 0 &&
-                               name.equals(other_info.file_list.get(
-                                               other_info.cur_file_idx))) {
-                                same_exists = true;
-                            }
-                        }
-                        if(is_retrying && same_exists) {
-                            continue;
-                        }
+                    if(is_retrying && same_exists) {
+                        continue;
                     }
                 }
 
                 Bitmap prev_bmp = info.bmp;
                 if(loadBitmap(info, info.file_list.get(idx))) {
                     info.cur_file_idx = idx;
+                    info.cur_file_uri = info.file_list.get(idx);
 
                     if(prev_bmp != null) {
                         prev_bmp.recycle();
