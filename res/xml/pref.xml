@@ -22,14 +22,27 @@
          android:summary="@string/pref_screen_bgcolor_summary"
          android:entries="@array/pref_screen_default_bgcolor_entries"
          android:entryValues="@array/pref_screen_bgcolor_entryvalues"
-         android:defaultValue="black"
-         />
+         android:defaultValue="black" />
       <ListPreference
          android:key="draw.clipratio"
          android:title="@string/pref_screen_clipratio_title"
          android:summary="@string/pref_screen_clipratio_summary"
          android:entries="@array/pref_screen_default_clipratio_entries"
          android:entryValues="@array/pref_screen_clipratio_entryvalues"
+         android:defaultValue="1.0" />
+      <ListPreference
+         android:key="screen.default.saturation"
+         android:title="@string/pref_screen_saturation_title"
+         android:summary="@string/pref_screen_saturation_summary"
+         android:entries="@array/pref_screen_default_saturation_entries"
+         android:entryValues="@array/pref_screen_saturation_entryvalues"
+         android:defaultValue="1.0" />
+      <ListPreference
+         android:key="screen.default.opacity"
+         android:title="@string/pref_screen_opacity_title"
+         android:summary="@string/pref_screen_opacity_summary"
+         android:entries="@array/pref_screen_default_opacity_entries"
+         android:entryValues="@array/pref_screen_opacity_entryvalues"
          android:defaultValue="1.0" />
       <ListPreference
          android:key="folder.order"

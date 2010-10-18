@@ -27,9 +27,12 @@ import android.graphics.BitmapFactory;
 import android.graphics.Camera;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ColorMatrix;
+import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Rect;
+import android.graphics.RectF;
 import android.media.ExifInterface;
 import android.net.Uri;
 import android.os.Environment;
@@ -37,6 +40,7 @@ import android.os.FileObserver;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
+import android.os.Process;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
@@ -140,6 +144,8 @@ public class MultiPictureRenderer
         private int bgcolor;
 
         private float clip_ratio;
+        private float saturation;
+        private float opacity;
 
         private OrderType change_order;
 
@@ -257,6 +263,8 @@ public class MultiPictureRenderer
     private ScreenType default_type;
     private TransitionType screen_transition;
     private float default_clip_ratio;
+    private float default_saturation;
+    private float default_opacity;
     private boolean default_detect_bgcolor;
     private int default_bgcolor;
     private boolean show_reflection;
@@ -305,7 +313,8 @@ public class MultiPictureRenderer
     {
         this.holder = holder;
 
-        thread = new HandlerThread("MultiPicture");
+        thread = new HandlerThread("MultiPicture",
+                                   Process.THREAD_PRIORITY_URGENT_DISPLAY);
         thread.start();
 
         handler = new Handler(thread.getLooper(), new Handler.Callback() {
@@ -594,9 +603,14 @@ public class MultiPictureRenderer
         screen_transition = TransitionType.valueOf(
             pref.getString("draw.transition", "slide"));
         cur_transition = screen_transition;
-        default_clip_ratio = Float.valueOf(
-            pref.getString("draw.clipratio", "1.0"));
         show_reflection = pref.getBoolean("draw.reflection", true);
+
+        default_clip_ratio = Float.valueOf(
+            pref.getString(MultiPictureSetting.DEFAULT_CLIP_KEY, "1.0"));
+        default_saturation = Float.valueOf(
+            pref.getString(MultiPictureSetting.DEFAULT_SATURATION_KEY, "1.0"));
+        default_opacity = Float.valueOf(
+            pref.getString(MultiPictureSetting.DEFAULT_OPACITY_KEY, "1.0"));
 
         // folder setting
         use_recursive = pref.getBoolean("folder.recursive", true);
@@ -894,7 +908,7 @@ public class MultiPictureRenderer
             }
 
             paint.setColor(cur_color);
-            paint.setAlpha(alpha);
+            paint.setAlpha((int)(alpha * pic[idx].opacity));
             c.drawBitmap(bmp, matrix, paint);
 
             if(show_reflection) {
@@ -908,7 +922,7 @@ public class MultiPictureRenderer
                 c.concat(matrix);
                 c.drawRect(0, 0, bmp.getWidth(), bmp.getHeight(), paint);
                 c.restore();
-                paint.setAlpha(alpha / 4);
+                paint.setAlpha((int)(alpha * pic[idx].opacity / 4));
                 c.drawBitmap(bmp, matrix, paint);
             }
         }
@@ -1278,6 +1292,12 @@ public class MultiPictureRenderer
         String clip = pref.getString(
             String.format(MultiPictureSetting.SCREEN_CLIP_KEY, idx),
             "use_default");
+        String satu = pref.getString(
+            String.format(MultiPictureSetting.SCREEN_SATURATION_KEY, idx),
+            "use_default");
+        String opac = pref.getString(
+            String.format(MultiPictureSetting.SCREEN_OPACITY_KEY, idx),
+            "use_default");
         String order = pref.getString(
             String.format(MultiPictureSetting.SCREEN_ORDER_KEY, idx),
             "use_default");
@@ -1328,6 +1348,22 @@ public class MultiPictureRenderer
         }
         else {
             info.clip_ratio = Float.valueOf(clip);
+        }
+
+        // saturation
+        if("use_default".equals(satu)) {
+            info.saturation = default_saturation;
+        }
+        else {
+            info.saturation = Float.valueOf(satu);
+        }
+
+        // opacity
+        if("use_default".equals(opac)) {
+            info.opacity = default_opacity;
+        }
+        else {
+            info.opacity = Float.valueOf(opac);
         }
 
         // selection order
@@ -1496,14 +1532,14 @@ public class MultiPictureRenderer
                     mat.preRotate(orientation, bw / 2, bh / 2);
                 }
 
-                info.bmp = Bitmap.createBitmap(
-                    bmp, src_x, src_y, src_w, src_h, mat, true);
+                info.bmp = createBitmap(
+                    bmp, src_x, src_y, src_w, src_h, mat, info.saturation);
                 bmp.recycle();
             }
             else {
                 // clip only
-                info.bmp = Bitmap.createBitmap(
-                    bmp, src_x, src_y, src_w, src_h);
+                info.bmp = createBitmap(
+                    bmp, src_x, src_y, src_w, src_h, null, info.saturation);
                 // do not recycle() for 'bmp'
             }
 
@@ -1681,6 +1717,70 @@ public class MultiPictureRenderer
                      ((detail_color & 0x0f0) << 4) |
                      ((detail_color & 0x00f) << 0));
         return color;
+    }
+
+    private Bitmap createBitmap(Bitmap src,
+                                int x, int y, int width, int height, Matrix m,
+                                float saturation)
+    {
+        Canvas canvas = new Canvas();
+        Bitmap bmp;
+        boolean has_alpha =
+            (src.hasAlpha() || (m != null && ! m.rectStaysRect()));
+        Bitmap.Config format =
+            (has_alpha ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565);
+        Paint paint;
+
+        Rect src_rect = new Rect(x, y, x + width, y + height);
+        RectF dst_rect = new RectF(0, 0, width, height);
+
+        if(m == null || m.isIdentity()) {
+            // no scale
+            bmp = Bitmap.createBitmap(width, height, format);
+            paint = null;
+        }
+        else {
+            // with scale
+            if(! m.rectStaysRect()) {
+                format = Bitmap.Config.ARGB_8888;
+            }
+
+            RectF device_rect = new RectF();
+            m.mapRect(device_rect, dst_rect);
+            width = Math.round(device_rect.width());
+            height = Math.round(device_rect.height());
+
+            bmp = Bitmap.createBitmap(width, height, format);
+            if(has_alpha) {
+                bmp.eraseColor(0);
+            }
+
+            canvas.translate(-device_rect.left, -device_rect.top);
+            canvas.concat(m);
+
+            paint = new Paint();
+            paint.setFilterBitmap(true);
+            if(! m.rectStaysRect()) {
+                paint.setAntiAlias(true);
+            }
+        }
+
+        // color filter
+        if(saturation != 1.0f) {
+            if(paint == null) {
+                paint = new Paint();
+            }
+
+            ColorMatrix cm = new ColorMatrix();
+            cm.setSaturation(saturation);
+            paint.setColorFilter(new ColorMatrixColorFilter(cm));
+        }
+
+        bmp.setDensity(src.getDensity());
+        canvas.setBitmap(bmp);
+        canvas.drawBitmap(src, src_rect, dst_rect, paint);
+
+        return bmp;
     }
 
     private boolean isPictureFile(String file_uri)

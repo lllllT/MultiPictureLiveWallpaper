@@ -10,7 +10,7 @@
 
   <string name="pref_cat_picture_screen_title">画面%dの設定</string>
   <string name="pref_cat_picture_screen_summary">画面%dの個別設定。</string>
-  <string name="pref_cat_picture_screen_left_summary">画面%dの設定。(一番左の画面)</string>
+  <string name="pref_cat_picture_screen_left_summary">画面%dの個別設定。(一番左の画面)</string>
 
   <string name="pref_screen_val_summary">\n%s</string>
 
@@ -28,6 +28,12 @@
 
   <string name="pref_screen_clipratio_title">切り抜き/リサイズ方法</string>
   <string name="pref_screen_clipratio_summary">画面サイズに合わせるために画像をどの程度切り抜きするか。</string>
+
+  <string name="pref_screen_saturation_title">彩度を落とす</string>
+  <string name="pref_screen_saturation_summary">彩度を落としてグレースケールで表示する。</string>
+
+  <string name="pref_screen_opacity_title">不透明度を下げる</string>
+  <string name="pref_screen_opacity_summary">不透明度を下げる (透明度を上げる)。</string>
 
   <string name="pref_screen_folder_order_title">選択順序</string>
   <string name="pref_screen_folder_order_summary">画像フォルダまたはアルバム指定の場合の画像選択順序。</string>

@@ -31,6 +31,8 @@ public class MultiPictureSetting extends PreferenceActivity
     public static final String SCREEN_BGCOLOR_CUSTOM_KEY =
         "screen.%d.bgcolor.custom";
     public static final String SCREEN_CLIP_KEY = "screen.%d.clipratio";
+    public static final String SCREEN_SATURATION_KEY = "screen.%d.saturation";
+    public static final String SCREEN_OPACITY_KEY = "screen.%d.opacity";
     public static final String SCREEN_ORDER_KEY = "screen.%d.order";
 
     public static final String DEFAULT_TYPE_KEY = "screen.default.type";
@@ -41,6 +43,9 @@ public class MultiPictureSetting extends PreferenceActivity
     public static final String DEFAULT_BGCOLOR_CUSTOM_KEY =
         "screen.default.bgcolor.custom";
     public static final String DEFAULT_CLIP_KEY = "draw.clipratio";
+    public static final String DEFAULT_SATURATION_KEY =
+        "screen.default.saturation";
+    public static final String DEFAULT_OPACITY_KEY = "screen.default.opacity";
     public static final String DEFAULT_ORDER_KEY = "folder.order";
 
     public static final Uri IMAGE_BUCKET_URI =
@@ -140,6 +145,33 @@ public class MultiPictureSetting extends PreferenceActivity
             sgroup.addPreference(clip);
             setupValueSummary(clip_key, R.string.pref_screen_clipratio_summary);
 
+            // saturation
+            ListPreference satu = new ListPreference(this);
+            String satu_key = String.format(SCREEN_SATURATION_KEY, i);
+            satu.setKey(satu_key);
+            satu.setTitle(R.string.pref_screen_saturation_title);
+            satu.setDialogTitle(satu.getTitle());
+            satu.setSummary(R.string.pref_screen_saturation_summary);
+            satu.setEntries(R.array.pref_screen_saturation_entries);
+            satu.setEntryValues(R.array.pref_screen_saturation_entryvalues);
+            satu.setDefaultValue("use_default");
+            sgroup.addPreference(satu);
+            setupValueSummary(satu_key,
+                              R.string.pref_screen_saturation_summary);
+
+            // opacity
+            ListPreference opac = new ListPreference(this);
+            String opac_key = String.format(SCREEN_OPACITY_KEY, i);
+            opac.setKey(opac_key);
+            opac.setTitle(R.string.pref_screen_opacity_title);
+            opac.setDialogTitle(opac.getTitle());
+            opac.setSummary(R.string.pref_screen_opacity_summary);
+            opac.setEntries(R.array.pref_screen_opacity_entries);
+            opac.setEntryValues(R.array.pref_screen_opacity_entryvalues);
+            opac.setDefaultValue("use_default");
+            sgroup.addPreference(opac);
+            setupValueSummary(opac_key, R.string.pref_screen_opacity_summary);
+
             // selection order
             ListPreference order = new ListPreference(this);
             String order_key = String.format(SCREEN_ORDER_KEY, i);
@@ -191,6 +223,10 @@ public class MultiPictureSetting extends PreferenceActivity
         // for summary
         setupValueSummary(DEFAULT_CLIP_KEY,
                           R.string.pref_screen_clipratio_summary);
+        setupValueSummary(DEFAULT_SATURATION_KEY,
+                          R.string.pref_screen_saturation_summary);
+        setupValueSummary(DEFAULT_OPACITY_KEY,
+                          R.string.pref_screen_opacity_summary);
         setupValueSummary(DEFAULT_ORDER_KEY,
                           R.string.pref_screen_folder_order_summary);
     }

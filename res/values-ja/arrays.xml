@@ -62,6 +62,66 @@
     <item>画像全体を表示</item>
   </string-array>
 
+  <!-- saturation -->
+  <string-array name="pref_screen_saturation_entries">
+    <item>100% (元の色)</item>
+    <item>90%</item>
+    <item>80%</item>
+    <item>70%</item>
+    <item>60%</item>
+    <item>50%</item>
+    <item>40%</item>
+    <item>30%</item>
+    <item>20%</item>
+    <item>10%</item>
+    <item>0% (グレースケール)</item>
+    <item>デフォルト設定と同じ</item>
+  </string-array>
+
+  <string-array name="pref_screen_default_saturation_entries">
+    <item>100% (元の色)</item>
+    <item>90%</item>
+    <item>80%</item>
+    <item>70%</item>
+    <item>60%</item>
+    <item>50%</item>
+    <item>40%</item>
+    <item>30%</item>
+    <item>20%</item>
+    <item>10%</item>
+    <item>0% (グレースケール)</item>
+  </string-array>
+
+  <!-- opacity -->
+  <string-array name="pref_screen_opacity_entries">
+    <item>100% (変更しない)</item>
+    <item>90%</item>
+    <item>80%</item>
+    <item>70%</item>
+    <item>60%</item>
+    <item>50%</item>
+    <item>40%</item>
+    <item>30%</item>
+    <item>20%</item>
+    <item>10%</item>
+    <item>0% (透明)</item>
+    <item>デフォルト設定と同じ</item>
+  </string-array>
+
+  <string-array name="pref_screen_default_opacity_entries">
+    <item>100% (変更しない)</item>
+    <item>90%</item>
+    <item>80%</item>
+    <item>70%</item>
+    <item>60%</item>
+    <item>50%</item>
+    <item>40%</item>
+    <item>30%</item>
+    <item>20%</item>
+    <item>10%</item>
+    <item>0% (透明)</item>
+  </string-array>
+
   <!-- folder order -->
   <string-array name="pref_screen_folder_order_entries">
     <item>名前 (昇順)</item>

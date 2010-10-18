@@ -29,6 +29,12 @@
   <string name="pref_screen_clipratio_title">Crop/Resize ratio</string>
   <string name="pref_screen_clipratio_summary">How may crop picture to fit screen size.</string>
 
+  <string name="pref_screen_saturation_title">Decrease saturation</string>
+  <string name="pref_screen_saturation_summary">Decrease saturation to show as grayscale.</string>
+
+  <string name="pref_screen_opacity_title">Decrease opacity</string>
+  <string name="pref_screen_opacity_summary">Decrease opacity (increase transparency).</string>
+
   <string name="pref_screen_folder_order_title">Selection order</string>
   <string name="pref_screen_folder_order_summary">Selection order when changing picture from Album or Picture Folder.</string>
 
