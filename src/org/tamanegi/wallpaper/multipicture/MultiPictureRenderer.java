@@ -1515,7 +1515,7 @@ public class MultiPictureRenderer
 
             return true;
         }
-        catch(IOException e) {
+        catch(Exception e) {
             return false;
         }
     }
@@ -1721,7 +1721,7 @@ public class MultiPictureRenderer
             path_avail_cache.put(file_uri, true);
             return true;
         }
-        catch(IOException e) {
+        catch(Exception e) {
             path_avail_cache.put(file_uri, false);
             return false;
         }
