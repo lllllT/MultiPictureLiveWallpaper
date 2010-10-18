@@ -272,9 +272,11 @@ public class MultiPictureRenderer
     private int cur_color;
 
     private boolean is_duration_pending = false;
+    private boolean is_clear_setting_pending = false;
+    private boolean is_change_size_pending = false;
+    private SurfaceInfo pending_size_info;
 
     private AsyncWorker cur_worker = null;
-    private boolean clear_setting_required = false;
     private int fadein_progress = 0;            // [ 0...RELOAD_STEP]
     private Bitmap spinner = null;
 
@@ -377,7 +379,6 @@ public class MultiPictureRenderer
 
           case MSG_DRAW:
           case MSG_DRAW_PROGRESS:
-              handler.removeMessages(MSG_DRAW);
               draw(msg.what == MSG_DRAW_PROGRESS);
               break;
 
@@ -422,19 +423,21 @@ public class MultiPictureRenderer
               synchronized(msg.obj) {
                   SurfaceInfo info = (SurfaceInfo)msg.obj;
                   holder = info.holder;
-                  updateScreenSize(info.width, info.height);
+                  updateScreenSize(info);
                   info.notifyAll();
               }
               break;
 
           case MSG_CHANGE_PIC_BY_TAP:
               if(change_tap) {
-                  startChangeFolderPicture();
+                  startChangeFolderPicture(false);
+                  handler.sendEmptyMessage(MSG_DRAW);
               }
               break;
 
           case MSG_CHANGE_PIC_BY_TIME:
-              startChangeFolderPicture();
+              startChangeFolderPicture(false);
+              handler.sendEmptyMessage(MSG_DRAW);
               break;
 
           case MSG_RELOAD:
@@ -523,10 +526,10 @@ public class MultiPictureRenderer
     {
         // check loading
         if(cur_worker != null) {
-            clear_setting_required = true;
+            is_clear_setting_pending = true;
             return;
         }
-        clear_setting_required = false;
+        is_clear_setting_pending = false;
 
         // is already cleared
         if(pic == null) {
@@ -623,13 +626,21 @@ public class MultiPictureRenderer
             "reload.extmedia.mounted", true);
     }
 
-    private void updateScreenSize(int width, int height)
+    private void updateScreenSize(SurfaceInfo info)
     {
         int cnt = xcnt * ycnt;
 
+        if(cur_worker != null) {
+            is_change_size_pending = true;
+            pending_size_info = info;
+            return;
+        }
+        is_change_size_pending = false;
+        pending_size_info = null;
+
         // screen size
-        this.width = width;
-        this.height = height;
+        this.width = info.width;
+        this.height = info.height;
 
         // restrict size
         if(width * height * (cnt + 3) > MAX_TOTAL_PIXELS) {
@@ -649,8 +660,8 @@ public class MultiPictureRenderer
         }
 
         // reload current pictures
-        // todo:
-        clearPictureSetting();
+        startChangeFolderPicture(true);
+        handler.sendEmptyMessage(MSG_DRAW);
     }
 
     private void startFadeInDraw()
@@ -668,6 +679,11 @@ public class MultiPictureRenderer
 
     private void draw(boolean is_progress)
     {
+        handler.removeMessages(MSG_DRAW);
+        if(is_progress && cur_worker != null) {
+            cur_worker.onPreProgress();
+        }
+
         if(! visible) {
             return;
         }
@@ -1042,11 +1058,17 @@ public class MultiPictureRenderer
         }
 
         @Override
+        protected void onPreProgress()
+        {
+            if(visible) {
+                handler.sendEmptyMessageDelayed(MSG_DRAW_PROGRESS,
+                                                LOADING_FRAME_DURATION);
+            }
+        }
+
+        @Override
         protected void onDrawProgress(Canvas c, boolean is_progress)
         {
-            handler.sendEmptyMessageDelayed(MSG_DRAW_PROGRESS,
-                                            LOADING_FRAME_DURATION);
-
             if(progress > 0) {
                 drawSpinner(c, progress);
             }
@@ -1065,24 +1087,33 @@ public class MultiPictureRenderer
             handler.removeMessages(MSG_DRAW_PROGRESS);
             cur_worker = null;
 
-            if(clear_setting_required) {
+            if(is_clear_setting_pending) {
                 clearPictureSetting();
+            }
+            if(is_change_size_pending) {
+                updateScreenSize(pending_size_info);
             }
 
             startFadeInDraw();
         }
     }
 
-    private void startChangeFolderPicture()
+    private void startChangeFolderPicture(boolean only_reread)
     {
-        new AsyncChangeFolderPicture().execute();
+        new AsyncChangeFolderPicture(only_reread).execute();
     }
 
     private class AsyncChangeFolderPicture extends AsyncWorker
     {
         private boolean is_complete = false;
         private int progress;
-        private Bitmap cur_screen;
+        private Bitmap cur_screen = null;
+        private boolean only_reread;
+
+        private AsyncChangeFolderPicture(boolean only_reread)
+        {
+            this.only_reread = only_reread;
+        }
 
         @Override
         protected void onPreExecute()
@@ -1092,53 +1123,61 @@ public class MultiPictureRenderer
                 return;
             }
 
-            if(! isNeedChangeFolderPicture()) {
+            if(! only_reread && ! isNeedChangeFolderPicture()) {
                 cancel();
                 return;
             }
 
             cur_worker = this;
-            progress = (visible ? fadein_progress + 1 : RELOAD_STEP);
+            progress = (visible && (! only_reread) ?
+                        fadein_progress + 1 : RELOAD_STEP);
 
             if(progress < RELOAD_STEP) {
                 saveCurrentScreen();
-                handler.removeMessages(MSG_DRAW_FADEIN);
-                handler.sendEmptyMessageDelayed(MSG_DRAW_PROGRESS,
-                                                RELOAD_DURATION / RELOAD_STEP);
             }
-            else {
-                handler.sendEmptyMessageDelayed(MSG_DRAW_PROGRESS,
-                                                LOADING_INITIAL_TIME);
+            if(cur_screen == null) {
+                progress = RELOAD_STEP;
             }
+
+            handler.removeMessages(MSG_DRAW_FADEIN);
+            handler.sendEmptyMessageDelayed(MSG_DRAW_PROGRESS,
+                                            RELOAD_DURATION / RELOAD_STEP);
         }
 
         @Override
         protected void doInBackground()
         {
-            changeFolderPicture();
+            changeFolderPicture(only_reread);
+        }
+
+        @Override
+        protected void onPreProgress()
+        {
+            if(visible) {
+                int duration =
+                    (progress < RELOAD_STEP ? RELOAD_DURATION / RELOAD_STEP :
+                     progress == RELOAD_STEP ? LOADING_INITIAL_TIME :
+                     LOADING_FRAME_DURATION);
+                handler.sendEmptyMessageDelayed(MSG_DRAW_PROGRESS, duration);
+            }
+            else {
+                progress = RELOAD_STEP;
+            }
         }
 
         @Override
         protected void onDrawProgress(Canvas c, boolean is_progress)
         {
             if(progress < RELOAD_STEP) {
-                handler.sendEmptyMessageDelayed(MSG_DRAW_PROGRESS,
-                                                RELOAD_DURATION / RELOAD_STEP);
-                if(cur_screen != null) {
-                    paint.setAlpha(0xff);
-                    c.drawBitmap(cur_screen, null,
-                                 new Rect(0, 0, width, height), paint);
-                    c.drawColor((0xff * progress / RELOAD_STEP) << 24);
-                }
+                paint.setAlpha(0xff);
+                c.drawBitmap(cur_screen, null,
+                             new Rect(0, 0, width, height), paint);
+                c.drawColor((0xff * progress / RELOAD_STEP) << 24);
             }
             else if(progress == RELOAD_STEP) {
-                handler.sendEmptyMessageDelayed(MSG_DRAW_PROGRESS,
-                                                LOADING_INITIAL_TIME);
                 c.drawColor(0xff000000);
             }
             else {
-                handler.sendEmptyMessageDelayed(MSG_DRAW_PROGRESS,
-                                                LOADING_FRAME_DURATION);
                 drawSpinner(c, progress);
             }
 
@@ -1178,9 +1217,15 @@ public class MultiPictureRenderer
         {
             handler.removeMessages(MSG_DRAW_PROGRESS);
             cur_worker = null;
+            if(cur_screen != null) {
+                cur_screen.recycle();
+            }
 
-            if(clear_setting_required) {
+            if(is_clear_setting_pending) {
                 clearPictureSetting();
+            }
+            if(is_change_size_pending) {
+                updateScreenSize(pending_size_info);
             }
 
             startFadeInDraw();
@@ -1213,7 +1258,7 @@ public class MultiPictureRenderer
             pic[i] = loadPictureInfo(i);
         }
 
-        changeFolderPicture();
+        changeFolderPicture(false);
     }
 
     private PictureInfo loadPictureInfo(int idx)
@@ -1759,20 +1804,20 @@ public class MultiPictureRenderer
         return list;
     }
 
-    private void changeFolderPicture()
+    private void changeFolderPicture(boolean only_reread)
     {
         if(pic == null) {
             return;
         }
 
         for(PictureInfo info : pic) {
-            changeFolderPicture(info);
+            changeFolderPicture(info, only_reread);
         }
 
         postDurationCallback();
     }
 
-    private void changeFolderPicture(PictureInfo info)
+    private void changeFolderPicture(PictureInfo info, boolean only_reread)
     {
         if(info != null &&
            (info.type == ScreenType.folder ||
@@ -1782,35 +1827,39 @@ public class MultiPictureRenderer
                 return;
             }
 
-            int idx_base = (info.change_order == OrderType.random ?
-                            random.nextInt(fcnt) :
-                            (info.cur_file_idx + 1) % fcnt);
+            int idx_base = (
+                only_reread ? info.cur_file_idx :
+                info.change_order == OrderType.random ? random.nextInt(fcnt) :
+                (info.cur_file_idx + 1) % fcnt);
             int idx_prev = info.cur_file_idx;
             boolean is_retrying = false;
 
             for(int i = 0; i < fcnt; i++) {
                 int idx = (idx_base + i) % fcnt;
-                if(idx == idx_prev) {
-                    continue;
-                }
-
                 boolean same_exists = false;
-                if(info.change_order == OrderType.random) {
-                    String name = info.file_list.get(idx);
 
-                    for(PictureInfo other_info : pic) {
-                        if(other_info == info) {
-                            break;
-                        }
-                        if(other_info.type != ScreenType.file &&
-                           other_info.cur_file_idx >= 0 &&
-                           name.equals(other_info.file_list.get(
-                                           other_info.cur_file_idx))) {
-                            same_exists = true;
-                        }
-                    }
-                    if(is_retrying && same_exists) {
+                if(! only_reread) {
+                    if(idx == idx_prev) {
                         continue;
+                    }
+
+                    if(info.change_order == OrderType.random) {
+                        String name = info.file_list.get(idx);
+
+                        for(PictureInfo other_info : pic) {
+                            if(other_info == info) {
+                                break;
+                            }
+                            if(other_info.type != ScreenType.file &&
+                               other_info.cur_file_idx >= 0 &&
+                               name.equals(other_info.file_list.get(
+                                               other_info.cur_file_idx))) {
+                                same_exists = true;
+                            }
+                        }
+                        if(is_retrying && same_exists) {
+                            continue;
+                        }
                     }
                 }
 
@@ -1958,6 +2007,7 @@ public class MultiPictureRenderer
 
         protected void onPreExecute() {}
         protected abstract void doInBackground();
+        protected void onPreProgress() {}
         protected void onDrawProgress(Canvas c, boolean is_progress) {}
         protected void onPostExecute() {}
 
