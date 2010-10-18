@@ -1339,7 +1339,13 @@ public class MultiPictureRenderer
         // load bitmap data
         if(type == ScreenType.file) {
             if(fname != null) {
-                addContentObserver(Uri.parse(fname), false);
+                Uri uri = Uri.parse(fname);
+                if(ContentResolver.SCHEME_FILE.equals(uri.getScheme())) {
+                    addFolderObserver(uri.getPath());
+                }
+                else {
+                    addContentObserver(uri, false);
+                }
                 loadBitmap(info, fname);
                 info.cur_file_uri = fname;
             }
