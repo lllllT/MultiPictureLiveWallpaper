@@ -43,8 +43,11 @@
   <string name="pref_draw_transition_title">Transition type</string>
   <string name="pref_draw_transition_summary">Transition type when switching screen.</string>
 
-  <string name="pref_draw_reflection_title">Show reflection</string>
-  <string name="pref_draw_reflection_summary">Show reflection at bottom of the picture.</string>
+  <string name="pref_draw_reflection_top_title">Show reflection (top)</string>
+  <string name="pref_draw_reflection_top_summary">Show reflection at top of the picture.</string>
+
+  <string name="pref_draw_reflection_bottom_title">Show reflection (bottom)</string>
+  <string name="pref_draw_reflection_bottom_summary">Show reflection at bottom of the picture.</string>
 
   <string name="pref_cat_folder_title">Album/Picture Folder</string>
 
