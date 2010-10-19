@@ -1,4 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!--
+    If you translate and localize to other language,
+    and if you want, please send me resource files.
+    I'd like to include more locales.
+-->
 <resources>
   <string name="app_name">MultiPicture Live Wallpaper</string>
   <string name="app_description">Show differecnt pictures for each screen.</string>

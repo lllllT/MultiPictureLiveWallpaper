@@ -64,7 +64,7 @@
 
   <!-- saturation -->
   <string-array name="pref_screen_saturation_entries">
-    <item>100% (元の色)</item>
+    <item>100% (変更しない)</item>
     <item>90%</item>
     <item>80%</item>
     <item>70%</item>
@@ -79,7 +79,7 @@
   </string-array>
 
   <string-array name="pref_screen_default_saturation_entries">
-    <item>100% (元の色)</item>
+    <item>100% (変更しない)</item>
     <item>90%</item>
     <item>80%</item>
     <item>70%</item>

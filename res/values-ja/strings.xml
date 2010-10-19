@@ -43,8 +43,11 @@
   <string name="pref_draw_transition_title">画面変更時の切替方法</string>
   <string name="pref_draw_transition_summary">画面を変更する時の画像切替方法。</string>
 
-  <string name="pref_draw_reflection_title">反射を表示する</string>
-  <string name="pref_draw_reflection_summary">画像の下側に反射を表示する。</string>
+  <string name="pref_draw_reflection_top_title">反射を表示する (上側)</string>
+  <string name="pref_draw_reflection_top_summary">画像の上側に反射を表示する。</string>
+
+  <string name="pref_draw_reflection_bottom_title">反射を表示する (下側)</string>
+  <string name="pref_draw_reflection_bottom_summary">画像の下側に反射を表示する。</string>
 
   <string name="pref_cat_folder_title">アルバム指定/フォルダ指定</string>
 

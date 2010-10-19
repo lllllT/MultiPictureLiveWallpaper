@@ -267,7 +267,8 @@ public class MultiPictureRenderer
     private float default_opacity;
     private boolean default_detect_bgcolor;
     private int default_bgcolor;
-    private boolean show_reflection;
+    private boolean show_reflection_top;
+    private boolean show_reflection_bottom;
     private boolean use_recursive;
     private boolean change_tap;
     private OrderType default_change_order;
@@ -603,7 +604,8 @@ public class MultiPictureRenderer
         screen_transition = TransitionType.valueOf(
             pref.getString("draw.transition", "slide"));
         cur_transition = screen_transition;
-        show_reflection = pref.getBoolean("draw.reflection", true);
+        show_reflection_top = pref.getBoolean("draw.reflection.top", false);
+        show_reflection_bottom = pref.getBoolean("draw.reflection", true);
 
         default_clip_ratio = Float.valueOf(
             pref.getString(MultiPictureSetting.DEFAULT_CLIP_KEY, "1.0"));
@@ -911,19 +913,44 @@ public class MultiPictureRenderer
             paint.setAlpha((int)(alpha * pic[idx].opacity));
             c.drawBitmap(bmp, matrix, paint);
 
-            if(show_reflection) {
+            if(show_reflection_top || show_reflection_bottom) {
                 // mirrored picture
-                if(fill_background) {
-                    paint.setColor(pic[idx].bgcolor);
-                    paint.setAlpha(alpha);
+                if(show_reflection_top) {
+                    Matrix mtop = new Matrix(matrix);
+                    mtop.preScale(1, -1, 0, 0);
+
+                    if(fill_background) {
+                        paint.setColor(pic[idx].bgcolor);
+                        paint.setAlpha(alpha);
+                        c.save();
+                        c.concat(mtop);
+                        c.drawRect(0, 0, bmp.getWidth(), bmp.getHeight(),
+                                   paint);
+                        c.restore();
+                    }
+
+                    paint.setColor(cur_color);
+                    paint.setAlpha((int)(alpha * pic[idx].opacity / 4));
+                    c.drawBitmap(bmp, mtop, paint);
                 }
-                matrix.preScale(1, -1, 0, bmp.getHeight());
-                c.save();
-                c.concat(matrix);
-                c.drawRect(0, 0, bmp.getWidth(), bmp.getHeight(), paint);
-                c.restore();
-                paint.setAlpha((int)(alpha * pic[idx].opacity / 4));
-                c.drawBitmap(bmp, matrix, paint);
+                if(show_reflection_bottom) {
+                    Matrix mbottom = new Matrix(matrix);
+                    mbottom.preScale(1, -1, 0, bmp.getHeight());
+
+                    if(fill_background) {
+                        paint.setColor(pic[idx].bgcolor);
+                        paint.setAlpha(alpha);
+                        c.save();
+                        c.concat(mbottom);
+                        c.drawRect(0, 0, bmp.getWidth(), bmp.getHeight(),
+                                   paint);
+                        c.restore();
+                    }
+
+                    paint.setColor(cur_color);
+                    paint.setAlpha((int)(alpha * pic[idx].opacity / 4));
+                    c.drawBitmap(bmp, mbottom, paint);
+                }
             }
         }
     }

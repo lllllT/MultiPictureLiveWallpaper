@@ -63,9 +63,14 @@
        android:entryValues="@array/pref_draw_transition_entryvalues"
        android:defaultValue="slide" />
     <CheckBoxPreference
+       android:key="draw.reflection.top"
+       android:title="@string/pref_draw_reflection_top_title"
+       android:summary="@string/pref_draw_reflection_top_summary"
+       android:defaultValue="false" />
+    <CheckBoxPreference
        android:key="draw.reflection"
-       android:title="@string/pref_draw_reflection_title"
-       android:summary="@string/pref_draw_reflection_summary"
+       android:title="@string/pref_draw_reflection_bottom_title"
+       android:summary="@string/pref_draw_reflection_bottom_summary"
        android:defaultValue="true" />
   </PreferenceCategory>
 
