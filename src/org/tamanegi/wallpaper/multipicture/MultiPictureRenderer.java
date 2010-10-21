@@ -106,8 +106,9 @@ public class MultiPictureRenderer
     private static enum TransitionType
     {
         none, random,
-            slide, crossfade, fade_inout, zoom_inout, card,
-            slide_3d, rotation_3d,
+            slide, crossfade, fade_inout, zoom_inout,
+            wipe, card,
+            slide_3d, rotation_3d, swing,
     }
 
     private static TransitionType[] random_transition = {
@@ -115,9 +116,11 @@ public class MultiPictureRenderer
         TransitionType.crossfade,
         TransitionType.fade_inout,
         TransitionType.zoom_inout,
+        TransitionType.wipe,
         TransitionType.card,
         TransitionType.slide_3d,
         TransitionType.rotation_3d,
+        TransitionType.swing,
     };
 
     // screen types
@@ -310,12 +313,14 @@ public class MultiPictureRenderer
         this.context = context;
     }
 
-    public void onCreate(SurfaceHolder holder)
+    public void onCreate(SurfaceHolder holder, boolean is_preview)
     {
         this.holder = holder;
 
-        thread = new HandlerThread("MultiPicture",
-                                   Process.THREAD_PRIORITY_URGENT_DISPLAY);
+        int priority = (is_preview ?
+                        Process.THREAD_PRIORITY_DEFAULT :
+                        Process.THREAD_PRIORITY_URGENT_DISPLAY);
+        thread = new HandlerThread("MultiPicture", priority);
         thread.start();
 
         handler = new Handler(thread.getLooper(), new Handler.Callback() {
@@ -748,8 +753,12 @@ public class MultiPictureRenderer
             (transition_prev_time + TRANSITION_RANDOM_TIMEOUT <
              SystemClock.elapsedRealtime())) ||
            (cur_transition == TransitionType.random)) {
-            cur_transition = random_transition[
-                random.nextInt(random_transition.length)];
+            TransitionType next_transition;
+            do {
+                next_transition = random_transition[
+                    random.nextInt(random_transition.length)];
+            } while(next_transition == cur_transition);
+            cur_transition = next_transition;
         }
 
         if(dx != 0 || dy != 0) {
@@ -805,6 +814,7 @@ public class MultiPictureRenderer
         }
 
         Matrix matrix = new Matrix();
+        RectF clip_rect = null;
         int alpha = 255;
         boolean fill_background = false;
 
@@ -835,6 +845,13 @@ public class MultiPictureRenderer
             matrix.postScale(fact, fact, width / 2f, height / 2f);
             matrix.postTranslate(width * dx / 2, height * dy / 2);
             alpha = 255;
+        }
+        else if(cur_transition == TransitionType.wipe) {
+            clip_rect = new RectF((dx <= 0 ? 0 : width * dx),
+                                  (dy <= 0 ? 0 : height * dy),
+                                  (dx <= 0 ? width * (1 + dx) : width),
+                                  (dy <= 0 ? height * (1 + dy) : height));
+            fill_background = true;
         }
         else if(cur_transition == TransitionType.card) {
             int sx = (dx < 0 ? 0 : (int)(width * dx));
@@ -876,11 +893,25 @@ public class MultiPictureRenderer
             matrix.preTranslate(-width / 2, -height / 2);
             matrix.postTranslate(width / 2, height / 2);
         }
+        else if(cur_transition == TransitionType.swing) {
+            Camera camera = new Camera();
+            camera.rotateY(dx * -90);
+            camera.rotateX(dy * 90);
+            camera.getMatrix(matrix);
+
+            float tx = (dx <= 0 ? 0 : -width);
+            float ty = (dy <= 0 ? 0 : -height);
+            matrix.preTranslate(tx, ty);
+            matrix.postTranslate(-tx, -ty);
+        }
 
         if(pic[idx] == null || pic[idx].bmp == null) {
             text_paint.setAlpha(alpha);
             paint.setAlpha(alpha);
             c.save();
+            if(clip_rect != null) {
+                c.clipRect(clip_rect);
+            }
             c.concat(matrix);
             c.drawRect(0, 0, width, height, paint);
             c.drawText(context.getString(R.string.str_pic_not_set, idx + 1),
@@ -891,6 +922,12 @@ public class MultiPictureRenderer
             Bitmap bmp = pic[idx].bmp;
             float xratio = pic[idx].xratio;
             float yratio = pic[idx].yratio;
+
+            // clip region
+            if(clip_rect != null) {
+                c.save();
+                c.clipRect(clip_rect);
+            }
 
             // real picture
             matrix.preTranslate(width * (1 - xratio) / 2,
@@ -951,6 +988,10 @@ public class MultiPictureRenderer
                     paint.setAlpha((int)(alpha * pic[idx].opacity / 4));
                     c.drawBitmap(bmp, mbottom, paint);
                 }
+            }
+
+            if(clip_rect != null) {
+                c.restore();
             }
         }
     }

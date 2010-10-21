@@ -220,9 +220,11 @@
     <item>CrossFade</item>
     <item>Fade In/Out</item>
     <item>Zoom In/Out</item>
+    <item>Wipe</item>
     <item>Card</item>
     <item>3D Slide</item>
     <item>3D Rotation</item>
+    <item>Swing</item>
     <item>Random</item>
   </string-array>
 
@@ -232,9 +234,11 @@
     <item>crossfade</item>
     <item>fade_inout</item>
     <item>zoom_inout</item>
+    <item>wipe</item>
     <item>card</item>
     <item>slide_3d</item>
     <item>rotation_3d</item>
+    <item>swing</item>
     <item>random</item>
   </string-array>
 

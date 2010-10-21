@@ -26,7 +26,7 @@ public class MultiPictureService extends WallpaperService
         @Override
         public void onCreate(SurfaceHolder sh)
         {
-            renderer.onCreate(sh);
+            renderer.onCreate(sh, isPreview());
 
             // for double tap
             gdetector = new GestureDetector(getApplicationContext(),

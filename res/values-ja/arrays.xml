@@ -149,9 +149,11 @@
     <item>クロスフェード</item>
     <item>フェードイン/アウト</item>
     <item>ズームイン/アウト</item>
+    <item>ワイプ</item>
     <item>カード</item>
     <item>3Dスライド</item>
     <item>3D回転</item>
+    <item>スウィング</item>
     <item>ランダム</item>
   </string-array>
 
