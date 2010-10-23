@@ -1,7 +1,7 @@
 package org.tamanegi.wallpaper.multipicture;
 
 import java.util.Arrays;
-import java.util.IllegalFormatFlagsException;
+import java.util.IllegalFormatException;
 
 import android.app.AlertDialog;
 import android.content.ContentResolver;
@@ -338,7 +338,7 @@ public class MultiPictureSetting extends PreferenceActivity
         try {
             item.getSummary();
         }
-        catch(IllegalFormatFlagsException e) {
+        catch(IllegalFormatException e) {
             // workaround for summary formatter...
             item.setSummary(getString(res_id) +
                             getString(R.string.pref_screen_val_summary));

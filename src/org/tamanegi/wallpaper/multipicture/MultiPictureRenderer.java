@@ -354,17 +354,7 @@ public class MultiPictureRenderer
         }
 
         SurfaceInfo info = new SurfaceInfo(sh, format, width, height);
-        synchronized(info) {
-            handler.sendMessage(
-                handler.obtainMessage(MSG_SURFACE_CHANGED, info));
-
-            try {
-                info.wait();
-            }
-            catch(InterruptedException e) {
-                // ignore
-            }
-        }
+        handler.sendMessage(handler.obtainMessage(MSG_SURFACE_CHANGED, info));
     }
 
     public void onVisibilityChanged(boolean visible)
@@ -436,12 +426,9 @@ public class MultiPictureRenderer
               break;
 
           case MSG_SURFACE_CHANGED:
-              synchronized(msg.obj) {
-                  SurfaceInfo info = (SurfaceInfo)msg.obj;
-                  holder = info.holder;
-                  updateScreenSize(info);
-                  info.notifyAll();
-              }
+              SurfaceInfo info = (SurfaceInfo)msg.obj;
+              holder = info.holder;
+              updateScreenSize(info);
               break;
 
           case MSG_CHANGE_PIC_BY_TAP:
