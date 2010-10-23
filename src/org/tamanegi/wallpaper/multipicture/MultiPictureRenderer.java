@@ -44,6 +44,7 @@ import android.os.Process;
 import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
+import android.util.FloatMath;
 import android.view.SurfaceHolder;
 
 public class MultiPictureRenderer
@@ -108,7 +109,7 @@ public class MultiPictureRenderer
         none, random,
             slide, crossfade, fade_inout, zoom_inout,
             wipe, card,
-            slide_3d, rotation_3d, swing,
+            slide_3d, rotation_3d, swing, swap,
     }
 
     private static TransitionType[] random_transition = {
@@ -121,6 +122,7 @@ public class MultiPictureRenderer
         TransitionType.slide_3d,
         TransitionType.rotation_3d,
         TransitionType.swing,
+        TransitionType.swap,
     };
 
     // screen types
@@ -733,6 +735,44 @@ public class MultiPictureRenderer
         float dx = xn - xcur;
         float dy = yn - ycur;
 
+        // delta for each screen
+        class ScreenDelta implements Comparable<ScreenDelta>
+        {
+            int xn;
+            int yn;
+            float dx;
+            float dy;
+            boolean visible;
+
+            ScreenDelta(int xn, int yn, float dx, float dy, boolean visible)
+            {
+                this.xn = xn;
+                this.yn = yn;
+                this.dx = dx;
+                this.dy = dy;
+                this.visible = visible;
+            }
+
+            @Override
+            public int compareTo(ScreenDelta o2)
+            {
+                // reverse order
+                float d1 = Math.max(Math.abs(this.dx), Math.abs(this.dy));
+                float d2 = Math.max(Math.abs(o2.dx), Math.abs(o2.dy));
+                return (d1 < d2 ? +1 :
+                        d1 > d2 ? -1 :
+                        0);
+            }
+        }
+
+        ScreenDelta[] ds = {
+            new ScreenDelta(xn,     yn,     dx,     dy,     true),
+            new ScreenDelta(xn + 1, yn,     dx + 1, dy,     (dx != 0)),
+            new ScreenDelta(xn,     yn + 1, dx,     dy + 1, (dy != 0)),
+            new ScreenDelta(xn + 1, yn + 1, dx + 1, dy + 1,
+                            (dx != 0 && dy != 0)),
+        };
+
         // for random transition
         if(((! is_in_transition) &&
             (screen_transition == TransitionType.random) &&
@@ -757,18 +797,12 @@ public class MultiPictureRenderer
         }
 
         // background color
-        int color = getBackgroundColor(xn, yn, dx, dy);
-        if(dx != 0) {
-            int cc = getBackgroundColor(xn + 1, yn, dx + 1, dy);
-            color = mergeColor(color, cc);
-        }
-        if(dy != 0) {
-            int cc = getBackgroundColor(xn, yn + 1, dx, dy + 1);
-            color = mergeColor(color, cc);
-        }
-        if(dx != 0 && dy != 0) {
-            int cc = getBackgroundColor(xn + 1, yn + 1, dx + 1, dy + 1);
-            color = mergeColor(color, cc);
+        int color = 0;
+        for(ScreenDelta s : ds) {
+            if(s.visible) {
+                int cc = getBackgroundColor(s.xn, s.yn, s.dx, s.dy);
+                color = mergeColor(color, cc);
+            }
         }
 
         cur_color = ((color & 0x00ffffff) | 0xff000000);
@@ -776,15 +810,13 @@ public class MultiPictureRenderer
         c.drawColor(cur_color);
 
         // draw each screen
-        drawPicture(c, xn, yn, dx, dy);
-        if(dx != 0) {
-            drawPicture(c, xn + 1, yn, dx + 1, dy);
+        if(cur_transition == TransitionType.swap) {
+            Arrays.sort(ds);
         }
-        if(dy != 0) {
-            drawPicture(c, xn, yn + 1, dx, dy + 1);
-        }
-        if(dx != 0 && dy != 0) {
-            drawPicture(c, xn + 1, yn + 1, dx + 1, dy + 1);
+        for(ScreenDelta s : ds) {
+            if(s.visible) {
+                drawPicture(c, s.xn, s.yn, s.dx, s.dy);
+            }
         }
 
         // fade in
@@ -805,6 +837,7 @@ public class MultiPictureRenderer
         int alpha = 255;
         boolean fill_background = false;
 
+        // transition effect
         if(cur_transition == TransitionType.none) {
             if(dx <= -0.5 || dx > 0.5 ||
                dy <= -0.5 || dy > 0.5) {
@@ -891,7 +924,25 @@ public class MultiPictureRenderer
             matrix.preTranslate(tx, ty);
             matrix.postTranslate(-tx, -ty);
         }
+        else if(cur_transition == TransitionType.swap) {
+            float fact = Math.max(Math.abs(dx), Math.abs(dy));
+            float ang1 = (float)(fact * Math.PI);
+            float ang2 = (float)Math.atan2(-dy, dx);
 
+            Camera camera = new Camera();
+            camera.translate(
+                FloatMath.cos(ang2) * FloatMath.sin(ang1) * width * 0.6f,
+                FloatMath.sin(ang2) * FloatMath.sin(ang1) * height * 0.6f,
+                (1 - FloatMath.cos(ang1)) * Math.max(width, height) * 0.6f);
+            camera.getMatrix(matrix);
+
+            matrix.preTranslate(-width / 2, -height / 2);
+            matrix.postTranslate(width / 2, height / 2);
+
+            alpha = Math.min((int)((FloatMath.cos(ang1) + 1) * 0xff), 0xff);
+        }
+
+        // draw
         if(pic[idx] == null || pic[idx].bmp == null) {
             text_paint.setAlpha(alpha);
             paint.setAlpha(alpha);

@@ -225,6 +225,7 @@
     <item>3D Slide</item>
     <item>3D Rotation</item>
     <item>Swing</item>
+    <item>Swap</item>
     <item>Random</item>
   </string-array>
 
@@ -239,6 +240,7 @@
     <item>slide_3d</item>
     <item>rotation_3d</item>
     <item>swing</item>
+    <item>swap</item>
     <item>random</item>
   </string-array>
 
