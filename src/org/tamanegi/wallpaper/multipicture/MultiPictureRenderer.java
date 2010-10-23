@@ -941,7 +941,7 @@ public class MultiPictureRenderer
             matrix.preTranslate(-width / 2, -height / 2);
             matrix.postTranslate(width / 2, height / 2);
 
-            alpha = Math.min((int)((FloatMath.cos(ang1) + 1) * 0xff), 0xff);
+            alpha = Math.min((int)((FloatMath.cos(ang1) + 1) * 2 * 0xff), 0xff);
         }
         else if(cur_transition == TransitionType.cube) {
             float fact = Math.max(Math.abs(dx), Math.abs(dy));
@@ -960,7 +960,7 @@ public class MultiPictureRenderer
             matrix.preTranslate(-width / 2, -height / 2);
             matrix.postTranslate(width / 2, height / 2);
 
-            alpha = Math.min((int)((FloatMath.cos(ang1) + 1) * 0xff), 0xff);
+            alpha = Math.min((int)(FloatMath.cos(ang1) * 4 * 0xff), 0xff);
         }
 
         // draw
