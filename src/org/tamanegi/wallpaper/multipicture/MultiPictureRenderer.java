@@ -109,7 +109,7 @@ public class MultiPictureRenderer
         none, random,
             slide, crossfade, fade_inout, zoom_inout,
             wipe, card,
-            slide_3d, rotation_3d, swing, swap,
+            slide_3d, rotation_3d, swing, swap, cube
     }
 
     private static TransitionType[] random_transition = {
@@ -123,6 +123,7 @@ public class MultiPictureRenderer
         TransitionType.rotation_3d,
         TransitionType.swing,
         TransitionType.swap,
+        TransitionType.cube,
     };
 
     // screen types
@@ -810,7 +811,8 @@ public class MultiPictureRenderer
         c.drawColor(cur_color);
 
         // draw each screen
-        if(cur_transition == TransitionType.swap) {
+        if(cur_transition == TransitionType.swap ||
+           cur_transition == TransitionType.cube) {
             Arrays.sort(ds);
         }
         for(ScreenDelta s : ds) {
@@ -931,9 +933,28 @@ public class MultiPictureRenderer
 
             Camera camera = new Camera();
             camera.translate(
-                FloatMath.cos(ang2) * FloatMath.sin(ang1) * width * 0.6f,
-                FloatMath.sin(ang2) * FloatMath.sin(ang1) * height * 0.6f,
-                (1 - FloatMath.cos(ang1)) * Math.max(width, height) * 0.6f);
+                FloatMath.cos(ang2) * FloatMath.sin(ang1) * width * 0.51f,
+                FloatMath.sin(ang2) * FloatMath.sin(ang1) * height * 0.51f,
+                (1 - FloatMath.cos(ang1)) * 100);
+            camera.getMatrix(matrix);
+
+            matrix.preTranslate(-width / 2, -height / 2);
+            matrix.postTranslate(width / 2, height / 2);
+
+            alpha = Math.min((int)((FloatMath.cos(ang1) + 1) * 0xff), 0xff);
+        }
+        else if(cur_transition == TransitionType.cube) {
+            float fact = Math.max(Math.abs(dx), Math.abs(dy));
+            float ang1 = (float)(fact * Math.PI / 2);
+            float ang2 = (float)Math.atan2(-dy, dx);
+
+            Camera camera = new Camera();
+            camera.translate(
+                FloatMath.cos(ang2) * FloatMath.sin(ang1) * width * 0.5f,
+                FloatMath.sin(ang2) * FloatMath.sin(ang1) * height * 0.5f,
+                (1 - FloatMath.cos(ang1)) * 200);
+            camera.rotateY(dx * 90);
+            camera.rotateX(dy * -90);
             camera.getMatrix(matrix);
 
             matrix.preTranslate(-width / 2, -height / 2);
