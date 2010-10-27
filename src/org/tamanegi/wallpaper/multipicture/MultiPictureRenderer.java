@@ -1102,7 +1102,7 @@ public class MultiPictureRenderer
         int g2 = (c2 >>  8) & 0xff;
         int b2 = (c2 >>  0) & 0xff;
 
-        return (((int)((a1 + a2) * 0xff) << 24) |
+        return ((0xff << 24) |
                 ((int)(r1 * a1 + r2 * a2) << 16) |
                 ((int)(g1 * a1 + g2 * a2) <<  8) |
                 ((int)(b1 * a1 + b2 * a2) <<  0));
