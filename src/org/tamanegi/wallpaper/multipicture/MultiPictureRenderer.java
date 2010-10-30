@@ -54,6 +54,7 @@ public class MultiPictureRenderer
     private static final int MSG_DESTROY = 2;
     private static final int MSG_SHOW = 3;
     private static final int MSG_HIDE = 4;
+    private static final int MSG_LOW_MEMORY = 5;
     private static final int MSG_DRAW = 10;
     private static final int MSG_DRAW_PROGRESS = 11;
     private static final int MSG_DRAW_FADEIN = 12;
@@ -291,6 +292,7 @@ public class MultiPictureRenderer
     private boolean is_clear_setting_pending = false;
     private boolean is_change_size_pending = false;
     private SurfaceInfo pending_size_info;
+    private boolean is_reread_pending = false;
 
     private AsyncWorker cur_worker = null;
     private int fadein_progress = 0;            // [ 0...RELOAD_STEP]
@@ -340,6 +342,20 @@ public class MultiPictureRenderer
         handler.sendEmptyMessage(MSG_DESTROY);
     }
 
+    public void onLowMemory()
+    {
+        Object lock = new Object();
+        synchronized(lock) {
+            handler.sendMessage(handler.obtainMessage(MSG_LOW_MEMORY, lock));
+            try {
+                lock.wait();
+            }
+            catch(InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     public void onOffsetsChanged(float xoffset, float yoffset,
                                  float xstep, float ystep,
                                  int xpixel, int ypixel)
@@ -384,6 +400,21 @@ public class MultiPictureRenderer
 
           case MSG_DESTROY:
               destroy();
+              break;
+
+          case MSG_LOW_MEMORY:
+              if(cur_worker == null && pic != null) {
+                  for(PictureInfo info : pic) {
+                      if(info.bmp != null) {
+                          info.bmp.recycle();
+                          info.bmp = null;
+                      }
+                  }
+                  is_reread_pending = true;
+              }
+              synchronized(msg.obj) {
+                  msg.obj.notifyAll();
+              }
               break;
 
           case MSG_DRAW:
@@ -703,6 +734,10 @@ public class MultiPictureRenderer
         if(pic == null) {
             startLoadPictureSetting();
         }
+        else if(is_reread_pending) {
+            startChangeFolderPicture(true);
+        }
+        is_reread_pending = false;
 
         Canvas c = null;
         try {

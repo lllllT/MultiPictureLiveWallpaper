@@ -1,5 +1,9 @@
 package org.tamanegi.wallpaper.multipicture;
 
+import java.lang.ref.WeakReference;
+import java.util.LinkedList;
+import java.util.ListIterator;
+
 import android.service.wallpaper.WallpaperService;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
@@ -7,10 +11,48 @@ import android.view.SurfaceHolder;
 
 public class MultiPictureService extends WallpaperService
 {
+    private LinkedList<WeakReference<MultiPictureRenderer>> renderer_list =
+        new LinkedList<WeakReference<MultiPictureRenderer>>();
+
     @Override
     public Engine onCreateEngine()
     {
         return new MultiPictureEngine();
+    }
+
+    @Override
+    public void onLowMemory()
+    {
+        for(ListIterator<WeakReference<MultiPictureRenderer>> i =
+                renderer_list.listIterator();
+            i.hasNext(); ) {
+            WeakReference<MultiPictureRenderer> ref = i.next();
+            MultiPictureRenderer elem = ref.get();
+            if(elem != null) {
+                elem.onLowMemory();
+            }
+            else {
+                i.remove();
+            }
+        }
+    }
+
+    private void addRenderer(MultiPictureRenderer r)
+    {
+        renderer_list.add(new WeakReference<MultiPictureRenderer>(r));
+    }
+
+    private void removeRenderer(MultiPictureRenderer r)
+    {
+        for(ListIterator<WeakReference<MultiPictureRenderer>> i =
+                renderer_list.listIterator();
+            i.hasNext(); ) {
+            WeakReference<MultiPictureRenderer> ref = i.next();
+            MultiPictureRenderer elem = ref.get();
+            if((elem != null && r == elem) || (elem == null)) {
+                i.remove();
+            }
+        }
     }
 
     private class MultiPictureEngine extends Engine
@@ -26,6 +68,7 @@ public class MultiPictureService extends WallpaperService
         @Override
         public void onCreate(SurfaceHolder sh)
         {
+            addRenderer(renderer);
             renderer.onCreate(sh, isPreview());
 
             // for double tap
@@ -38,6 +81,7 @@ public class MultiPictureService extends WallpaperService
         public void onDestroy()
         {
             renderer.onDestroy();
+            removeRenderer(renderer);
         }
 
         @Override
