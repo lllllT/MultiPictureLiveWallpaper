@@ -73,10 +73,20 @@
   <string name="pref_reload_extmedia_mounted_title">Rescan pictures when modified</string>
   <string name="pref_reload_extmedia_mounted_summary">Rescan pictures when picture is modified; e.g. external media (SD card, etc) was mounted, file is modified, etc.</string>
 
+  <string name="menu_tweet">Tweet</string>
+  <string name="menu_qr">QR Code</string>
+  <string name="menu_report">Report/Request</string>
+
   <string name="folder_picker_title">Select Folder</string>
   <string name="folder_up">../ (Up folder)</string>
 
   <string name="str_pic_not_set">Picture not set: Screen %d</string>
 
   <string name="lwp_not_supported">Live Wallpaper may not supported.</string>
+  <string name="mailer_not_found">Email application not found</string>
+
+  <!-- DO NOT localize below -->
+  <string name="tweet_uri">http://twitter.com/home?status=MultiPicture%20Live%20Wallpaper%20http%3a%2f%2fbit.ly%2faP29G4%20%23mplwp</string>
+  <string name="report_uri">mailto:lllllT@tamanegi.org</string>
+  <string name="report_subject">MultiPicture Live Wallpaper</string>
 </resources>

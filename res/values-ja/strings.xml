@@ -68,10 +68,15 @@
   <string name="pref_reload_extmedia_mounted_title">更新時に画像再読み込み</string>
   <string name="pref_reload_extmedia_mounted_summary">外部メディア (SDカード等) をマウントした時やファイル更新時等に画像を再読み込みする。</string>
 
+  <string name="menu_tweet">ツイートする</string>
+  <string name="menu_qr">QRコード</string>
+  <string name="menu_report">報告/要望</string>
+
   <string name="folder_picker_title">フォルダを選択</string>
   <string name="folder_up">../ (上のフォルダ)</string>
 
   <string name="str_pic_not_set">画像未設定: 画面%d</string>
 
   <string name="lwp_not_supported">ライブ壁紙に対応していないようです。</string>
+  <string name="mailer_not_found">メールアプリケーションが見付からないようです。</string>
 </resources>
