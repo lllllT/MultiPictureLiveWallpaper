@@ -422,6 +422,13 @@ public class MultiPictureSetting extends PreferenceActivity
         }
 
         item.setSummary(summary);
+        try {
+            item.getSummary();
+        }
+        catch(IllegalFormatException e) {
+            // workaround for summary formatter...
+            item.setSummary(summary.toString().replaceAll("%", "%%"));
+        }
     }
 
     private void updateColorSummary(ListPreference item, String val)
@@ -435,17 +442,17 @@ public class MultiPictureSetting extends PreferenceActivity
             val = item.getValue();
         }
 
-        item.setSummary(
+        String summary =
             getString(res_id) +
             getString(R.string.pref_screen_val_summary,
-                      item.getEntries()[item.findIndexOfValue(val)]));
+                      item.getEntries()[item.findIndexOfValue(val)]);
+        item.setSummary(summary);
         try {
             item.getSummary();
         }
         catch(IllegalFormatException e) {
             // workaround for summary formatter...
-            item.setSummary(getString(res_id) +
-                            getString(R.string.pref_screen_val_summary));
+            item.setSummary(summary.replaceAll("%", "%%"));
         }
     }
 
