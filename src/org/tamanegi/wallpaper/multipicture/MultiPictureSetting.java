@@ -5,6 +5,7 @@ import java.util.IllegalFormatException;
 import java.util.List;
 
 import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.ContentResolver;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -533,9 +534,16 @@ public class MultiPictureSetting extends PreferenceActivity
         intent.addCategory(Intent.CATEGORY_OPENABLE);
         intent.setType("image/*");
 
-        startActivityForResult(intent, REQUEST_CODE_FILE);
-        cur_item = (ListPreference)item;
-        cur_idx = idx;
+        try {
+            startActivityForResult(intent, REQUEST_CODE_FILE);
+            cur_item = (ListPreference)item;
+            cur_idx = idx;
+        }
+        catch(ActivityNotFoundException e) {
+            Toast.makeText(
+                this, R.string.gallery_not_found, Toast.LENGTH_SHORT)
+                .show();
+        }
     }
 
     private void startFolderPickerActivity(Preference item, int idx,

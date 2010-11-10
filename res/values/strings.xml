@@ -83,7 +83,8 @@
   <string name="str_pic_not_set">Picture not set: Screen %d</string>
 
   <string name="lwp_not_supported">Live Wallpaper may not supported.</string>
-  <string name="mailer_not_found">Email application not found</string>
+  <string name="mailer_not_found">Email application not found.</string>
+  <string name="gallery_not_found">Gallery application not found.</string>
 
   <!-- DO NOT localize below -->
   <string name="tweet_uri">http://twitter.com/home?status=MultiPicture%20Live%20Wallpaper%20http%3a%2f%2fbit.ly%2faP29G4%20%23mplwp</string>

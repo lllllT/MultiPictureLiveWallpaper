@@ -316,6 +316,15 @@ public class MultiPictureRenderer
     public MultiPictureRenderer(Context context)
     {
         this.context = context;
+
+        thread = new HandlerThread("MultiPicture");
+        thread.start();
+
+        handler = new Handler(thread.getLooper(), new Handler.Callback() {
+                public boolean handleMessage(Message msg) {
+                    return onHandleMessage(msg);
+                }
+            });
     }
 
     public void onCreate(SurfaceHolder holder, boolean is_preview)
@@ -325,16 +334,8 @@ public class MultiPictureRenderer
         int priority = (is_preview ?
                         Process.THREAD_PRIORITY_DEFAULT :
                         Process.THREAD_PRIORITY_URGENT_DISPLAY);
-        thread = new HandlerThread("MultiPicture", priority);
-        thread.start();
-
-        handler = new Handler(thread.getLooper(), new Handler.Callback() {
-                public boolean handleMessage(Message msg) {
-                    return onHandleMessage(msg);
-                }
-            });
-
-        handler.sendEmptyMessage(MSG_INIT);
+        handler.sendMessage(handler.obtainMessage(
+                                MSG_INIT, Integer.valueOf(priority)));
     }
 
     public void onDestroy()
@@ -395,7 +396,7 @@ public class MultiPictureRenderer
     {
         switch(msg.what) {
           case MSG_INIT:
-              init();
+              init(((Integer)msg.obj).intValue());
               break;
 
           case MSG_DESTROY:
@@ -496,8 +497,11 @@ public class MultiPictureRenderer
         return true;
     }
 
-    private void init()
+    private void init(int priority)
     {
+        // thread priority
+        Process.setThreadPriority(priority);
+
         // paint
         paint = new Paint();
         paint.setFilterBitmap(true);

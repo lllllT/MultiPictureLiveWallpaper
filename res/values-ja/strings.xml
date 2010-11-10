@@ -79,4 +79,5 @@
 
   <string name="lwp_not_supported">ライブ壁紙に対応していないようです。</string>
   <string name="mailer_not_found">メールアプリケーションが見付からないようです。</string>
+  <string name="gallery_not_found">ギャラリーアプリケーションが見付からないようです。</string>
 </resources>
