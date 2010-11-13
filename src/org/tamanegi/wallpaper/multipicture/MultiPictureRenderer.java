@@ -59,8 +59,9 @@ public class MultiPictureRenderer
     private static final int MSG_DRAW_PROGRESS = 11;
     private static final int MSG_DRAW_FADEIN = 12;
     private static final int MSG_PREF_CHANGED = 20;
-    private static final int MSG_OFFSET_CHANGED = 21;
-    private static final int MSG_SURFACE_CHANGED = 22;
+    private static final int MSG_PREF_CHANGED_NORELOAD = 21;
+    private static final int MSG_OFFSET_CHANGED = 22;
+    private static final int MSG_SURFACE_CHANGED = 23;
     private static final int MSG_CHANGE_PIC_BY_TAP = 30;
     private static final int MSG_CHANGE_PIC_BY_TIME = 31;
     private static final int MSG_RELOAD = 41;
@@ -86,6 +87,13 @@ public class MultiPictureRenderer
     // action for broadcast intent
     private static final String ACTION_CHANGE_PICTURE =
         "org.tamanegi.wallpaper.multipicture.CHANGE_PICTURE";
+
+    //
+    private static final String[] UNNECCESARY_RELOAD_KEYS = {
+        "draw.transition",
+        "draw.reflection.top",
+        "draw.reflection",
+    };
 
     // for album of media store
     private static final Uri IMAGE_LIST_URI =
@@ -452,6 +460,11 @@ public class MultiPictureRenderer
 
           case MSG_PREF_CHANGED:
               clearPictureSetting();
+              loadGlobalSetting();
+              handler.sendEmptyMessage(MSG_DRAW);
+              break;
+
+          case MSG_PREF_CHANGED_NORELOAD:
               loadGlobalSetting();
               handler.sendEmptyMessage(MSG_DRAW);
               break;
@@ -2276,7 +2289,20 @@ public class MultiPictureRenderer
         public void onSharedPreferenceChanged(SharedPreferences pref,
                                               String key)
         {
-            handler.sendEmptyMessage(MSG_PREF_CHANGED);
+            boolean is_unneccesary_reload = false;
+            for(String k : UNNECCESARY_RELOAD_KEYS) {
+                if(k.equals(key)) {
+                    is_unneccesary_reload = true;
+                    break;
+                }
+            }
+
+            if(is_unneccesary_reload) {
+                handler.sendEmptyMessage(MSG_PREF_CHANGED_NORELOAD);
+            }
+            else {
+                handler.sendEmptyMessage(MSG_PREF_CHANGED);
+            }
         }
     }
 
