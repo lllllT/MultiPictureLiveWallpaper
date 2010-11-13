@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
-  <item android:title="@string/menu_tweet"
-		android:id="@+id/menu_tweet"
-		android:icon="@drawable/ic_menu_tweet" />
+  <item android:title="@string/menu_share"
+		android:id="@+id/menu_share"
+		android:icon="@android:drawable/ic_menu_share" />
   <item android:title="@string/menu_qr"
 		android:id="@+id/menu_qr"
 		android:icon="@drawable/ic_menu_qr" />

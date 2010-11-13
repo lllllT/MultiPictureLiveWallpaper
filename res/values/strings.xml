@@ -73,7 +73,7 @@
   <string name="pref_reload_extmedia_mounted_title">Rescan pictures when modified</string>
   <string name="pref_reload_extmedia_mounted_summary">Rescan pictures when picture is modified; e.g. external media (SD card, etc) was mounted, file is modified, etc.</string>
 
-  <string name="menu_tweet">Tweet</string>
+  <string name="menu_share">Share</string>
   <string name="menu_qr">QR Code</string>
   <string name="menu_report">Report/Request</string>
 
@@ -87,7 +87,7 @@
   <string name="gallery_not_found">Gallery application not found.</string>
 
   <!-- DO NOT localize below -->
-  <string name="tweet_uri">http://twitter.com/home?status=MultiPicture%20Live%20Wallpaper%20http%3a%2f%2fbit.ly%2faP29G4%20%23mplwp</string>
+  <string name="share_text">MultiPicture Live Wallpaper http://market.android.com/details?id=org.tamanegi.wallpaper.multipicture</string>
   <string name="report_uri">mailto:lllllT@tamanegi.org</string>
   <string name="report_subject">MultiPicture Live Wallpaper</string>
 </resources>

@@ -253,12 +253,18 @@ public class MultiPictureSetting extends PreferenceActivity
     public boolean onOptionsItemSelected(MenuItem item)
     {
         switch(item.getItemId()) {
-          case R.id.menu_tweet:
-              {
-                  Intent intent = new Intent(
-                      Intent.ACTION_VIEW,
-                      Uri.parse(getString(R.string.tweet_uri)));
-                  startActivity(intent);
+          case R.id.menu_share:
+              try {
+                  Intent intent = new Intent(Intent.ACTION_SEND);
+                  intent.setType("text/plain");
+                  intent.putExtra(Intent.EXTRA_TEXT,
+                                  getString(R.string.share_text));
+                  startActivity(Intent.createChooser(
+                                    intent, getString(R.string.menu_share)));
+              }
+              catch(Exception e) {
+                  e.printStackTrace();
+                  // ignore
               }
               return true;
 
