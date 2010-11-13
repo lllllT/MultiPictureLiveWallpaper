@@ -884,6 +884,7 @@ public class MultiPictureRenderer
                dy <= -0.5 || dy > 0.5) {
                 return;
             }
+            fill_background = true;
         }
         else if(cur_transition == TransitionType.crossfade) {
             alpha = (int)((1 - Math.abs(dx)) * (1 - Math.abs(dy)) * 255);
