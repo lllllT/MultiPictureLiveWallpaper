@@ -16,7 +16,8 @@ public class CreateShortcut extends Activity
 
         Intent data = new Intent();
         data.putExtra(Intent.EXTRA_SHORTCUT_INTENT, launch_intent);
-        data.putExtra(Intent.EXTRA_SHORTCUT_NAME, getString(R.string.app_name));
+        data.putExtra(Intent.EXTRA_SHORTCUT_NAME,
+                      getString(R.string.shortcut_name_settings));
         data.putExtra(Intent.EXTRA_SHORTCUT_ICON_RESOURCE,
                       Intent.ShortcutIconResource.fromContext(
                           getApplication(), R.drawable.icon));

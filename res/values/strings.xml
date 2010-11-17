@@ -8,6 +8,8 @@
   <string name="app_name">MultiPicture Live Wallpaper</string>
   <string name="app_description">Show differecnt pictures for each screen.</string>
 
+  <string name="shortcut_name_settings">MultiPicture Live Wallpaper Settings</string>
+
   <string name="pref_cat_screen_title">Screen Settings</string>
 
   <string name="pref_group_screen_default_title">Default settings</string>

@@ -3,6 +3,8 @@
   <string name="app_name">MultiPicture Live Wallpaper</string>
   <string name="app_description">画面ごとに異なる画像を表示。</string>
 
+  <string name="shortcut_name_settings">MultiPicture Live Wallpaper設定</string>
+
   <string name="pref_cat_screen_title">画面設定</string>
 
   <string name="pref_group_screen_default_title">デフォルト設定</string>
