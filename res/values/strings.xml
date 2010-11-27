@@ -11,6 +11,7 @@
   <string name="shortcut_name_settings">MultiPicture Live Wallpaper Settings</string>
 
   <string name="pref_cat_screen_title">Screen Settings</string>
+  <string name="pref_cat_screen_summary">Settings for each screen, such as pictures for display.</string>
 
   <string name="pref_group_screen_default_title">Default settings</string>
   <string name="pref_group_screen_default_summary">Default settings for unspecified case in individual settings.</string>
@@ -18,6 +19,10 @@
   <string name="pref_cat_picture_screen_title">Screen %d settings</string>
   <string name="pref_cat_picture_screen_summary">Individual settings for screen %d.</string>
   <string name="pref_cat_picture_screen_left_summary">Individual settings for screen %d. (Leftmost screen)</string>
+
+  <string name="pref_add_screen_title">Add screen settings</string>
+  <string name="pref_add_screen_summary">Add settings for individual screen.</string>
+  <string name="pref_add_screen_dialog_title">Select screen</string>
 
   <string name="pref_screen_val_summary">\n%s</string>
 

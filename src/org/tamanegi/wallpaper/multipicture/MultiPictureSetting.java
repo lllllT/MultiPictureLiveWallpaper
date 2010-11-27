@@ -70,14 +70,17 @@ public class MultiPictureSetting extends PreferenceActivity
         "upper(" + MediaStore.Images.ImageColumns.BUCKET_DISPLAY_NAME +
         ") ASC";
 
-    private static final int SCREEN_COUNT = 7;
-
     private static final int REQUEST_CODE_FILE = 1;
     private static final int REQUEST_CODE_FOLDER = 2;
 
     private SharedPreferences pref;
+    private PreferenceGroup pref_group;
     private ContentResolver resolver;
     private Handler handler;
+
+    private ScreenPickerPreference screen_picker;
+    private int pickable_screen = 0;
+    private int all_screen_mask = 0;
 
     private ListPreference cur_item = null;
     private int cur_idx = -1;
@@ -94,108 +97,21 @@ public class MultiPictureSetting extends PreferenceActivity
         handler = new Handler();
 
         // setup screen-N setting item
-        PreferenceGroup group = (PreferenceGroup)
+        pref_group = (PreferenceGroup)
             getPreferenceManager().findPreference("screen.cat");
 
-        for(int i = 0; i < SCREEN_COUNT; i++) {
-            // group for each screen
-            PreferenceScreen sgroup =
-                getPreferenceManager().createPreferenceScreen(this);
-            sgroup.setTitle(
-                getString(R.string.pref_cat_picture_screen_title, i + 1));
-            sgroup.setSummary(
-                getString((i == 0 ?
-                           R.string.pref_cat_picture_screen_left_summary :
-                           R.string.pref_cat_picture_screen_summary), i + 1));
-            group.addPreference(sgroup);
+        for(int i = 0; i < ScreenPickerPreference.SCREEN_COUNT; i++) {
+            addScreenPreferences(i, true);
+            all_screen_mask |= (1 << i);
+        }
 
-            // screen type
-            boolean is_file_val_exist =
-                (pref.getString(
-                    String.format(SCREEN_FILE_KEY, i), null) != null);
-
-            ListPreference type = new ListPreference(this);
-            type.setKey(String.format(SCREEN_TYPE_KEY, i));
-            type.setTitle(R.string.pref_screen_type_title);
-            type.setDialogTitle(type.getTitle());
-            type.setSummary(R.string.pref_screen_type_base_summary);
-            type.setEntries(R.array.pref_screen_type_entries);
-            type.setEntryValues(R.array.pref_screen_type_entryvalues);
-            type.setDefaultValue((is_file_val_exist ? "file" : "use_default"));
-            type.setOnPreferenceChangeListener(
-                new OnScreenTypeChangeListener(i));
-            sgroup.addPreference(type);
-
-            updateScreenTypeSummary(type, i);
-
-            // background color
-            ListPreference color = new ListPreference(this);
-            color.setKey(String.format(SCREEN_BGCOLOR_KEY, i));
-            color.setTitle(R.string.pref_screen_bgcolor_title);
-            color.setDialogTitle(color.getTitle());
-            color.setSummary(R.string.pref_screen_bgcolor_summary);
-            color.setEntries(R.array.pref_screen_bgcolor_entries);
-            color.setEntryValues(R.array.pref_screen_bgcolor_entryvalues);
-            color.setDefaultValue("use_default");
-            color.setOnPreferenceChangeListener(
-                new OnColorChangeListener(i));
-            sgroup.addPreference(color);
-
-            updateColorSummary(color, null);
-
-            // clip ratio
-            ListPreference clip = new ListPreference(this);
-            String clip_key = String.format(SCREEN_CLIP_KEY, i);
-            clip.setKey(clip_key);
-            clip.setTitle(R.string.pref_screen_clipratio_title);
-            clip.setDialogTitle(clip.getTitle());
-            clip.setSummary(R.string.pref_screen_clipratio_summary);
-            clip.setEntries(R.array.pref_screen_clipratio_entries);
-            clip.setEntryValues(R.array.pref_screen_clipratio_entryvalues);
-            clip.setDefaultValue("use_default");
-            sgroup.addPreference(clip);
-            setupValueSummary(clip_key, R.string.pref_screen_clipratio_summary);
-
-            // saturation
-            ListPreference satu = new ListPreference(this);
-            String satu_key = String.format(SCREEN_SATURATION_KEY, i);
-            satu.setKey(satu_key);
-            satu.setTitle(R.string.pref_screen_saturation_title);
-            satu.setDialogTitle(satu.getTitle());
-            satu.setSummary(R.string.pref_screen_saturation_summary);
-            satu.setEntries(R.array.pref_screen_saturation_entries);
-            satu.setEntryValues(R.array.pref_screen_saturation_entryvalues);
-            satu.setDefaultValue("use_default");
-            sgroup.addPreference(satu);
-            setupValueSummary(satu_key,
-                              R.string.pref_screen_saturation_summary);
-
-            // opacity
-            ListPreference opac = new ListPreference(this);
-            String opac_key = String.format(SCREEN_OPACITY_KEY, i);
-            opac.setKey(opac_key);
-            opac.setTitle(R.string.pref_screen_opacity_title);
-            opac.setDialogTitle(opac.getTitle());
-            opac.setSummary(R.string.pref_screen_opacity_summary);
-            opac.setEntries(R.array.pref_screen_opacity_entries);
-            opac.setEntryValues(R.array.pref_screen_opacity_entryvalues);
-            opac.setDefaultValue("use_default");
-            sgroup.addPreference(opac);
-            setupValueSummary(opac_key, R.string.pref_screen_opacity_summary);
-
-            // selection order
-            ListPreference order = new ListPreference(this);
-            String order_key = String.format(SCREEN_ORDER_KEY, i);
-            order.setKey(order_key);
-            order.setTitle(R.string.pref_screen_folder_order_title);
-            order.setDialogTitle(order.getTitle());
-            order.setSummary(R.string.pref_screen_folder_order_summary);
-            order.setEntries(R.array.pref_screen_folder_order_entries);
-            order.setEntryValues(R.array.pref_screen_folder_order_entryvalues);
-            order.setDefaultValue("use_default");
-            sgroup.addPreference(order);
-            setupValueSummary(order_key,
-                              R.string.pref_screen_folder_order_summary);
+        screen_picker = (ScreenPickerPreference)
+            getPreferenceManager().findPreference("screen.picker");
+        screen_picker.setOnPreferenceClickListener(
+            new ScreenPickerClickListener());
+        screen_picker.setScreenPickedListener(new ScreenPickerListener());
+        if(pickable_screen == all_screen_mask) {
+            screen_picker.setEnabled(false);
         }
 
         // setup default type item
@@ -383,6 +299,134 @@ public class MultiPictureSetting extends PreferenceActivity
 
         cur_item = null;
         cur_idx = -1;
+    }
+
+    private void addScreenPreferences(int idx, boolean check_default)
+    {
+        String type_key = String.format(SCREEN_TYPE_KEY, idx);
+        String fname_key = String.format(SCREEN_FILE_KEY, idx);
+        String bgcolor_key = String.format(SCREEN_BGCOLOR_KEY, idx);
+        String clip_key = String.format(SCREEN_CLIP_KEY, idx);
+        String satu_key = String.format(SCREEN_SATURATION_KEY, idx);
+        String opac_key = String.format(SCREEN_OPACITY_KEY, idx);
+        String order_key = String.format(SCREEN_ORDER_KEY, idx);
+
+        if(check_default) {
+            String type_str = pref.getString(type_key, null);
+            String fname = pref.getString(fname_key, null);
+            String bgcolor = pref.getString(bgcolor_key, "use_default");
+            String clip = pref.getString(clip_key, "use_default");
+            String satu = pref.getString(satu_key, "use_default");
+            String opac = pref.getString(opac_key, "use_default");
+            String order = pref.getString(order_key, "use_default");
+
+            if(((type_str == null && fname == null) ||
+                ("use_default".equals(type_str))) &&
+               "use_default".equals(bgcolor) &&
+               "use_default".equals(clip) &&
+               "use_default".equals(satu) &&
+               "use_default".equals(opac) &&
+               "use_default".equals(order)) {
+                return;
+            }
+        }
+
+        // group for each screen
+        PreferenceScreen sgroup =
+            getPreferenceManager().createPreferenceScreen(this);
+        sgroup.setTitle(
+            getString(R.string.pref_cat_picture_screen_title, idx + 1));
+        sgroup.setSummary(
+            getString((idx == 0 ?
+                       R.string.pref_cat_picture_screen_left_summary :
+                       R.string.pref_cat_picture_screen_summary), idx + 1));
+        sgroup.setOrder(idx + 1);
+        pref_group.addPreference(sgroup);
+
+        // screen type
+        boolean is_file_val_exist = (pref.getString(fname_key, null) != null);
+
+        ListPreference type = new ListPreference(this);
+        type.setKey(type_key);
+        type.setTitle(R.string.pref_screen_type_title);
+        type.setDialogTitle(type.getTitle());
+        type.setSummary(R.string.pref_screen_type_base_summary);
+        type.setEntries(R.array.pref_screen_type_entries);
+        type.setEntryValues(R.array.pref_screen_type_entryvalues);
+        type.setDefaultValue((is_file_val_exist ? "file" : "use_default"));
+        type.setOnPreferenceChangeListener(
+            new OnScreenTypeChangeListener(idx));
+        sgroup.addPreference(type);
+
+        updateScreenTypeSummary(type, idx);
+
+        // background color
+        ListPreference color = new ListPreference(this);
+        color.setKey(bgcolor_key);
+        color.setTitle(R.string.pref_screen_bgcolor_title);
+        color.setDialogTitle(color.getTitle());
+        color.setSummary(R.string.pref_screen_bgcolor_summary);
+        color.setEntries(R.array.pref_screen_bgcolor_entries);
+        color.setEntryValues(R.array.pref_screen_bgcolor_entryvalues);
+        color.setDefaultValue("use_default");
+        color.setOnPreferenceChangeListener(
+            new OnColorChangeListener(idx));
+        sgroup.addPreference(color);
+
+        updateColorSummary(color, null);
+
+        // clip ratio
+        ListPreference clip = new ListPreference(this);
+        clip.setKey(clip_key);
+        clip.setTitle(R.string.pref_screen_clipratio_title);
+        clip.setDialogTitle(clip.getTitle());
+        clip.setSummary(R.string.pref_screen_clipratio_summary);
+        clip.setEntries(R.array.pref_screen_clipratio_entries);
+        clip.setEntryValues(R.array.pref_screen_clipratio_entryvalues);
+        clip.setDefaultValue("use_default");
+        sgroup.addPreference(clip);
+        setupValueSummary(clip_key, R.string.pref_screen_clipratio_summary);
+
+        // saturation
+        ListPreference satu = new ListPreference(this);
+        satu.setKey(satu_key);
+        satu.setTitle(R.string.pref_screen_saturation_title);
+        satu.setDialogTitle(satu.getTitle());
+        satu.setSummary(R.string.pref_screen_saturation_summary);
+        satu.setEntries(R.array.pref_screen_saturation_entries);
+        satu.setEntryValues(R.array.pref_screen_saturation_entryvalues);
+        satu.setDefaultValue("use_default");
+        sgroup.addPreference(satu);
+        setupValueSummary(satu_key,
+                          R.string.pref_screen_saturation_summary);
+
+        // opacity
+        ListPreference opac = new ListPreference(this);
+        opac.setKey(opac_key);
+        opac.setTitle(R.string.pref_screen_opacity_title);
+        opac.setDialogTitle(opac.getTitle());
+        opac.setSummary(R.string.pref_screen_opacity_summary);
+        opac.setEntries(R.array.pref_screen_opacity_entries);
+        opac.setEntryValues(R.array.pref_screen_opacity_entryvalues);
+        opac.setDefaultValue("use_default");
+        sgroup.addPreference(opac);
+        setupValueSummary(opac_key, R.string.pref_screen_opacity_summary);
+
+        // selection order
+        ListPreference order = new ListPreference(this);
+        order.setKey(order_key);
+        order.setTitle(R.string.pref_screen_folder_order_title);
+        order.setDialogTitle(order.getTitle());
+        order.setSummary(R.string.pref_screen_folder_order_summary);
+        order.setEntries(R.array.pref_screen_folder_order_entries);
+        order.setEntryValues(R.array.pref_screen_folder_order_entryvalues);
+        order.setDefaultValue("use_default");
+        sgroup.addPreference(order);
+        setupValueSummary(order_key,
+                          R.string.pref_screen_folder_order_summary);
+
+        // manage pickable screen numbers
+        pickable_screen |= (1 << idx);
     }
 
     private void updateScreenTypeSummary(ListPreference item, int idx)
@@ -759,6 +803,45 @@ public class MultiPictureSetting extends PreferenceActivity
                     }
                 })
             .show();
+    }
+
+    private class ScreenPickerClickListener
+        implements Preference.OnPreferenceClickListener
+    {
+        @Override
+        public boolean onPreferenceClick(Preference preference)
+        {
+            int num = 1;
+            for(int i = 0; i < ScreenPickerPreference.SCREEN_COUNT; i++) {
+                if((pickable_screen & (1 << i)) == 0) {
+                    num = i + 1;
+                    break;
+                }
+            }
+
+            screen_picker.setScreenNumber(num);
+            return false;
+        }
+    }
+
+    private class ScreenPickerListener
+        implements ScreenPickerPreference.ScreenPickerListener
+    {
+        @Override
+        public boolean onScreenNumberChanging(int screen_num)
+        {
+            return ((pickable_screen & (1 << (screen_num - 1))) == 0);
+        }
+
+        @Override
+        public void onScreenNumberPicked(int screen_num)
+        {
+            addScreenPreferences(screen_num - 1, false);
+
+            if(pickable_screen == all_screen_mask) {
+                screen_picker.setEnabled(false);
+            }
+        }
     }
 
     private class OnScreenTypeChangeListener

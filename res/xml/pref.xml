@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-  <PreferenceCategory
+  <PreferenceScreen
      android:key="screen.cat"
-     android:title="@string/pref_cat_screen_title">
+     android:title="@string/pref_cat_screen_title"
+     android:summary="@string/pref_cat_screen_summary"
+     >
     <!-- insert PreferenceScreen of each screen at runtime -->
     <PreferenceScreen
        android:title="@string/pref_group_screen_default_title"
        android:summary="@string/pref_group_screen_default_summary"
+       android:order="0"
        >
       <ListPreference
          android:key="screen.default.type"
@@ -52,7 +55,13 @@
          android:entryValues="@array/pref_screen_folder_order_entryvalues"
          /> <!-- default value is set by MultiPictureSetting#onCreate -->
     </PreferenceScreen>
-  </PreferenceCategory>
+    <org.tamanegi.wallpaper.multipicture.ScreenPickerPreference
+       android:key="screen.picker"
+       android:title="@string/pref_add_screen_title"
+       android:summary="@string/pref_add_screen_summary"
+       android:order="0x7ffffffe"
+       />
+  </PreferenceScreen>
 
   <PreferenceCategory android:title="@string/pref_cat_draw_title">
     <ListPreference

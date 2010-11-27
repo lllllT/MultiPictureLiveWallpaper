@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_margin="6dp"
+              android:orientation="horizontal"
+              android:gravity="center"
+              >
+
+  <ImageButton
+     android:id="@+id/screen_picker_decrement"
+     android:layout_width="60dp"
+     android:layout_height="fill_parent"
+     android:src="@drawable/btn_decrement"
+     />
+  <EditText
+     android:id="@+id/screen_picker_number"
+     android:layout_width="120dp"
+     android:layout_height="wrap_content"
+     android:gravity="center"
+     android:singleLine="true"
+     android:inputType="number"
+     android:textSize="30sp"
+     />
+  <ImageButton
+     android:id="@+id/screen_picker_increment"
+     android:layout_width="60dp"
+     android:layout_height="fill_parent"
+     android:src="@drawable/btn_increment"
+     />
+
+</LinearLayout>
