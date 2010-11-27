@@ -79,6 +79,7 @@
 
   <string name="str_pic_not_set">画像未設定: 画面%d</string>
 
+  <string name="chooser_navigation">\'MultiPicture Live Wallpaper\' を選択して下さい。</string>
   <string name="lwp_not_supported">ライブ壁紙に対応していないようです。</string>
   <string name="mailer_not_found">メールアプリケーションが見付からないようです。</string>
   <string name="gallery_not_found">ギャラリーアプリケーションが見付からないようです。</string>

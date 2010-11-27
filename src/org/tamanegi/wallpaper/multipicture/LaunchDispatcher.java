@@ -15,6 +15,7 @@ public class LaunchDispatcher extends Activity
     {
         super.onCreate(savedInstanceState);
 
+        String msg = null;
         Intent intent;
         WallpaperInfo info =
             WallpaperManager.getInstance(this).getWallpaperInfo();
@@ -27,6 +28,7 @@ public class LaunchDispatcher extends Activity
         }
         else {
             intent = new Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER);
+            msg = getString(R.string.chooser_navigation);
         }
 
         try {
@@ -35,10 +37,15 @@ public class LaunchDispatcher extends Activity
         catch(ActivityNotFoundException e) {
             if(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER.equals(
                    intent.getAction())) {
-                Toast.makeText(this, R.string.lwp_not_supported,
-                               Toast.LENGTH_SHORT)
-                    .show();
+                msg = getString(R.string.lwp_not_supported);
             }
+            else {
+                msg = null;
+            }
+        }
+
+        if(msg != null) {
+            Toast.makeText(this, msg, Toast.LENGTH_SHORT).show();
         }
 
         finish();

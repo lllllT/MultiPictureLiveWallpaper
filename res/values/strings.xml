@@ -84,6 +84,7 @@
 
   <string name="str_pic_not_set">Picture not set: Screen %d</string>
 
+  <string name="chooser_navigation">Select \'MultiPicture Live Wallpaper\'</string>
   <string name="lwp_not_supported">Live Wallpaper may not supported.</string>
   <string name="mailer_not_found">Email application not found.</string>
   <string name="gallery_not_found">Gallery application not found.</string>

@@ -1397,7 +1397,7 @@ public class MultiPictureRenderer
 
         private void saveCurrentScreen()
         {
-            if(pic == null) {
+            if(pic == null || max_width == 0 || max_height == 0) {
                 cur_screen = null;
             }
             else {
@@ -1908,7 +1908,7 @@ public class MultiPictureRenderer
         boolean has_alpha =
             (src.hasAlpha() || (m != null && ! m.rectStaysRect()));
         Bitmap.Config format =
-            (has_alpha ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565);
+            (has_alpha ? Bitmap.Config.ARGB_4444 : Bitmap.Config.RGB_565);
         Paint paint;
 
         Rect src_rect = new Rect(x, y, x + width, y + height);
@@ -1921,10 +1921,6 @@ public class MultiPictureRenderer
         }
         else {
             // with scale
-            if(! m.rectStaysRect()) {
-                format = Bitmap.Config.ARGB_8888;
-            }
-
             RectF device_rect = new RectF();
             m.mapRect(device_rect, dst_rect);
             width = Math.round(device_rect.width());
