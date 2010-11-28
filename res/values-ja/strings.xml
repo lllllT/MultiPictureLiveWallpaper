@@ -16,7 +16,7 @@
   <string name="pref_cat_picture_screen_left_summary">画面%dの個別設定。(一番左の画面)</string>
 
   <string name="pref_add_screen_title">画面設定を追加</string>
-  <string name="pref_add_screen_summary">個別画面の設定を追加する。</string>
+  <string name="pref_add_screen_summary">指定しされた画面の個別設定を追加する。</string>
   <string name="pref_add_screen_dialog_title">画面の選択</string>
 
   <string name="pref_screen_val_summary">\n%s</string>

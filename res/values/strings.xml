@@ -21,7 +21,7 @@
   <string name="pref_cat_picture_screen_left_summary">Individual settings for screen %d. (Leftmost screen)</string>
 
   <string name="pref_add_screen_title">Add screen settings</string>
-  <string name="pref_add_screen_summary">Add settings for individual screen.</string>
+  <string name="pref_add_screen_summary">Add individual settings for specified screen.</string>
   <string name="pref_add_screen_dialog_title">Select screen</string>
 
   <string name="pref_screen_val_summary">\n%s</string>
