@@ -76,6 +76,7 @@ public class ColorPickerView extends View
 
         paint_rect = new Paint();
         paint_rect.setStyle(Paint.Style.FILL);
+        paint_rect.setDither(true);
     }
 
     @Override

@@ -10,6 +10,7 @@
   <application android:icon="@drawable/icon"
                android:label="@string/app_name">
 
+    <!-- main live wallpaper service -->
     <service android:name=".MultiPictureService"
              android:permission="android.permission.BIND_WALLPAPER">
       <intent-filter>
@@ -19,6 +20,7 @@
                  android:resource="@xml/multipicture" />
     </service>
 
+    <!-- settings -->
     <activity android:name=".MultiPictureSetting"
               android:label="@string/app_name"
               android:exported="true" />
@@ -27,9 +29,43 @@
               android:theme="@android:style/Theme.Light"
               android:screenOrientation="portrait" />
 
-    <activity android:name=".FolderPicker"
+    <!-- activity for picture source -->
+    <activity android:name=".picsource.SingleSource"
+              android:label="single picture"
+              android:theme="@android:style/Theme.Translucent.NoTitleBar">
+      <intent-filter>
+        <action android:name="org.tamanegi.wallpaper.multipicture.action.GET_PICTURE_SOURCE" />
+        <category android:name="android.intent.category.DEFAULT" />
+      </intent-filter>
+    </activity>
+
+    <activity android:name=".picsource.AlbumSource"
+              android:label="album picture"
+              android:theme="@android:style/Theme.Translucent.NoTitleBar">
+      <intent-filter>
+        <action android:name="org.tamanegi.wallpaper.multipicture.action.GET_PICTURE_SOURCE" />
+        <category android:name="android.intent.category.DEFAULT" />
+      </intent-filter>
+    </activity>
+
+    <activity android:name=".picsource.FolderSource"
+              android:label="folder picture"
+              android:theme="@android:style/Theme.Translucent.NoTitleBar">
+      <intent-filter>
+        <action android:name="org.tamanegi.wallpaper.multipicture.action.GET_PICTURE_SOURCE" />
+        <category android:name="android.intent.category.DEFAULT" />
+      </intent-filter>
+    </activity>
+
+    <activity android:name=".picsource.FolderPicker"
               android:label="@string/folder_picker_title" />
 
+    <!-- picker service for picture source -->
+    <service android:name=".picsource.SinglePickService" />
+    <service android:name=".picsource.AlbumPickService" />
+    <service android:name=".picsource.FolderPickService" />
+
+    <!-- launch from "open" -->
     <activity android:name=".LaunchDispatcher"
               android:label="@string/app_name"
               android:theme="@android:style/Theme.Translucent.NoTitleBar">
@@ -39,6 +75,7 @@
       </intent-filter>
     </activity>
 
+    <!-- for shortcut -->
     <activity android:name=".CreateShortcut"
               android:label="@string/shortcut_name_settings"
               android:theme="@android:style/Theme.Translucent.NoTitleBar">

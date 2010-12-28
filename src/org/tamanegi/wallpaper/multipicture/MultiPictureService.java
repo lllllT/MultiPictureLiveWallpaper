@@ -104,7 +104,6 @@ public class MultiPictureService extends WallpaperService
                                      int width, int height)
         {
             renderer.onSurfaceChanged(sh, format, width, height);
-            renderer.onDraw();
         }
 
         @Override

@@ -5,6 +5,12 @@
 
   <string name="shortcut_name_settings">MultiPicture Live Wallpaper設定</string>
 
+  <string name="plugin_search_button">プラグインを検索</string>
+  <string name="pref_use_default">デフォルト設定と同じ</string>
+  <string name="pref_screen_type_file_desc">単一画像 : %s</string>
+  <string name="pref_screen_type_folder_desc">画像フォルダ : %s</string>
+  <string name="pref_screen_type_bucket_desc">アルバム : %s</string>
+
   <string name="pref_cat_screen_title">画面設定</string>
   <string name="pref_cat_screen_summary">各画面に表示する画像等の設定。</string>
 
@@ -24,7 +30,6 @@
   <string name="pref_screen_type_title">画面タイプ</string>
   <string name="pref_screen_type_base_summary">表示する画像の選択方法。</string>
   <string name="pref_screen_type_val1_summary">\n%s</string>
-  <string name="pref_screen_type_val2_summary">\n%s : %s</string>
 
   <string name="pref_screen_bucket_title">アルバム</string>
   <string name="pref_screen_no_bucket_exist_msg">アルバムが存在しません。</string>
@@ -82,10 +87,12 @@
   <string name="folder_picker_title">フォルダを選択</string>
   <string name="folder_up">../ (上のフォルダ)</string>
 
-  <string name="str_pic_not_set">画像未設定: 画面%d</string>
+  <string name="str_pic_not_avail">画面%d: 画像が利用できません</string>
 
   <string name="chooser_navigation">\'MultiPicture Live Wallpaper\' を選択して下さい。</string>
   <string name="lwp_not_supported">ライブ壁紙に対応していないようです。</string>
   <string name="mailer_not_found">メールアプリケーションが見付からないようです。</string>
   <string name="gallery_not_found">ギャラリーアプリケーションが見付からないようです。</string>
+  <string name="market_not_found">マーケットアプリケーションが見付からないようです。</string>
+  <string name="picsource_not_found">画像取得プラグインが見付からないようです。</string>
 </resources>

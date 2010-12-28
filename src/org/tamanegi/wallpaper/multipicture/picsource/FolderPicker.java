@@ -1,9 +1,11 @@
-package org.tamanegi.wallpaper.multipicture;
+package org.tamanegi.wallpaper.multipicture.picsource;
 
 import java.io.File;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedList;
+
+import org.tamanegi.wallpaper.multipicture.R;
 
 import android.app.Activity;
 import android.content.Intent;

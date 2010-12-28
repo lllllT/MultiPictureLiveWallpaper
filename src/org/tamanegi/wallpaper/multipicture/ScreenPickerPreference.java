@@ -2,7 +2,6 @@ package org.tamanegi.wallpaper.multipicture;
 
 import android.content.Context;
 import android.preference.DialogPreference;
-import android.text.Editable;
 import android.text.InputFilter;
 import android.text.Spanned;
 import android.util.AttributeSet;
@@ -32,7 +31,6 @@ public class ScreenPickerPreference extends DialogPreference
 
         setWidgetLayoutResource(R.layout.preference_add_screen);
         setDialogLayoutResource(R.layout.screen_picker);
-        setDialogTitle(R.string.pref_add_screen_dialog_title);
     }
 
     public int getScreenNumber()
