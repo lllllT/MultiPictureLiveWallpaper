@@ -1137,9 +1137,7 @@ public class MultiPictureRenderer
         }
         else if(use_bmp) {
             // alpha with fade
-            alpha = alpha *
-                (FRAME_COUNT - fade_step) * (FRAME_COUNT - fade_step) /
-                (FRAME_COUNT * FRAME_COUNT);
+            alpha = alpha * (FRAME_COUNT - fade_step) / FRAME_COUNT;
 
             // matrix for main bitmap
             Matrix mcenter = new Matrix(matrix);
