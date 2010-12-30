@@ -21,6 +21,7 @@ public class FolderPickService extends AbstractFileListPickService
 {
     private BroadcastReceiver receiver;
     private HashMap<String, FolderObserver> observer_map;
+    private HashMap<String, Boolean> path_avail_map;
 
     @Override
     public LazyPicker onCreateLazyPicker()
@@ -85,7 +86,7 @@ public class FolderPickService extends AbstractFileListPickService
 
             // list picture files
             ArrayList<FileInfo> flist =
-                PictureUtils.listFolderPictures(folders);
+                PictureUtils.listFolderPictures(folders, path_avail_map);
 
             // set file list
             setFileList(flist, change_order);
@@ -96,8 +97,9 @@ public class FolderPickService extends AbstractFileListPickService
     @Override
     protected void onAddFirstPicker()
     {
-        // prepare observer map
+        // prepare
         observer_map = new HashMap<String, FolderObserver>();
+        path_avail_map = new HashMap<String, Boolean>();
 
         // receiver for broadcast
         IntentFilter filter;

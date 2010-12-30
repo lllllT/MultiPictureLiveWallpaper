@@ -158,6 +158,7 @@ public class AlbumSource extends Activity
         SharedPreferences.Editor editor =
             PreferenceManager.getDefaultSharedPreferences(this).edit();
         editor.putString(getPreferenceKey(), val);
+        // todo: persist for select order
         editor.commit();
     }
 

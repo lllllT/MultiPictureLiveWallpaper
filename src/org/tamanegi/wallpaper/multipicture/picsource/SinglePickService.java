@@ -17,16 +17,6 @@ public class SinglePickService extends LazyPickService
 {
     private static final int RESCAN_DELAY = 5000; // msec
 
-    private Handler handler;
-
-    @Override
-    public void onCreate()
-    {
-        super.onCreate();
-
-        handler = new Handler();
-    }
-
     @Override
     public LazyPicker onCreateLazyPicker()
     {
@@ -36,13 +26,18 @@ public class SinglePickService extends LazyPickService
     private class SingleLazyPicker extends LazyPicker
     {
         private Uri uri;
+        private boolean content_changed;
 
         private PictureObserver observer;
+
+        private Handler handler;
         private Runnable rescan_callback;
 
         @Override
         protected void onStart(String key, ScreenInfo hint)
         {
+            handler = new Handler();
+
             // read preference
             SharedPreferences pref = PreferenceManager.
                 getDefaultSharedPreferences(SinglePickService.this);
@@ -51,11 +46,14 @@ public class SinglePickService extends LazyPickService
                     MultiPictureSetting.SCREEN_FILE_KEY, key), "");
             uri = Uri.parse(fname);
 
+            content_changed = true;
+
             // picture file observer
             observer = new PictureObserver(this);
             rescan_callback = new Runnable() {
                     @Override
                     public void run() {
+                        content_changed = true;
                         notifyChanged();
                     }
                 };
@@ -73,6 +71,12 @@ public class SinglePickService extends LazyPickService
         @Override
         public PictureContentInfo getNext()
         {
+            if(! content_changed) {
+                return null;
+            }
+
+            content_changed = false;
+
             int orientation = PictureUtils.getContentOrientation(
                 getContentResolver(), uri);
             return new PictureContentInfo(uri, orientation);

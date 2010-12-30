@@ -108,24 +108,16 @@ public abstract class LazyPickerClient
             });
     }
 
-    private void doConnected(final Messenger _send_to)
+    private void doConnected(final Messenger service_messenger)
     {
         handler.post(new Runnable() {
                 public void run() {
-                    send_to = _send_to;
-                    waiting_next.set(false);
+                    Message msg = Message.obtain(
+                        null, LazyPickService.MSG_CREATE);
+                    msg.replyTo = receiver;
+
                     try {
-                        Message msg = Message.obtain(
-                            null, LazyPickService.MSG_START);
-                        msg.replyTo = receiver;
-
-                        Bundle data = new Bundle();
-                        data.putString(LazyPickService.DATA_KEY, key);
-                        data.putBundle(LazyPickService.DATA_HINT,
-                                       hint.foldToBundle());
-                        msg.setData(data);
-
-                        send_to.send(msg);
+                        service_messenger.send(msg);
                     }
                     catch(RemoteException e) {
                         // ignore
@@ -141,6 +133,29 @@ public abstract class LazyPickerClient
                     send_to = null;
                 }
             });
+    }
+
+    private void doResultCreate(Messenger send_to)
+    {
+        this.send_to = send_to;
+        waiting_next.set(false);
+
+        Message msg = Message.obtain(null, LazyPickService.MSG_START);
+        msg.replyTo = receiver;
+
+        Bundle data = new Bundle();
+        data.putString(LazyPickService.DATA_KEY, key);
+        data.putBundle(LazyPickService.DATA_HINT, hint.foldToBundle());
+        msg.setData(data);
+
+        try {
+            if(send_to != null) {
+                send_to.send(msg);
+            }
+        }
+        catch(RemoteException e) {
+            // ignore
+        }
     }
 
     private void doStartCompleted()
@@ -197,6 +212,10 @@ public abstract class LazyPickerClient
         public boolean handleMessage(Message msg)
         {
             switch(msg.what) {
+              case LazyPickService.MSG_RESULT_CREATE:
+                  doResultCreate(msg.replyTo);
+                  return true;
+
               case LazyPickService.MSG_START_COMPLETED:
                   doStartCompleted();
                   return true;

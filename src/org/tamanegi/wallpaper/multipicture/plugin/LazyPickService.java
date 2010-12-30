@@ -16,6 +16,8 @@ public abstract class LazyPickService extends Service
     public static final String SERVICE_INTERFACE =
         "org.tamanegi.wallpaper.multipicture.plugin.LazyPickService";
 
+    public static final int MSG_CREATE          = 0x00100000;
+    public static final int MSG_RESULT_CREATE   = 0x00200000;
     public static final int MSG_START           = 0x00100010;
     public static final int MSG_START_COMPLETED = 0x00200010;
     public static final int MSG_STOP            = 0x00100020;
@@ -31,10 +33,31 @@ public abstract class LazyPickService extends Service
     // for reply of get next content
     public static final String DATA_NEXT_CONTENT = "nextContent";
 
+    private Messenger main_messenger;
+
+    @Override
+    public void onCreate()
+    {
+        super.onCreate();
+
+        main_messenger = new Messenger(new Handler() {
+                @Override
+                public void handleMessage(Message msg) {
+                    if(msg.what == MSG_CREATE) {
+                        handleCreateMessage(msg);
+                    }
+                    else {
+                        super.handleMessage(msg);
+                    }
+                }
+            });
+    }
+
+    @Override
     public final IBinder onBind(Intent intent)
     {
         if(SERVICE_INTERFACE.equals(intent.getAction())) {
-            return new LazyPickManager(onCreateLazyPicker()).getBinder();
+            return main_messenger.getBinder();
         }
 
         return null;
@@ -76,6 +99,25 @@ public abstract class LazyPickService extends Service
         }
     }
 
+    private void handleCreateMessage(Message msg)
+    {
+        if(msg.replyTo == null) {
+            return;
+        }
+
+        LazyPickManager mgr = new LazyPickManager(onCreateLazyPicker());
+
+        Message rep = Message.obtain(null, MSG_RESULT_CREATE);
+        rep.replyTo = mgr.getMessenger();
+
+        try {
+            msg.replyTo.send(rep);
+        }
+        catch(RemoteException e) {
+            // ignore
+        }
+    }
+
     private static class LazyPickManager implements Handler.Callback
     {
         private HandlerThread thread;
@@ -92,9 +134,9 @@ public abstract class LazyPickService extends Service
             handler = new Handler(thread.getLooper(), this);
         }
 
-        private IBinder getBinder()
+        private Messenger getMessenger()
         {
-            return new Messenger(handler).getBinder();
+            return new Messenger(handler);
         }
 
         public boolean handleMessage(Message msg)
@@ -153,7 +195,9 @@ public abstract class LazyPickService extends Service
             Message msg = Message.obtain(null, MSG_RESULT_NEXT);
 
             Bundle data = new Bundle();
-            data.putBundle(DATA_NEXT_CONTENT, content.foldToBundle());
+            if(content != null) {
+                data.putBundle(DATA_NEXT_CONTENT, content.foldToBundle());
+            }
             msg.setData(data);
 
             sendReply(msg);

@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -192,7 +193,7 @@ public class PictureUtils
         }
     }
 
-    public static boolean isPictureFile(File file)
+    public static boolean isPictureFile(String path)
     {
         try {
             BitmapFactory.Options opt;
@@ -201,7 +202,7 @@ public class PictureUtils
             opt = new BitmapFactory.Options();
             opt.inJustDecodeBounds = true;
 
-            BitmapFactory.decodeFile(file.getPath(), opt);
+            BitmapFactory.decodeFile(path, opt);
             if(opt.outWidth < 0 || opt.outHeight < 0) {
                 return false;
             }
@@ -289,7 +290,8 @@ public class PictureUtils
         return list;
     }
 
-    public static ArrayList<FileInfo> listFolderPictures(List<File> folders)
+    public static ArrayList<FileInfo> listFolderPictures(
+        List<File> folders, Map<String, Boolean> path_avail_map)
     {
         ArrayList<FileInfo> list = new ArrayList<FileInfo>();
 
@@ -301,7 +303,17 @@ public class PictureUtils
 
             for(File file : files) {
                 if(file.isFile()) {
-                    if(isPictureFile(file)) {
+                    String path = file.getPath();
+                    boolean avail;
+
+                    synchronized(path_avail_map) {
+                        avail = (path_avail_map.containsKey(path) ?
+                                 path_avail_map.get(path) :
+                                 isPictureFile(path));
+                        path_avail_map.put(path, avail);
+                    }
+
+                    if(avail) {
                         FileInfo fi = new FileInfo();
 
                         fi.setUri(Uri.fromFile(file));

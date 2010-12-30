@@ -88,6 +88,7 @@ public class FolderSource extends Activity
         SharedPreferences.Editor editor =
             PreferenceManager.getDefaultSharedPreferences(this).edit();
         editor.putString(getPreferenceKey(), val);
+        // todo: persist for select order, recursive
         editor.commit();
     }
 
