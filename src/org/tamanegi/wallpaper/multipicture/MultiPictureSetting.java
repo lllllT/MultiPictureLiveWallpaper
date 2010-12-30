@@ -535,7 +535,7 @@ public class MultiPictureSetting extends PreferenceActivity
     private void persistPictureSourceInfo(int idx, String desc, String service)
     {
         String desc_key = getKey(SCREEN_PICSOURCE_DESC_KEY, idx);
-        String service_key = getKey(SCREEN_PICSOURCE_SERVICE_KEY, cur_idx);
+        String service_key = getKey(SCREEN_PICSOURCE_SERVICE_KEY, idx);
 
         SharedPreferences.Editor editor = pref.edit();
         editor.putString(desc_key, desc);
@@ -729,6 +729,7 @@ public class MultiPictureSetting extends PreferenceActivity
             else {
                 handler.post(new Runnable() {
                         public void run() {
+                            persistPictureSourceInfo(idx, "", "");
                             updatePictureSourceSummary(picsource, idx);
                         }
                     });

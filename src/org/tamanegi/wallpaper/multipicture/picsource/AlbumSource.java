@@ -41,6 +41,8 @@ public class AlbumSource extends Activity
     @Override
     protected void onResume()
     {
+        super.onResume();
+
         startBucketPickerDialog(need_clear);
     }
 

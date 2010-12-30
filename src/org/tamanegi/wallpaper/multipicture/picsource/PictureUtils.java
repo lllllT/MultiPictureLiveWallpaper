@@ -25,7 +25,7 @@ public class PictureUtils
         MediaStore.Images.ImageColumns.BUCKET_DISPLAY_NAME
     };
     private static final int IMAGE_BUCKET_COL_BUCKET_ID = 0;
-    private static final int IMAGE_BUCKET_COL_DISPLAY_NAME = 0;
+    private static final int IMAGE_BUCKET_COL_DISPLAY_NAME = 1;
     private static final String IMAGE_BUCKET_SORT_ORDER =
         "upper(" + MediaStore.Images.ImageColumns.BUCKET_DISPLAY_NAME +
         ") ASC";
