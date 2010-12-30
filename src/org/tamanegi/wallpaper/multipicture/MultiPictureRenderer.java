@@ -60,8 +60,9 @@ public class MultiPictureRenderer
     private static final int MSG_UPDATE_SCREEN = 1001;
 
     // animation params
-    private static final int DRAW_FRAME_INTERVAL = 100; // msec
-    private static final int FRAME_COUNT = 5;           // todo: more smooth?
+    private static final int DRAW_FRAME_INTERVAL = 50; // msec
+    private static final int FRAME_COUNT = 10;
+    private static final int SPINNER_FRAME_INTERVAL = 100; // msec
     private static final int SPINNER_TOTAL_FRAMES = 12;
     private static final int BORDER_COLOR = 0x3f3f3f;
 
@@ -140,6 +141,8 @@ public class MultiPictureRenderer
         private String picsource_key;
         private PickerClient picker;
 
+        private boolean is_update_pending;
+
         private BitmapInfo bmp_info;
 
         private boolean detect_bgcolor;
@@ -151,8 +154,16 @@ public class MultiPictureRenderer
 
         private void setStatus(PictureStatus status)
         {
+            if((status == PictureStatus.FADEOUT &&
+                this.status == PictureStatus.FADEIN) ||
+               (status == PictureStatus.FADEIN &&
+                this.status == PictureStatus.FADEOUT)) {
+                progress = Math.max(FRAME_COUNT - progress, 0);
+            }
+            else {
+                progress = 0;
+            }
             this.status = status;
-            this.progress = 0;
         }
     }
 
@@ -381,6 +392,16 @@ public class MultiPictureRenderer
               if(is_duration_pending) {
                   postDurationCallback();
               }
+              synchronized(pic_whole_lock) {
+                  if(pic != null) {
+                      for(PictureInfo info : pic) {
+                          if(info.is_update_pending) {
+                              info.picker.sendGetNext();
+                          }
+                          info.is_update_pending = false;
+                      }
+                  }
+              }
               drawer_handler.sendEmptyMessage(MSG_DRAW);
               break;
 
@@ -418,14 +439,17 @@ public class MultiPictureRenderer
           case MSG_CHANGE_PIC_BY_TAP:
               if(change_tap) {
                   synchronized(pic_whole_lock) {
-                      updateAllScreen();
+                      updateAllScreen(true);
+                      drawer_handler.sendEmptyMessage(MSG_DRAW);
                   }
+                  postDurationCallback();
               }
               break;
 
           case MSG_CHANGE_PIC_BY_TIME:
               synchronized(pic_whole_lock) {
-                  updateAllScreen();
+                  updateAllScreen(false);
+                  drawer_handler.sendEmptyMessage(MSG_DRAW);
               }
               postDurationCallback();
               break;
@@ -683,9 +707,9 @@ public class MultiPictureRenderer
         }
     }
 
-    private boolean updatePictureStatus(boolean add_step)
+    private int updatePictureStatus(int add_step)
     {
-        boolean need_next_draw = false;
+        int next_interval = 0;
 
         for(int i = 0; i < pic.length; i++) {
             int xn = i % xcnt;
@@ -695,7 +719,7 @@ public class MultiPictureRenderer
                                   Math.abs(yn - ycur) < 1);
             PictureInfo info = pic[i];
 
-            if((is_visible && info.progress == FRAME_COUNT) ||
+            if((is_visible && info.progress >= FRAME_COUNT) ||
                (! is_visible)) {
                 if(info.status == PictureStatus.BLACKOUT) {
                     info.setStatus(PictureStatus.SPINNER);
@@ -708,20 +732,26 @@ public class MultiPictureRenderer
                 }
             }
 
-            if(is_visible &&
-               (info.status == PictureStatus.BLACKOUT ||
-                info.status == PictureStatus.SPINNER ||
-                info.status == PictureStatus.FADEIN ||
-                info.status == PictureStatus.FADEOUT)) {
-                need_next_draw = true;
+            if(is_visible) {
+                int interval = next_interval;
+                if(info.status == PictureStatus.BLACKOUT ||
+                   info.status == PictureStatus.FADEIN ||
+                   info.status == PictureStatus.FADEOUT) {
+                    interval = DRAW_FRAME_INTERVAL;
+                }
+                else if(info.status == PictureStatus.SPINNER) {
+                    interval = SPINNER_FRAME_INTERVAL;
+                }
+
+                next_interval = (next_interval == 0 ?
+                                 interval :
+                                 Math.min(next_interval, interval));
             }
 
-            if(add_step) {
-                info.progress += 1;
-            }
+            info.progress += add_step;
         }
 
-        return need_next_draw;
+        return next_interval;
     }
 
     private void draw()
@@ -730,15 +760,14 @@ public class MultiPictureRenderer
 
         // check draw interval
         long cur_time = SystemClock.uptimeMillis();
-        boolean add_step = (last_step_time + DRAW_FRAME_INTERVAL <= cur_time);
+        int add_step =
+            (last_step_time == 0 ? 1 :
+             (int)(cur_time - last_step_time) / DRAW_FRAME_INTERVAL);
+        int next_interval = 0;
 
         // prepare next draw
         if(pic != null) {
-            boolean need_next_draw = updatePictureStatus(add_step);
-            if(need_next_draw) {
-                drawer_handler.sendEmptyMessageAtTime(
-                    MSG_DRAW, cur_time + DRAW_FRAME_INTERVAL);
-            }
+            next_interval = updatePictureStatus(add_step);
         }
 
         // check visible
@@ -749,9 +778,8 @@ public class MultiPictureRenderer
         // check picture data
         if(pic == null) {
             loadPictureSetting();
-            updatePictureStatus(true);
-            drawer_handler.sendEmptyMessageAtTime(
-                MSG_DRAW, cur_time + DRAW_FRAME_INTERVAL);
+            postDurationCallback();
+            next_interval = updatePictureStatus(1);
         }
 
         for(int i = 0; i < pic.length; i++) {
@@ -779,9 +807,18 @@ public class MultiPictureRenderer
         }
 
         // increase progress counter
-        if(add_step) {
-            progress_time = (progress_time + 1) % SPINNER_TOTAL_FRAMES;
+        if(add_step > 0) {
+            progress_time = (progress_time + add_step) % SPINNER_TOTAL_FRAMES;
+        }
+
+        // prepare next draw step
+        if(next_interval > 0) {
+            drawer_handler.sendEmptyMessageAtTime(
+                MSG_DRAW, cur_time + next_interval);
             last_step_time = cur_time;
+        }
+        else {
+            last_step_time = 0;
         }
     }
 
@@ -892,6 +929,7 @@ public class MultiPictureRenderer
         RectF clip_rect = null;
         int alpha = 0xff;
         boolean fill_background = false;
+        boolean need_border = false;
 
         // transition effect
         if(cur_transition == TransitionType.none) {
@@ -966,6 +1004,8 @@ public class MultiPictureRenderer
 
             matrix.preTranslate(-width / 2, -height / 2);
             matrix.postTranslate(width / 2, height / 2);
+
+            need_border = true;
         }
         else if(cur_transition == TransitionType.swing) {
             Camera camera = new Camera();
@@ -977,6 +1017,8 @@ public class MultiPictureRenderer
             float ty = (dy <= 0 ? 0 : -height);
             matrix.preTranslate(tx, ty);
             matrix.postTranslate(-tx, -ty);
+
+            need_border = true;
         }
         else if(cur_transition == TransitionType.swap) {
             float fact = Math.max(Math.abs(dx), Math.abs(dy));
@@ -1012,7 +1054,8 @@ public class MultiPictureRenderer
             matrix.preTranslate(-width / 2, -height / 2);
             matrix.postTranslate(width / 2, height / 2);
 
-            alpha = Math.min((int)(FloatMath.cos(ang1) * 4 * 0xff), 0xff);
+            alpha = Math.min((int)(FloatMath.cos(ang1) * 0xff), 0xff);
+            need_border = true;
         }
 
         // clip region
@@ -1021,158 +1064,139 @@ public class MultiPictureRenderer
             c.clipRect(clip_rect);
         }
 
-        // draw
-        if(status == PictureStatus.BLACKOUT ||
-           status == PictureStatus.SPINNER ||
-           status == PictureStatus.NOT_AVAILABLE) {
-            if(fill_background) {
-                // black background
-                paint.setColor(0);
-                paint.setAlpha(0xff);
-                paint.setStyle(Paint.Style.FILL);
+        // draw params
+        boolean use_bmp = (status == PictureStatus.NORMAL ||
+                           status == PictureStatus.FADEIN ||
+                           status == PictureStatus.FADEOUT);
+        Bitmap bmp = (use_bmp ? pic[idx].bmp_info.bmp : null);
+        float xratio = (use_bmp ? pic[idx].bmp_info.xratio : 1);
+        float yratio = (use_bmp ? pic[idx].bmp_info.yratio : 1);
+        int bgcolor = getBackgroundColorNoAlpha(idx);
+        int fade_step =
+            (status == PictureStatus.NORMAL ? 0 :
+             status == PictureStatus.FADEOUT ? pic[idx].progress :
+             status == PictureStatus.FADEIN ? FRAME_COUNT - pic[idx].progress :
+             FRAME_COUNT);
+        fade_step = (fade_step < 0 ? 0 :
+                     fade_step > FRAME_COUNT ? FRAME_COUNT :
+                     fade_step);
 
-                c.save();
-                c.concat(matrix);
-                c.drawRect(0, 0, width, height, paint);
-                c.restore();
-            }
+        if(fill_background) {
+            // background
+            paint.setColor(bgcolor);
+            paint.setAlpha(0xff);
+            paint.setStyle(Paint.Style.FILL);
 
+            c.save();
+            c.concat(matrix);
+            c.drawRect(-width * (1 - xratio) / 2,
+                       -height * (1 - yratio) / 2,
+                       width, height, paint);
+            c.restore();
+        }
+
+        if(need_border && fade_step > 0) {
             // border
             paint.setColor(BORDER_COLOR);
-            paint.setAlpha(alpha);
+            paint.setAlpha(alpha * fade_step / FRAME_COUNT);
             paint.setStyle(Paint.Style.STROKE);
 
             c.save();
             c.concat(matrix);
-            c.drawRect(0, 0, width - 1, height - 1, paint);
+            c.drawRect(-1, -1, width, height, paint);
             c.restore();
-
-            if(status == PictureStatus.SPINNER) {
-                // spinner
-                paint.setColor(0);
-                paint.setAlpha(alpha);
-                paint.setStyle(Paint.Style.FILL);
-                matrix.preRotate(360f * progress_time / SPINNER_TOTAL_FRAMES,
-                                 width / 2f, height / 2f);
-
-                c.save();
-                c.concat(matrix);
-                c.drawBitmap(spinner,
-                             (width - spinner.getWidth()) / 2f,
-                             (height - spinner.getHeight()) / 2f,
-                             paint);
-                c.restore();
-            }
-            else if(status == PictureStatus.NOT_AVAILABLE) {
-                int str_id = R.string.str_pic_not_avail;
-
-                text_paint.setAlpha(alpha);
-                paint.setAlpha(alpha);
-                c.save();
-                c.concat(matrix);
-                c.drawText(context.getString(str_id, idx + 1),
-                           width / 2, height / 2, text_paint);
-                c.restore();
-            }
         }
-        else {
-            Bitmap bmp = pic[idx].bmp_info.bmp;
-            float xratio = pic[idx].bmp_info.xratio;
-            float yratio = pic[idx].bmp_info.yratio;
-            int bgcolor = getBackgroundColorNoAlpha(idx);
 
+        if(status == PictureStatus.SPINNER) {
+            // spinner
+            paint.setColor(0);
+            paint.setAlpha(alpha);
+            paint.setStyle(Paint.Style.FILL);
+            matrix.preRotate(360f * progress_time / SPINNER_TOTAL_FRAMES,
+                             width / 2f, height / 2f);
+
+            c.save();
+            c.concat(matrix);
+            c.drawBitmap(spinner,
+                         (width - spinner.getWidth()) / 2f,
+                         (height - spinner.getHeight()) / 2f,
+                         paint);
+            c.restore();
+        }
+        else if(status == PictureStatus.NOT_AVAILABLE) {
+            // show "not available"
+            int str_id = R.string.str_pic_not_avail;
+
+            text_paint.setAlpha(alpha);
+            paint.setAlpha(alpha);
+            c.save();
+            c.concat(matrix);
+            c.drawText(context.getString(str_id, idx + 1),
+                       width / 2, height / 2, text_paint);
+            c.restore();
+        }
+        else if(use_bmp) {
+            // alpha with fade
+            alpha = alpha *
+                (FRAME_COUNT - fade_step) * (FRAME_COUNT - fade_step) /
+                (FRAME_COUNT * FRAME_COUNT);
+
+            // matrix for main bitmap
             Matrix mcenter = new Matrix(matrix);
             mcenter.preTranslate(width * (1 - xratio) / 2,
                                  height * (1 - yratio) / 2);
             mcenter.preScale(width * xratio / bmp.getWidth(),
                              height * yratio / bmp.getHeight());
 
-            if(fill_background) {
-                // background
-                paint.setColor(bgcolor);
-                paint.setAlpha(0xff);
-                paint.setStyle(Paint.Style.FILL);
+            // draw content picture
+            paint.setColor(cur_color);
+            paint.setAlpha((int)(alpha * pic[idx].opacity));
+            c.drawBitmap(bmp, mcenter, paint);
 
-                c.save();
-                c.concat(matrix);
-                c.drawRect(-width * (1 - xratio) / 2,
-                           -height * (1 - yratio) / 2,
-                           width, height, paint);
-                c.restore();
-            }
+            // draw refrection
+            if(show_reflection_top || show_reflection_bottom) {
+                // mirrored picture
+                if(show_reflection_top) {
+                    Matrix mtop = new Matrix(mcenter);
+                    mtop.preScale(1, -1, 0, 0);
 
-            if(status == PictureStatus.FADEIN ||
-               status == PictureStatus.FADEOUT) {
-                // fade in/out
-                int p = (pic[idx].status == PictureStatus.FADEIN ?
-                         pic[idx].progress :
-                         FRAME_COUNT - pic[idx].progress);
+                    if(fill_background) {
+                        paint.setColor(bgcolor);
+                        paint.setAlpha(0xff);
+                        paint.setStyle(Paint.Style.FILL);
 
-                // border
-                paint.setColor(BORDER_COLOR);
-                paint.setAlpha(alpha * (FRAME_COUNT - p) / FRAME_COUNT);
-                paint.setStyle(Paint.Style.STROKE);
-
-                c.save();
-                c.concat(matrix);
-                c.drawRect(0, 0, width - 1, height - 1, paint);
-                c.restore();
-
-                // alpha
-                alpha = alpha * p / FRAME_COUNT;
-            }
-
-            if(bmp != null) {
-                // draw content picture
-                paint.setColor(cur_color);
-                paint.setAlpha((int)(alpha * pic[idx].opacity));
-                c.drawBitmap(bmp, mcenter, paint);
-
-                // draw refrection
-                if(show_reflection_top || show_reflection_bottom) {
-                    // mirrored picture
-                    if(show_reflection_top) {
-                        Matrix mtop = new Matrix(mcenter);
-                        mtop.preScale(1, -1, 0, 0);
-
-                        if(fill_background) {
-                            paint.setColor(bgcolor);
-                            paint.setAlpha(0xff);
-                            paint.setStyle(Paint.Style.FILL);
-
-                            c.save();
-                            c.concat(mtop);
-                            c.drawRect(
-                                0, 0, bmp.getWidth(), bmp.getHeight(),
-                                paint);
-                            c.restore();
-                        }
-
-                        paint.setColor(cur_color);
-                        paint.setAlpha((int)(alpha * pic[idx].opacity / 4));
-                        c.drawBitmap(bmp, mtop, paint);
+                        c.save();
+                        c.concat(mtop);
+                        c.drawRect(
+                            0, 0, bmp.getWidth(), bmp.getHeight(),
+                            paint);
+                        c.restore();
                     }
-                    if(show_reflection_bottom) {
-                        Matrix mbottom = new Matrix(mcenter);
-                        mbottom.preScale(1, -1, 0, bmp.getHeight());
 
-                        if(fill_background) {
-                            paint.setColor(bgcolor);
-                            paint.setAlpha(0xff);
-                            paint.setStyle(Paint.Style.FILL);
+                    paint.setColor(cur_color);
+                    paint.setAlpha((int)(alpha * pic[idx].opacity / 4));
+                    c.drawBitmap(bmp, mtop, paint);
+                }
+                if(show_reflection_bottom) {
+                    Matrix mbottom = new Matrix(mcenter);
+                    mbottom.preScale(1, -1, 0, bmp.getHeight());
 
-                            c.save();
-                            c.concat(mbottom);
-                            c.drawRect(
-                                0, 0, bmp.getWidth(), bmp.getHeight(),
-                                paint);
-                            c.restore();
-                        }
+                    if(fill_background) {
+                        paint.setColor(bgcolor);
+                        paint.setAlpha(0xff);
+                        paint.setStyle(Paint.Style.FILL);
 
-                        paint.setColor(cur_color);
-                        paint.setAlpha((int)(alpha * pic[idx].opacity / 4));
-                        c.drawBitmap(bmp, mbottom, paint);
+                        c.save();
+                        c.concat(mbottom);
+                        c.drawRect(
+                            0, 0, bmp.getWidth(), bmp.getHeight(),
+                            paint);
+                        c.restore();
                     }
+
+                    paint.setColor(cur_color);
+                    paint.setAlpha((int)(alpha * pic[idx].opacity / 4));
+                    c.drawBitmap(bmp, mbottom, paint);
                 }
             }
         }
@@ -1185,18 +1209,24 @@ public class MultiPictureRenderer
 
     private int getBackgroundColorNoAlpha(int idx)
     {
-        if(pic[idx].status == PictureStatus.BLACKOUT ||
-           pic[idx].status == PictureStatus.SPINNER ||
-           pic[idx].status == PictureStatus.NOT_AVAILABLE) {
+        PictureStatus status = pic[idx].status;
+
+        if(status == PictureStatus.BLACKOUT ||
+           status == PictureStatus.SPINNER ||
+           status == PictureStatus.NOT_AVAILABLE) {
             return 0xff000000;
         }
 
         int color = pic[idx].bgcolor;
-        if(pic[idx].status == PictureStatus.FADEIN ||
-           pic[idx].status == PictureStatus.FADEOUT) {
+        if(status == PictureStatus.FADEIN ||
+           status == PictureStatus.FADEOUT) {
             int p = (pic[idx].status == PictureStatus.FADEIN ?
                      pic[idx].progress :
                      FRAME_COUNT - pic[idx].progress);
+            p = (p < 0 ? 0 :
+                 p > FRAME_COUNT ? FRAME_COUNT :
+                 p);
+
             color = mergeColor(
                 (color & 0x00ffffff) | (0xff * p / FRAME_COUNT) << 24,
                 (0xff * (FRAME_COUNT - p) / FRAME_COUNT) << 24);
@@ -1426,7 +1456,7 @@ public class MultiPictureRenderer
         return info;
     }
 
-    private void updateAllScreen()
+    private void updateAllScreen(boolean fadeout)
     {
         if(pic == null) {
             return;
@@ -1436,6 +1466,13 @@ public class MultiPictureRenderer
             if(info.loading_cnt == 0) {
                 info.loading_cnt += 1;
                 info.picker.sendGetNext();
+            }
+
+            if(fadeout) {
+                if(info.status == PictureStatus.NORMAL ||
+                   info.status == PictureStatus.FADEIN) {
+                    info.setStatus(PictureStatus.FADEOUT);
+                }
             }
         }
     }
@@ -1482,6 +1519,11 @@ public class MultiPictureRenderer
                 }
                 else {
                     pic_info.loading_cnt -= 1;
+                    if(pic_info.status == PictureStatus.BLACKOUT ||
+                       pic_info.status == PictureStatus.SPINNER ||
+                       pic_info.status == PictureStatus.FADEOUT) {
+                        pic_info.setStatus(PictureStatus.FADEIN);
+                    }
                     return;
                 }
             }
@@ -1489,10 +1531,15 @@ public class MultiPictureRenderer
             // set status and progress
             if(pic_info.status == PictureStatus.NOT_AVAILABLE ||
                pic_info.bmp_info == null) {
-                pic_info.setStatus(PictureStatus.BLACKOUT);
+                if(pic_info.status != PictureStatus.SPINNER) {
+                    pic_info.setStatus(PictureStatus.BLACKOUT);
+                }
             }
             else {
-                pic_info.setStatus(PictureStatus.FADEOUT);
+                if(pic_info.status == PictureStatus.NORMAL ||
+                   pic_info.status == PictureStatus.FADEIN) {
+                    pic_info.setStatus(PictureStatus.FADEOUT);
+                }
             }
 
             // request to start redraw
@@ -1958,13 +2005,16 @@ public class MultiPictureRenderer
         @Override
         protected void onNotifyChanged()
         {
-            synchronized(pic_whole_lock) {
-                if(visible) {
+            if(pic_info != null) {
+                synchronized(pic_whole_lock) {
                     pic_info.loading_cnt += 1;
-                    sendGetNext();
-                }
-                else {
-                    // todo: request reload when visible
+
+                    if(visible) {
+                        sendGetNext();
+                    }
+                    else {
+                        pic_info.is_update_pending = true;
+                    }
                 }
             }
         }
