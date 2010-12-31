@@ -46,6 +46,12 @@ public abstract class AbstractFileListPickService extends LazyPickService
     protected void postRescanAllCallback()
     {
         handler.removeCallbacks(rescan_callback);
+
+        synchronized(picker_list) {
+            for(FileListLazyPicker picker : picker_list) {
+                picker.need_rescan.set(true);
+            }
+        }
         handler.postDelayed(rescan_callback, RESCAN_DELAY);
     }
 
