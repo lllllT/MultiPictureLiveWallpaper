@@ -51,6 +51,7 @@ public class MultiPictureRenderer
     private static final int MSG_SHOW = 3;
     private static final int MSG_HIDE = 4;
     private static final int MSG_DRAW = 10;
+    private static final int MSG_DRAW_STEP = 11;
     private static final int MSG_PREF_CHANGED = 20;
     private static final int MSG_PREF_CHANGED_NORELOAD = 21;
     private static final int MSG_OFFSET_CHANGED = 22;
@@ -63,11 +64,11 @@ public class MultiPictureRenderer
 
     // animation params
     private static final int FRAME_INTERVAL = 100; // msec
-    private static final int FRAME_DURATION = 1;
-    private static final int FADE_FRAME_COUNT = 10;
+    private static final int FADE_FRAME_DURATION = 1;
+    private static final int FADE_FRAME_COUNT = 5;
     private static final int BLACKOUT_FRAME_COUNT = 5;
-    private static final int SPINNER_FRAME_DURATION = 2;
-    private static final int SPINNER_TOTAL_FRAMES = 12;
+    private static final int SPINNER_FRAME_DURATION = 1;
+    private static final int SPINNER_TOTAL_FRAMES = 20;
     private static final int BORDER_COLOR = 0x3f3f3f;
 
     // transition params
@@ -269,7 +270,7 @@ public class MultiPictureRenderer
     private int change_duration;
     private boolean enable_workaround_htcsense;
 
-    private long last_step_time = 0;
+    private int last_duration = 0;
     private boolean is_in_transition = false;
     private long transition_prev_time = 0;
     private TransitionType cur_transition;
@@ -278,7 +279,6 @@ public class MultiPictureRenderer
     private boolean is_duration_pending = false;
 
     private Bitmap spinner = null;
-    private int progress_time = 0;
 
     private Paint paint;
     private Paint text_paint;
@@ -306,7 +306,8 @@ public class MultiPictureRenderer
                 });
 
         // load thread and handler
-        loader_thread = new HandlerThread("MultiPicture.loader");
+        loader_thread = new HandlerThread(
+            "MultiPicture.loader", Process.THREAD_PRIORITY_BACKGROUND);
         loader_thread.start();
         loader_handler = new Handler(
             loader_thread.getLooper(), new Handler.Callback() {
@@ -316,7 +317,8 @@ public class MultiPictureRenderer
                 });
 
         // picture source thread and handler
-        picsource_thread = new HandlerThread("MultiPicture.picsource");
+        picsource_thread = new HandlerThread(
+            "MultiPicture.picsource", Process.THREAD_PRIORITY_BACKGROUND);
         picsource_thread.start();
     }
 
@@ -385,8 +387,9 @@ public class MultiPictureRenderer
               break;
 
           case MSG_DRAW:
+          case MSG_DRAW_STEP:
               synchronized(pic_whole_lock) {
-                  draw();
+                  draw(msg.what == MSG_DRAW_STEP);
                   pic_whole_lock.notifyAll();
               }
               break;
@@ -568,9 +571,6 @@ public class MultiPictureRenderer
 
         // clear picture info
         pic = null;
-
-        // need redraw
-        last_step_time = 0;
     }
 
     private void clearPictureBitmap()
@@ -747,7 +747,7 @@ public class MultiPictureRenderer
                 if(info.status == PictureStatus.BLACKOUT ||
                    info.status == PictureStatus.FADEIN ||
                    info.status == PictureStatus.FADEOUT) {
-                    duration = FRAME_DURATION;
+                    duration = FADE_FRAME_DURATION;
                 }
                 else if(info.status == PictureStatus.SPINNER) {
                     duration = SPINNER_FRAME_DURATION;
@@ -764,23 +764,22 @@ public class MultiPictureRenderer
         return next_duration;
     }
 
-    private void draw()
+    private void draw(boolean is_step)
     {
         drawer_handler.removeMessages(MSG_DRAW);
 
         // check draw interval
         long cur_time = SystemClock.uptimeMillis();
-        int add_step = (last_step_time == 0 ? 1 :
-                        (int)(cur_time - last_step_time) / FRAME_INTERVAL);
-        int next_duration = 0;
+        int cur_duration = 0;
 
         // prepare next draw
-        if(pic != null) {
-            next_duration = updatePictureStatus(add_step);
+        if(pic != null && (is_step || last_duration == 0)) {
+            cur_duration = updatePictureStatus(last_duration);
         }
 
         // check visible
         if(! visible) {
+            drawer_handler.removeMessages(MSG_DRAW);
             return;
         }
 
@@ -788,7 +787,7 @@ public class MultiPictureRenderer
         if(pic == null) {
             loadPictureSetting();
             postDurationCallback();
-            next_duration = updatePictureStatus(1);
+            cur_duration = updatePictureStatus(0);
         }
 
         for(int i = 0; i < pic.length; i++) {
@@ -815,30 +814,16 @@ public class MultiPictureRenderer
             }
         }
 
-        // increase progress counter
-        if(add_step > 0) {
-            progress_time =
-                (progress_time +
-                 add_step / SPINNER_FRAME_DURATION) % SPINNER_TOTAL_FRAMES;
-        }
-
         // prepare next draw step
-        if(next_duration > 0) {
-            long next_time;                     // todo: more smooth
-            if(last_step_time == 0) {
-                next_time = cur_time + next_duration * FRAME_INTERVAL;
-                last_step_time = cur_time;
-            }
-            else {
-                next_time = last_step_time +
-                    (add_step + next_duration) * FRAME_INTERVAL;
-                last_step_time += add_step * FRAME_INTERVAL;
-            }
+        if(cur_duration > 0) {
+            long next_time = cur_time + cur_duration * FRAME_INTERVAL;
+            last_duration = cur_duration;
 
-            drawer_handler.sendEmptyMessageAtTime(MSG_DRAW, next_time);
+            drawer_handler.removeMessages(MSG_DRAW_STEP);
+            drawer_handler.sendEmptyMessageAtTime(MSG_DRAW_STEP, next_time);
         }
-        else {
-            last_step_time = 0;
+        else if(is_step) {
+            last_duration = 0;
         }
     }
 
@@ -1133,8 +1118,12 @@ public class MultiPictureRenderer
             paint.setColor(0);
             paint.setAlpha(alpha);
             paint.setStyle(Paint.Style.FILL);
-            matrix.preRotate(360f * progress_time / SPINNER_TOTAL_FRAMES,
-                             width / 2f, height / 2f);
+            matrix.preRotate(
+                360f *
+                (int)((SystemClock.uptimeMillis() /
+                       (FRAME_INTERVAL * SPINNER_FRAME_DURATION)) %
+                      SPINNER_TOTAL_FRAMES) / SPINNER_TOTAL_FRAMES,
+                width / 2f, height / 2f);
 
             c.save();
             c.concat(matrix);

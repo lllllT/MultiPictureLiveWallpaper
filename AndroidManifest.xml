@@ -61,9 +61,12 @@
               android:label="@string/folder_picker_title" />
 
     <!-- picker service for picture source -->
-    <service android:name=".picsource.SinglePickService" />
-    <service android:name=".picsource.AlbumPickService" />
-    <service android:name=".picsource.FolderPickService" />
+    <service android:name=".picsource.SinglePickService"
+             android:process=":internalPlugin" />
+    <service android:name=".picsource.AlbumPickService"
+             android:process=":internalPlugin" />
+    <service android:name=".picsource.FolderPickService"
+             android:process=":internalPlugin" />
 
     <!-- launch from "open" -->
     <activity android:name=".LaunchDispatcher"
