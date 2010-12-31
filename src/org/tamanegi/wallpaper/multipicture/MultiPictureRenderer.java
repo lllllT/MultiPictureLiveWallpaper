@@ -29,6 +29,8 @@ import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffColorFilter;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.net.Uri;
@@ -60,9 +62,11 @@ public class MultiPictureRenderer
     private static final int MSG_UPDATE_SCREEN = 1001;
 
     // animation params
-    private static final int DRAW_FRAME_INTERVAL = 50; // msec
-    private static final int FRAME_COUNT = 10;
-    private static final int SPINNER_FRAME_INTERVAL = 100; // msec
+    private static final int FRAME_INTERVAL = 100; // msec
+    private static final int FRAME_DURATION = 1;
+    private static final int FADE_FRAME_COUNT = 10;
+    private static final int BLACKOUT_FRAME_COUNT = 5;
+    private static final int SPINNER_FRAME_DURATION = 2;
     private static final int SPINNER_TOTAL_FRAMES = 12;
     private static final int BORDER_COLOR = 0x3f3f3f;
 
@@ -158,7 +162,7 @@ public class MultiPictureRenderer
                 this.status == PictureStatus.FADEIN) ||
                (status == PictureStatus.FADEIN &&
                 this.status == PictureStatus.FADEOUT)) {
-                progress = Math.max(FRAME_COUNT - progress, 0);
+                progress = Math.max(FADE_FRAME_COUNT - progress, 0);
             }
             else {
                 progress = 0;
@@ -709,7 +713,7 @@ public class MultiPictureRenderer
 
     private int updatePictureStatus(int add_step)
     {
-        int next_interval = 0;
+        int next_duration = 0;
 
         for(int i = 0; i < pic.length; i++) {
             int xn = i % xcnt;
@@ -719,39 +723,45 @@ public class MultiPictureRenderer
                                   Math.abs(yn - ycur) < 1);
             PictureInfo info = pic[i];
 
-            if((is_visible && info.progress >= FRAME_COUNT) ||
-               (! is_visible)) {
-                if(info.status == PictureStatus.BLACKOUT) {
-                    info.setStatus(PictureStatus.SPINNER);
-                }
-                else if(info.status == PictureStatus.FADEIN) {
+            if(info.status == PictureStatus.FADEIN) {
+                if((is_visible && info.progress >= FADE_FRAME_COUNT) ||
+                   (! is_visible)) {
                     info.setStatus(PictureStatus.NORMAL);
                 }
-                else if(info.status == PictureStatus.FADEOUT) {
+            }
+            else if(info.status == PictureStatus.FADEOUT) {
+                if((is_visible && info.progress >= FADE_FRAME_COUNT) ||
+                   (! is_visible)) {
                     info.setStatus(PictureStatus.BLACKOUT);
+                }
+            }
+            else if(info.status == PictureStatus.BLACKOUT) {
+                if((is_visible && info.progress >= BLACKOUT_FRAME_COUNT) ||
+                   (! is_visible)) {
+                    info.setStatus(PictureStatus.SPINNER);
                 }
             }
 
             if(is_visible) {
-                int interval = next_interval;
+                int duration = next_duration;
                 if(info.status == PictureStatus.BLACKOUT ||
                    info.status == PictureStatus.FADEIN ||
                    info.status == PictureStatus.FADEOUT) {
-                    interval = DRAW_FRAME_INTERVAL;
+                    duration = FRAME_DURATION;
                 }
                 else if(info.status == PictureStatus.SPINNER) {
-                    interval = SPINNER_FRAME_INTERVAL;
+                    duration = SPINNER_FRAME_DURATION;
                 }
 
-                next_interval = (next_interval == 0 ?
-                                 interval :
-                                 Math.min(next_interval, interval));
+                next_duration = (next_duration == 0 ?
+                                 duration :
+                                 Math.min(next_duration, duration));
             }
 
             info.progress += add_step;
         }
 
-        return next_interval;
+        return next_duration;
     }
 
     private void draw()
@@ -760,14 +770,13 @@ public class MultiPictureRenderer
 
         // check draw interval
         long cur_time = SystemClock.uptimeMillis();
-        int add_step =
-            (last_step_time == 0 ? 1 :
-             (int)(cur_time - last_step_time) / DRAW_FRAME_INTERVAL);
-        int next_interval = 0;
+        int add_step = (last_step_time == 0 ? 1 :
+                        (int)(cur_time - last_step_time) / FRAME_INTERVAL);
+        int next_duration = 0;
 
         // prepare next draw
         if(pic != null) {
-            next_interval = updatePictureStatus(add_step);
+            next_duration = updatePictureStatus(add_step);
         }
 
         // check visible
@@ -779,7 +788,7 @@ public class MultiPictureRenderer
         if(pic == null) {
             loadPictureSetting();
             postDurationCallback();
-            next_interval = updatePictureStatus(1);
+            next_duration = updatePictureStatus(1);
         }
 
         for(int i = 0; i < pic.length; i++) {
@@ -808,14 +817,25 @@ public class MultiPictureRenderer
 
         // increase progress counter
         if(add_step > 0) {
-            progress_time = (progress_time + add_step) % SPINNER_TOTAL_FRAMES;
+            progress_time =
+                (progress_time +
+                 add_step / SPINNER_FRAME_DURATION) % SPINNER_TOTAL_FRAMES;
         }
 
         // prepare next draw step
-        if(next_interval > 0) {
-            drawer_handler.sendEmptyMessageAtTime(
-                MSG_DRAW, cur_time + next_interval);
-            last_step_time = cur_time;
+        if(next_duration > 0) {
+            long next_time;                     // todo: more smooth
+            if(last_step_time == 0) {
+                next_time = cur_time + next_duration * FRAME_INTERVAL;
+                last_step_time = cur_time;
+            }
+            else {
+                next_time = last_step_time +
+                    (add_step + next_duration) * FRAME_INTERVAL;
+                last_step_time += add_step * FRAME_INTERVAL;
+            }
+
+            drawer_handler.sendEmptyMessageAtTime(MSG_DRAW, next_time);
         }
         else {
             last_step_time = 0;
@@ -1075,10 +1095,11 @@ public class MultiPictureRenderer
         int fade_step =
             (status == PictureStatus.NORMAL ? 0 :
              status == PictureStatus.FADEOUT ? pic[idx].progress :
-             status == PictureStatus.FADEIN ? FRAME_COUNT - pic[idx].progress :
-             FRAME_COUNT);
+             status == PictureStatus.FADEIN ?
+             FADE_FRAME_COUNT - pic[idx].progress :
+             FADE_FRAME_COUNT);
         fade_step = (fade_step < 0 ? 0 :
-                     fade_step > FRAME_COUNT ? FRAME_COUNT :
+                     fade_step > FADE_FRAME_COUNT ? FADE_FRAME_COUNT :
                      fade_step);
 
         if(fill_background) {
@@ -1098,7 +1119,7 @@ public class MultiPictureRenderer
         if(need_border && fade_step > 0) {
             // border
             paint.setColor(BORDER_COLOR);
-            paint.setAlpha(alpha * fade_step / FRAME_COUNT);
+            paint.setAlpha(alpha * fade_step / FADE_FRAME_COUNT);
             paint.setStyle(Paint.Style.STROKE);
 
             c.save();
@@ -1137,7 +1158,13 @@ public class MultiPictureRenderer
         }
         else if(use_bmp) {
             // alpha with fade
-            alpha = alpha * (FRAME_COUNT - fade_step) / FRAME_COUNT;
+            alpha = alpha * (FADE_FRAME_COUNT - fade_step) / FADE_FRAME_COUNT;
+            if(fade_step > 0) {
+                paint.setColorFilter(
+                    new PorterDuffColorFilter(
+                        (0xff * fade_step / FADE_FRAME_COUNT) << 24,
+                        PorterDuff.Mode.SRC_ATOP));
+            }
 
             // matrix for main bitmap
             Matrix mcenter = new Matrix(matrix);
@@ -1165,9 +1192,8 @@ public class MultiPictureRenderer
 
                         c.save();
                         c.concat(mtop);
-                        c.drawRect(
-                            0, 0, bmp.getWidth(), bmp.getHeight(),
-                            paint);
+                        c.drawRect(0, 0, bmp.getWidth(), bmp.getHeight(),
+                                   paint);
                         c.restore();
                     }
 
@@ -1186,9 +1212,8 @@ public class MultiPictureRenderer
 
                         c.save();
                         c.concat(mbottom);
-                        c.drawRect(
-                            0, 0, bmp.getWidth(), bmp.getHeight(),
-                            paint);
+                        c.drawRect(0, 0, bmp.getWidth(), bmp.getHeight(),
+                                   paint);
                         c.restore();
                     }
 
@@ -1197,6 +1222,8 @@ public class MultiPictureRenderer
                     c.drawBitmap(bmp, mbottom, paint);
                 }
             }
+
+            paint.setColorFilter(null);
         }
 
         // restore clip region
@@ -1220,14 +1247,14 @@ public class MultiPictureRenderer
            status == PictureStatus.FADEOUT) {
             int p = (pic[idx].status == PictureStatus.FADEIN ?
                      pic[idx].progress :
-                     FRAME_COUNT - pic[idx].progress);
+                     FADE_FRAME_COUNT - pic[idx].progress);
             p = (p < 0 ? 0 :
-                 p > FRAME_COUNT ? FRAME_COUNT :
+                 p > FADE_FRAME_COUNT ? FADE_FRAME_COUNT :
                  p);
 
             color = mergeColor(
-                (color & 0x00ffffff) | (0xff * p / FRAME_COUNT) << 24,
-                (0xff * (FRAME_COUNT - p) / FRAME_COUNT) << 24);
+                (color & 0x00ffffff) | (0xff * p / FADE_FRAME_COUNT) << 24,
+                (0xff * (FADE_FRAME_COUNT - p) / FADE_FRAME_COUNT) << 24);
         }
 
         return color;

@@ -220,6 +220,9 @@ public class FolderPickService extends AbstractFileListPickService
                         postRescanCallback(picker);
                     }
                 }
+                synchronized(path_avail_map) {
+                    path_avail_map.clear();
+                }
             }
         }
     }
