@@ -779,7 +779,9 @@ public class MultiPictureRenderer
 
         // check visible
         if(! visible) {
-            drawer_handler.removeMessages(MSG_DRAW);
+            if(is_step || cur_duration > 0) {
+                last_duration = cur_duration;
+            }
             return;
         }
 

@@ -136,8 +136,13 @@ public class SinglePickService extends LazyPickService
                             picker.postRescanCallback();
                         }
                     };
-                getContentResolver().registerContentObserver(
-                    picker.uri, false, content_observer);
+                try {
+                    getContentResolver().registerContentObserver(
+                        picker.uri, false, content_observer);
+                }
+                catch(Exception e) {
+                    // ignore
+                }
             }
         }
 
@@ -147,8 +152,13 @@ public class SinglePickService extends LazyPickService
                 file_observer.stopWatching();
             }
             else {
-                getContentResolver().unregisterContentObserver(
-                    content_observer);
+                try {
+                    getContentResolver().unregisterContentObserver(
+                        content_observer);
+                }
+                catch(Exception e) {
+                    // ignore
+                }
             }
         }
     }

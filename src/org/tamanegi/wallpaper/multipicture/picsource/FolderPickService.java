@@ -42,6 +42,13 @@ public class FolderPickService extends AbstractFileListPickService
         }
 
         @Override
+        protected void onStop()
+        {
+            removeFolderObservers(folders, this);
+            folders = null;
+        }
+
+        @Override
         protected void onLoadFileList()
         {
             // read preferences
@@ -129,6 +136,9 @@ public class FolderPickService extends AbstractFileListPickService
         @Override
         public void onReceive(Context context, Intent intent)
         {
+            synchronized(path_avail_map) {
+                path_avail_map.clear();
+            }
             postRescanAllCallback();
         }
     }
@@ -183,11 +193,13 @@ public class FolderPickService extends AbstractFileListPickService
             MOVED_FROM | MOVED_TO | MOVE_SELF;
 
         private ArrayList<FolderLazyPicker> pickers;
+        private String base;
 
         private FolderObserver(String path)
         {
             super(path, EVENTS);
             pickers = new ArrayList<FolderLazyPicker>();
+            base = path;
         }
 
         private void addPicker(FolderLazyPicker picker)
@@ -215,13 +227,13 @@ public class FolderPickService extends AbstractFileListPickService
         public void onEvent(int event, String path)
         {
             if((event & EVENTS) != 0) {
+                synchronized(path_avail_map) {
+                    path_avail_map.remove(new File(base, path).getPath());
+                }
                 synchronized(pickers) {
                     for(FolderLazyPicker picker : pickers) {
                         postRescanCallback(picker);
                     }
-                }
-                synchronized(path_avail_map) {
-                    path_avail_map.clear();
                 }
             }
         }

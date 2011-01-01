@@ -1,7 +1,5 @@
 package org.tamanegi.wallpaper.multipicture.plugin;
 
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -27,7 +25,9 @@ public abstract class LazyPickerClient
     private HandlerThread thread;
     private Handler handler;
     private Messenger receiver;
-    private AtomicBoolean waiting_next;
+
+    private int waiting_next_cnt;
+    private Object waiting_next_lock;
 
     private ServiceConnection conn;
     private Messenger send_to;
@@ -66,7 +66,8 @@ public abstract class LazyPickerClient
         }
         handler = new Handler(looper, new MsgCallback());
         receiver = new Messenger(handler);
-        waiting_next = new AtomicBoolean(false);
+
+        waiting_next_lock = new Object();
     }
 
     public void start()
@@ -85,24 +86,39 @@ public abstract class LazyPickerClient
 
     public void sendGetNext()
     {
-        if(waiting_next.getAndSet(true)) {
-            return;
+        synchronized(waiting_next_lock) {
+            waiting_next_cnt += 1;
         }
 
-        sendMessage(Message.obtain(null, LazyPickService.MSG_GET_NEXT));
+        sendMessage(Message.obtain(null, LazyPickService.MSG_GET_NEXT),
+                    new Runnable() {
+                        public void run() {
+                            doReceiveNext(null);
+                        }
+                    });
     }
 
-    private void sendMessage(final Message msg)
+    private void sendMessage(Message msg)
+    {
+        sendMessage(msg, null);
+    }
+
+    private void sendMessage(final Message msg, final Runnable on_failed)
     {
         handler.post(new Runnable() {
                 public void run() {
                     try {
                         if(send_to != null) {
                             send_to.send(msg);
+                            return;
                         }
                     }
                     catch(RemoteException e) {
                         // ignore
+                    }
+
+                    if(on_failed != null) {
+                        on_failed.run();
                     }
                 }
             });
@@ -138,7 +154,7 @@ public abstract class LazyPickerClient
     private void doResultCreate(Messenger send_to)
     {
         this.send_to = send_to;
-        waiting_next.set(false);
+        waiting_next_cnt = 0;
 
         Message msg = Message.obtain(null, LazyPickService.MSG_START);
         msg.replyTo = receiver;
@@ -179,9 +195,15 @@ public abstract class LazyPickerClient
 
     private void doReceiveNext(PictureContentInfo content)
     {
-        if(waiting_next.getAndSet(false)) {
-            onReceiveNext(content);
+        synchronized(waiting_next_lock) {
+            if(waiting_next_cnt <= 0) {
+                // not requested content: discard
+                return;
+            }
+            waiting_next_cnt -= 1;
         }
+
+        onReceiveNext(content);
     }
 
     private void doNotifyChanged()

@@ -72,8 +72,13 @@ public class AlbumPickService extends AbstractFileListPickService
     {
         // content observer
         observer = new Observer();
-        getContentResolver().registerContentObserver(
-            PictureUtils.IMAGE_LIST_URI, true, observer);
+        try {
+            getContentResolver().registerContentObserver(
+                PictureUtils.IMAGE_LIST_URI, true, observer);
+        }
+        catch(Exception e) {
+            // ignore
+        }
 
         // receiver for broadcast
         IntentFilter filter;
@@ -93,8 +98,16 @@ public class AlbumPickService extends AbstractFileListPickService
     @Override
     protected void onRemoveLastPicker()
     {
+        // broadcast receiver
         unregisterReceiver(receiver);
-        getContentResolver().unregisterContentObserver(observer);
+
+        // content observer
+        try {
+            getContentResolver().unregisterContentObserver(observer);
+        }
+        catch(Exception e) {
+            // ignore
+        }
     }
 
     private class Observer extends ContentObserver
