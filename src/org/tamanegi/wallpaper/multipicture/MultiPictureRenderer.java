@@ -395,11 +395,13 @@ public class MultiPictureRenderer
               break;
 
           case MSG_SHOW:
-              visible = true;
-              if(is_duration_pending) {
-                  postDurationCallback();
-              }
               synchronized(pic_whole_lock) {
+                  visible = true;
+
+                  if(is_duration_pending) {
+                      postDurationCallback();
+                  }
+
                   if(pic != null) {
                       for(PictureInfo info : pic) {
                           if(info.is_update_pending) {
@@ -408,8 +410,9 @@ public class MultiPictureRenderer
                           info.is_update_pending = false;
                       }
                   }
+
+                  drawer_handler.sendEmptyMessage(MSG_DRAW);
               }
-              drawer_handler.sendEmptyMessage(MSG_DRAW);
               break;
 
           case MSG_HIDE:
@@ -1482,12 +1485,12 @@ public class MultiPictureRenderer
             if(info.loading_cnt == 0) {
                 info.loading_cnt += 1;
                 info.picker.sendGetNext();
-            }
 
-            if(fadeout) {
-                if(info.status == PictureStatus.NORMAL ||
-                   info.status == PictureStatus.FADEIN) {
-                    info.setStatus(PictureStatus.FADEOUT);
+                if(fadeout) {
+                    if(info.status == PictureStatus.NORMAL ||
+                       info.status == PictureStatus.FADEIN) {
+                        info.setStatus(PictureStatus.FADEOUT);
+                    }
                 }
             }
         }
@@ -2023,12 +2026,12 @@ public class MultiPictureRenderer
         {
             if(pic_info != null) {
                 synchronized(pic_whole_lock) {
-                    pic_info.loading_cnt += 1;
-
                     if(visible) {
+                        pic_info.loading_cnt += 1;
                         sendGetNext();
                     }
-                    else {
+                    else if(! pic_info.is_update_pending) {
+                        pic_info.loading_cnt += 1;
                         pic_info.is_update_pending = true;
                     }
                 }
