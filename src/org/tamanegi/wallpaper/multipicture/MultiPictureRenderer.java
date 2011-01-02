@@ -25,6 +25,7 @@ import android.graphics.BitmapFactory;
 import android.graphics.Camera;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.ColorFilter;
 import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Matrix;
@@ -68,7 +69,7 @@ public class MultiPictureRenderer
     private static final int FADE_FRAME_COUNT = 5;
     private static final int BLACKOUT_FRAME_COUNT = 5;
     private static final int SPINNER_FRAME_DURATION = 1;
-    private static final int SPINNER_TOTAL_FRAMES = 20;
+    private static final int SPINNER_TOTAL_FRAMES = 15;
     private static final int BORDER_COLOR = 0x3f3f3f;
 
     // transition params
@@ -1153,11 +1154,11 @@ public class MultiPictureRenderer
         else if(use_bmp) {
             // alpha with fade
             alpha = alpha * (FADE_FRAME_COUNT - fade_step) / FADE_FRAME_COUNT;
+            ColorFilter cfilter = null;
             if(fade_step > 0) {
-                paint.setColorFilter(
-                    new PorterDuffColorFilter(
-                        (0xff * fade_step / FADE_FRAME_COUNT) << 24,
-                        PorterDuff.Mode.SRC_ATOP));
+                cfilter = new PorterDuffColorFilter(
+                    (0xff * fade_step / FADE_FRAME_COUNT) << 24,
+                    PorterDuff.Mode.SRC_ATOP);
             }
 
             // matrix for main bitmap
@@ -1170,51 +1171,62 @@ public class MultiPictureRenderer
             // draw content picture
             paint.setColor(cur_color);
             paint.setAlpha((int)(alpha * pic[idx].opacity));
+            if(cfilter != null) {
+                paint.setColorFilter(cfilter);
+            }
+
             c.drawBitmap(bmp, mcenter, paint);
 
-            // draw refrection
-            if(show_reflection_top || show_reflection_bottom) {
-                // mirrored picture
-                if(show_reflection_top) {
-                    Matrix mtop = new Matrix(mcenter);
-                    mtop.preScale(1, -1, 0, 0);
+            // mirrored picture: top
+            if(show_reflection_top) {
+                Matrix mtop = new Matrix(mcenter);
+                mtop.preScale(1, -1, 0, 0);
 
-                    if(fill_background) {
-                        paint.setColor(bgcolor);
-                        paint.setAlpha(0xff);
-                        paint.setStyle(Paint.Style.FILL);
+                if(fill_background) {
+                    paint.setColor(bgcolor);
+                    paint.setAlpha(0xff);
+                    paint.setStyle(Paint.Style.FILL);
+                    paint.setColorFilter(null);
 
-                        c.save();
-                        c.concat(mtop);
-                        c.drawRect(0, 0, bmp.getWidth(), bmp.getHeight(),
-                                   paint);
-                        c.restore();
-                    }
-
-                    paint.setColor(cur_color);
-                    paint.setAlpha((int)(alpha * pic[idx].opacity / 4));
-                    c.drawBitmap(bmp, mtop, paint);
+                    c.save();
+                    c.concat(mtop);
+                    c.drawRect(0, 0, bmp.getWidth(), bmp.getHeight(), paint);
+                    c.restore();
                 }
-                if(show_reflection_bottom) {
-                    Matrix mbottom = new Matrix(mcenter);
-                    mbottom.preScale(1, -1, 0, bmp.getHeight());
 
-                    if(fill_background) {
-                        paint.setColor(bgcolor);
-                        paint.setAlpha(0xff);
-                        paint.setStyle(Paint.Style.FILL);
-
-                        c.save();
-                        c.concat(mbottom);
-                        c.drawRect(0, 0, bmp.getWidth(), bmp.getHeight(),
-                                   paint);
-                        c.restore();
-                    }
-
-                    paint.setColor(cur_color);
-                    paint.setAlpha((int)(alpha * pic[idx].opacity / 4));
-                    c.drawBitmap(bmp, mbottom, paint);
+                paint.setColor(cur_color);
+                paint.setAlpha((int)(alpha * pic[idx].opacity / 4));
+                if(cfilter != null) {
+                    paint.setColorFilter(cfilter);
                 }
+
+                c.drawBitmap(bmp, mtop, paint);
+            }
+
+            // mirrored picture: bottom
+            if(show_reflection_bottom) {
+                Matrix mbottom = new Matrix(mcenter);
+                mbottom.preScale(1, -1, 0, bmp.getHeight());
+
+                if(fill_background) {
+                    paint.setColor(bgcolor);
+                    paint.setAlpha(0xff);
+                    paint.setStyle(Paint.Style.FILL);
+                    paint.setColorFilter(null);
+
+                    c.save();
+                    c.concat(mbottom);
+                    c.drawRect(0, 0, bmp.getWidth(), bmp.getHeight(), paint);
+                    c.restore();
+                }
+
+                paint.setColor(cur_color);
+                paint.setAlpha((int)(alpha * pic[idx].opacity / 4));
+                if(cfilter != null) {
+                    paint.setColorFilter(cfilter);
+                }
+
+                c.drawBitmap(bmp, mbottom, paint);
             }
 
             paint.setColorFilter(null);
