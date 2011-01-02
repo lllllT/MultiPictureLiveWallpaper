@@ -1,5 +1,6 @@
 package org.tamanegi.wallpaper.multipicture;
 
+import java.lang.reflect.Method;
 import java.util.IllegalFormatException;
 import java.util.List;
 
@@ -84,6 +85,8 @@ public class MultiPictureSetting extends PreferenceActivity
     private ComponentName cur_comp = null;
     private int cur_idx = -1;
 
+    private Method set_no_commit = null;
+
     public static String getKey(String base, int idx)
     {
         return getKey(base, (idx >= 0 ? String.valueOf(idx) : SCREEN_DEFAULT));
@@ -120,10 +123,12 @@ public class MultiPictureSetting extends PreferenceActivity
         pref_group = (PreferenceGroup)
             getPreferenceManager().findPreference("screen.cat");
 
+        invokeSetNoCommit(true);
         for(int i = 0; i < ScreenPickerPreference.SCREEN_COUNT; i++) {
             addScreenPreferences(i, true);
             all_screen_mask |= (1 << i);
         }
+        invokeSetNoCommit(false);
 
         screen_picker = (ScreenPickerPreference)
             getPreferenceManager().findPreference("screen.picker");
@@ -347,6 +352,21 @@ public class MultiPictureSetting extends PreferenceActivity
 
         cur_item = null;
         cur_idx = -1;
+    }
+
+    private void invokeSetNoCommit(boolean no_commit)
+    {
+        try {
+            if(set_no_commit == null) {
+                set_no_commit = PreferenceManager.class.getDeclaredMethod(
+                    "setNoCommit", Boolean.TYPE);
+                set_no_commit.setAccessible(true);
+            }
+            set_no_commit.invoke(getPreferenceManager(), true);
+        }
+        catch(Exception e) {
+            // ignore
+        }
     }
 
     private void addScreenPreferences(int idx, boolean check_default)
@@ -680,7 +700,9 @@ public class MultiPictureSetting extends PreferenceActivity
         @Override
         public void onScreenNumberPicked(int screen_num)
         {
+            invokeSetNoCommit(true);
             addScreenPreferences(screen_num - 1, false);
+            invokeSetNoCommit(false);
 
             if(pickable_screen == all_screen_mask) {
                 screen_picker.setEnabled(false);
