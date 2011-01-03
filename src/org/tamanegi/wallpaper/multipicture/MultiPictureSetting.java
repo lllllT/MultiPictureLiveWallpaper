@@ -288,7 +288,7 @@ public class MultiPictureSetting extends PreferenceActivity
         sb.append("Image picker app(s): ")
             .append(getRuntimeApplicationInfo(picker_intent));
 
-        System.out.println("dbg: " + sb);
+        Log.v(TAG, sb.toString());
         return sb;
     }
 
@@ -347,6 +347,8 @@ public class MultiPictureSetting extends PreferenceActivity
 
         cur_item = null;
         cur_idx = -1;
+
+        Log.d(TAG, "picture source: apply: " + serv);
     }
 
     private void addScreenPreferences(int idx, boolean check_default)
@@ -709,8 +711,7 @@ public class MultiPictureSetting extends PreferenceActivity
                 cur_comp = (ComponentName)val;
                 Intent intent = picsource.createIntent(cur_comp, key);
 
-                Log.d(TAG, "picture source: start: key=" + key +
-                      ", component=" + cur_comp);
+                Log.d(TAG, "picture source: start: " + key + ", " + intent);
                 try {
                     startActivityForResult(intent, REQUEST_CODE_PICSOURCE);
                     cur_item = picsource;

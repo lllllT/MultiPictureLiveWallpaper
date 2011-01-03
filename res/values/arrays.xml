@@ -5,7 +5,7 @@
     <item>Single Picture</item>
     <item>Album</item>
     <item>Picture Folder</item>
-    <item>Same as Default Setting</item>
+    <item>Same as Common settings</item>
   </string-array>
 
   <string-array name="pref_screen_default_type_entries">
@@ -36,7 +36,7 @@
     <item>Yellow</item>
     <item>Custom Color</item>
     <item>Auto detect (slow and maybe inexact)</item>
-    <item>Same as Default Setting</item>
+    <item>Same as Common settings</item>
   </string-array>
 
   <string-array name="pref_screen_default_bgcolor_entries">
@@ -77,7 +77,7 @@
     <item>Fit to Fullscreen</item>
     <item>Medium crop</item>
     <item>Show Entire Picture</item>
-    <item>Same as Default Setting</item>
+    <item>Same as Common settings</item>
   </string-array>
 
   <string-array name="pref_screen_default_clipratio_entries">
@@ -106,7 +106,7 @@
     <item>20%</item>
     <item>10%</item>
     <item>0% (grayscale)</item>
-    <item>Same as Default Setting</item>
+    <item>Same as Common settings</item>
   </string-array>
 
   <string-array name="pref_screen_default_saturation_entries">
@@ -151,7 +151,7 @@
     <item>20%</item>
     <item>10%</item>
     <item>0% (transparent)</item>
-    <item>Same as Default Setting</item>
+    <item>Same as Common settings</item>
   </string-array>
 
   <string-array name="pref_screen_default_opacity_entries">
@@ -191,7 +191,7 @@
     <item>Date (newest first)</item>
     <item>Random</item>
     <item>Shuffle</item>
-    <item>Same as Default Setting</item>
+    <item>Same as Common settings</item>
   </string-array>
 
   <string-array name="pref_screen_default_folder_order_entries">

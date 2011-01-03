@@ -12,10 +12,13 @@ import android.os.Looper;
 import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
+import android.util.Log;
 
 public abstract class LazyPickerClient
 {
     private static final int STOP_TIMEOUT = 1000; // msec
+
+    private static final String TAG = "LazyPickerClient";
 
     private Context context;
     private ComponentName comp;
@@ -40,6 +43,7 @@ public abstract class LazyPickerClient
     private Runnable timeout_stop_callback = new Runnable() {
             public void run() {
                 // timed out: force unbind
+                Log.d(TAG, "stop request timeout: " + key);
                 doStopCompleted();
             }
         };
@@ -76,10 +80,12 @@ public abstract class LazyPickerClient
         intent.setComponent(comp);
         conn = new Connection();
         context.bindService(intent, conn, Context.BIND_AUTO_CREATE);
+        Log.d(TAG, "bind plugin: " + key + ", " + intent);
     }
 
     public void sendStop()
     {
+        Log.d(TAG, "request to stop plugin" + key);
         sendMessage(Message.obtain(null, LazyPickService.MSG_STOP));
         handler.postDelayed(timeout_stop_callback, STOP_TIMEOUT);
     }
@@ -132,6 +138,7 @@ public abstract class LazyPickerClient
                         null, LazyPickService.MSG_CREATE);
                     msg.replyTo = receiver;
 
+                    Log.d(TAG, "creating picker: " + key);
                     try {
                         service_messenger.send(msg);
                     }
@@ -146,6 +153,7 @@ public abstract class LazyPickerClient
     {
         handler.post(new Runnable() {
                 public void run() {
+                    Log.d(TAG, "plugin disconnected: " + key);
                     send_to = null;
                 }
             });
@@ -164,6 +172,7 @@ public abstract class LazyPickerClient
         data.putBundle(LazyPickService.DATA_HINT, hint.foldToBundle());
         msg.setData(data);
 
+        Log.d(TAG, "starting picker: " + key);
         try {
             if(send_to != null) {
                 send_to.send(msg);
@@ -186,11 +195,13 @@ public abstract class LazyPickerClient
         send_to = null;
 
         if(conn != null) {
+            Log.d(TAG, "unbind plugin: " + key);
             context.unbindService(conn);
             conn = null;
         }
 
         onStopCompleted();
+        Log.d(TAG, "picker stopped: " + key);
     }
 
     private void doReceiveNext(PictureContentInfo content)
@@ -198,6 +209,7 @@ public abstract class LazyPickerClient
         synchronized(waiting_next_lock) {
             if(waiting_next_cnt <= 0) {
                 // not requested content: discard
+                Log.d(TAG, "not requested content receive: " + key);
                 return;
             }
             waiting_next_cnt -= 1;

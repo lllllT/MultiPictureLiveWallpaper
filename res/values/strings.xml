@@ -11,7 +11,7 @@
   <string name="shortcut_name_settings">MultiPicture Live Wallpaper Settings</string>
 
   <string name="plugin_search_button">Search Plugins</string>
-  <string name="pref_use_default">Same as Default Setting</string>
+  <string name="pref_use_default">Same as common settings</string>
   <string name="pref_screen_type_file_desc">Single Picture : %s</string>
   <string name="pref_screen_type_folder_desc">Picture Folder : %s</string>
   <string name="pref_screen_type_bucket_desc">Album : %s</string>
@@ -19,14 +19,14 @@
   <string name="pref_cat_screen_title">Screen Settings</string>
   <string name="pref_cat_screen_summary">Settings for each screen, such as pictures for display.</string>
 
-  <string name="pref_group_screen_default_title">Default settings</string>
-  <string name="pref_group_screen_default_summary">Default settings for unspecified case in individual settings.</string>
+  <string name="pref_group_screen_default_title">Common settings</string>
+  <string name="pref_group_screen_default_summary">Common settings for unspecified case in individual settings.</string>
 
   <string name="pref_cat_picture_screen_title">Screen %d settings</string>
   <string name="pref_cat_picture_screen_summary">Individual settings for screen %d.</string>
   <string name="pref_cat_picture_screen_left_summary">Individual settings for screen %d. (Leftmost screen)</string>
 
-  <string name="pref_add_screen_title">Add screen settings</string>
+  <string name="pref_add_screen_title">Add individual settings</string>
   <string name="pref_add_screen_summary">Add individual settings for specified screen.</string>
   <string name="pref_add_screen_dialog_title">Select screen</string>
 

@@ -5,7 +5,7 @@
     <item>単一画像</item>
     <item>アルバム</item>
     <item>画像フォルダ</item>
-    <item>デフォルト設定と同じ</item>
+    <item>共通設定と同じ</item>
   </string-array>
 
   <string-array name="pref_screen_default_type_entries">
@@ -29,7 +29,7 @@
     <item>黄</item>
     <item>カスタムカラー</item>
     <item>自動検出 (遅くて多分不正確)</item>
-    <item>デフォルト設定と同じ</item>
+    <item>共通設定と同じ</item>
   </string-array>
 
   <string-array name="pref_screen_default_bgcolor_entries">
@@ -53,7 +53,7 @@
     <item>フルスクリーンに合わせる</item>
     <item>中くらいに切り抜き</item>
     <item>画像全体を表示</item>
-    <item>デフォルト設定と同じ</item>
+    <item>共通設定と同じ</item>
   </string-array>
 
   <string-array name="pref_screen_default_clipratio_entries">
@@ -75,7 +75,7 @@
     <item>20%</item>
     <item>10%</item>
     <item>0% (グレースケール)</item>
-    <item>デフォルト設定と同じ</item>
+    <item>共通設定と同じ</item>
   </string-array>
 
   <string-array name="pref_screen_default_saturation_entries">
@@ -105,7 +105,7 @@
     <item>20%</item>
     <item>10%</item>
     <item>0% (透明)</item>
-    <item>デフォルト設定と同じ</item>
+    <item>共通設定と同じ</item>
   </string-array>
 
   <string-array name="pref_screen_default_opacity_entries">
@@ -130,7 +130,7 @@
     <item>日付 (新しい順)</item>
     <item>ランダム</item>
     <item>シャッフル</item>
-    <item>デフォルト設定と同じ</item>
+    <item>共通設定と同じ</item>
   </string-array>
 
   <string-array name="pref_screen_default_folder_order_entries">

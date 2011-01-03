@@ -6,7 +6,7 @@
   <string name="shortcut_name_settings">MultiPicture Live Wallpaper設定</string>
 
   <string name="plugin_search_button">プラグインを検索</string>
-  <string name="pref_use_default">デフォルト設定と同じ</string>
+  <string name="pref_use_default">共通設定と同じ</string>
   <string name="pref_screen_type_file_desc">単一画像 : %s</string>
   <string name="pref_screen_type_folder_desc">画像フォルダ : %s</string>
   <string name="pref_screen_type_bucket_desc">アルバム : %s</string>
@@ -14,15 +14,15 @@
   <string name="pref_cat_screen_title">画面設定</string>
   <string name="pref_cat_screen_summary">各画面に表示する画像等の設定。</string>
 
-  <string name="pref_group_screen_default_title">デフォルト設定</string>
-  <string name="pref_group_screen_default_summary">個別設定で指定しなかった場合のデフォルト設定。</string>
+  <string name="pref_group_screen_default_title">共通設定</string>
+  <string name="pref_group_screen_default_summary">個別設定で指定しなかった場合の共通設定。</string>
 
   <string name="pref_cat_picture_screen_title">画面%dの設定</string>
   <string name="pref_cat_picture_screen_summary">画面%dの個別設定。</string>
   <string name="pref_cat_picture_screen_left_summary">画面%dの個別設定。(一番左の画面)</string>
 
-  <string name="pref_add_screen_title">画面設定を追加</string>
-  <string name="pref_add_screen_summary">指定しされた画面の個別設定を追加する。</string>
+  <string name="pref_add_screen_title">個別設定を追加</string>
+  <string name="pref_add_screen_summary">指定された画面の個別設定を追加する。</string>
   <string name="pref_add_screen_dialog_title">画面の選択</string>
 
   <string name="pref_screen_val_summary">\n%s</string>
