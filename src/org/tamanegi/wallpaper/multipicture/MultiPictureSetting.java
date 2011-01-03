@@ -21,6 +21,7 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.ResolveInfo;
 import android.content.pm.PackageManager.NameNotFoundException;
+import android.graphics.PixelFormat;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -266,10 +267,18 @@ public class MultiPictureSetting extends PreferenceActivity
         // display info
         WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
         Display dpy = wm.getDefaultDisplay();
+        int pfmt = dpy.getPixelFormat();
         sb.append("Display: ")
             .append(dpy.getWidth()).append("x").append(dpy.getHeight())
             .append(", ")
-            .append("format=").append(dpy.getPixelFormat())
+            .append(pfmt == PixelFormat.RGB_332 ? "RGB_332" :
+                    pfmt == PixelFormat.RGB_565 ? "RGB_565" :
+                    pfmt == PixelFormat.RGB_888 ? "RGB_888" :
+                    pfmt == PixelFormat.RGBA_4444 ? "RGBA_4444" :
+                    pfmt == PixelFormat.RGBA_5551 ? "RGBA_5551" :
+                    pfmt == PixelFormat.RGBA_8888 ? "RGBA_8888" :
+                    pfmt == PixelFormat.RGBX_8888 ? "RGBX_8888" :
+                    "format=" + pfmt)
             .append(", ")
             .append(dpy.getRefreshRate()).append("fps")
             .append("\n");
