@@ -44,6 +44,7 @@ public class FolderPickService extends AbstractFileListPickService
         @Override
         protected void onStop()
         {
+            super.onStop();
             removeFolderObservers(folders, this);
             folders = null;
         }
