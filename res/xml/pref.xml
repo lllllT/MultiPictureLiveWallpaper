@@ -1,60 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
 
-  <PreferenceCategory android:title="@string/pref_cat_screen_title">
+  <PreferenceCategory android:title="@string/pref_cat_screen_title"
+                      android:key="screen.cat">
+    <!-- insert PreferenceScreen of each screen at runtime -->
     <PreferenceScreen
-       android:key="screen.cat"
-       android:title="@string/pref_cat_screen_title"
-       android:summary="@string/pref_cat_screen_summary"
+       android:title="@string/pref_group_screen_default_title"
+       android:summary="@string/pref_group_screen_default_summary"
+       android:order="0"
        >
-      <!-- insert PreferenceScreen of each screen at runtime -->
-      <PreferenceScreen
-         android:title="@string/pref_group_screen_default_title"
-         android:summary="@string/pref_group_screen_default_summary"
-         android:order="0"
-         >
-        <org.tamanegi.wallpaper.multipicture.PictureSourcePreference
-           android:key="screen.default.picsource"
-           android:title="@string/pref_screen_type_title"
-           android:summary="@string/pref_screen_type_base_summary"
-           /> <!-- default value is set by MultiPictureSetting#onCreate -->
-        <ListPreference
-           android:key="screen.default.bgcolor"
-           android:title="@string/pref_screen_bgcolor_title"
-           android:summary="@string/pref_screen_bgcolor_summary"
-           android:entries="@array/pref_screen_default_bgcolor_entries"
-           android:entryValues="@array/pref_screen_bgcolor_entryvalues"
-           android:defaultValue="black" />
-        <ListPreference
-           android:key="draw.clipratio"
-           android:title="@string/pref_screen_clipratio_title"
-           android:summary="@string/pref_screen_clipratio_summary"
-           android:entries="@array/pref_screen_default_clipratio_entries"
-           android:entryValues="@array/pref_screen_clipratio_entryvalues"
-           android:defaultValue="1.0" />
-        <ListPreference
-           android:key="screen.default.saturation"
-           android:title="@string/pref_screen_saturation_title"
-           android:summary="@string/pref_screen_saturation_summary"
-           android:entries="@array/pref_screen_default_saturation_entries"
-           android:entryValues="@array/pref_screen_saturation_entryvalues"
-           android:defaultValue="1.0" />
-        <ListPreference
-           android:key="screen.default.opacity"
-           android:title="@string/pref_screen_opacity_title"
-           android:summary="@string/pref_screen_opacity_summary"
-           android:entries="@array/pref_screen_default_opacity_entries"
-           android:entryValues="@array/pref_screen_opacity_entryvalues"
-           android:defaultValue="1.0" />
-      </PreferenceScreen>
-      <org.tamanegi.wallpaper.multipicture.ScreenPickerPreference
-         android:key="screen.picker"
-         android:title="@string/pref_add_screen_title"
-         android:summary="@string/pref_add_screen_summary"
-         android:dialogTitle="@string/pref_add_screen_dialog_title"
-         android:order="0x7ffffffe"
-         />
+      <org.tamanegi.wallpaper.multipicture.PictureSourcePreference
+         android:key="screen.default.picsource"
+         android:title="@string/pref_screen_type_title"
+         android:summary="@string/pref_screen_type_base_summary"
+         /> <!-- default value is set by MultiPictureSetting#onCreate -->
+      <ListPreference
+         android:key="screen.default.bgcolor"
+         android:title="@string/pref_screen_bgcolor_title"
+         android:summary="@string/pref_screen_bgcolor_summary"
+         android:entries="@array/pref_screen_default_bgcolor_entries"
+         android:entryValues="@array/pref_screen_bgcolor_entryvalues"
+         android:defaultValue="black" />
+      <ListPreference
+         android:key="draw.clipratio"
+         android:title="@string/pref_screen_clipratio_title"
+         android:summary="@string/pref_screen_clipratio_summary"
+         android:entries="@array/pref_screen_default_clipratio_entries"
+         android:entryValues="@array/pref_screen_clipratio_entryvalues"
+         android:defaultValue="1.0" />
+      <ListPreference
+         android:key="screen.default.saturation"
+         android:title="@string/pref_screen_saturation_title"
+         android:summary="@string/pref_screen_saturation_summary"
+         android:entries="@array/pref_screen_default_saturation_entries"
+         android:entryValues="@array/pref_screen_saturation_entryvalues"
+         android:defaultValue="1.0" />
+      <ListPreference
+         android:key="screen.default.opacity"
+         android:title="@string/pref_screen_opacity_title"
+         android:summary="@string/pref_screen_opacity_summary"
+         android:entries="@array/pref_screen_default_opacity_entries"
+         android:entryValues="@array/pref_screen_opacity_entryvalues"
+         android:defaultValue="1.0" />
     </PreferenceScreen>
+    <org.tamanegi.wallpaper.multipicture.ScreenPickerPreference
+       android:key="screen.picker"
+       android:title="@string/pref_add_screen_title"
+       android:summary="@string/pref_add_screen_summary"
+       android:dialogTitle="@string/pref_add_screen_dialog_title"
+       android:order="0x7ffffffe"
+       />
   </PreferenceCategory>
 
   <PreferenceCategory android:title="@string/pref_cat_draw_title">

@@ -12,7 +12,6 @@
   <string name="pref_screen_type_bucket_desc">アルバム : %s</string>
 
   <string name="pref_cat_screen_title">画面設定</string>
-  <string name="pref_cat_screen_summary">各画面に表示する画像等の設定。</string>
 
   <string name="pref_group_screen_default_title">共通設定</string>
   <string name="pref_group_screen_default_summary">個別設定で指定しなかった場合の共通設定。</string>

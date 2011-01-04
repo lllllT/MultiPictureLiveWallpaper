@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+  <item android:drawable="@drawable/btn_circle"
+        android:left="3dp"
+        android:top="6dp"
+        android:right="3dp"
+        android:bottom="10dp" />
+  <item android:drawable="@drawable/ic_btn_add_screen" />
+</layer-list>
