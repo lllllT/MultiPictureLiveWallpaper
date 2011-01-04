@@ -6,20 +6,26 @@ import org.tamanegi.wallpaper.multipicture.MultiPictureSetting;
 import org.tamanegi.wallpaper.multipicture.R;
 import org.tamanegi.wallpaper.multipicture.plugin.PictureSourceContract;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.CheckBoxPreference;
+import android.preference.ListPreference;
+import android.preference.PreferenceActivity;
+import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
 import android.widget.Toast;
 
-public class AlbumSource extends Activity
+public class AlbumSource extends PreferenceActivity
 {
     private String key;
     private boolean need_clear;
+
+    private SharedPreferences pref;
+    private PreferenceGroup album_group;
 
     private PictureUtils.BucketItem[] buckets;
     private boolean[] checked;
@@ -36,25 +42,13 @@ public class AlbumSource extends Activity
         if(key == null) {
             finish();
         }
-    }
 
-    @Override
-    protected void onResume()
-    {
-        super.onResume();
+        addPreferencesFromResource(R.xml.album_pref);
+        pref = PreferenceManager.getDefaultSharedPreferences(this);
 
-        startBucketPickerDialog(need_clear);
-    }
-
-    private void startBucketPickerDialog(boolean need_clear)
-    {
+        // prepare
         buckets = PictureUtils.getAvailBuckets(getContentResolver());
         if(buckets == null) {
-            Toast.makeText(
-                this, R.string.pref_screen_no_bucket_exist_msg,
-                Toast.LENGTH_LONG)
-                .show();
-            finish();
             return;
         }
 
@@ -75,50 +69,82 @@ public class AlbumSource extends Activity
             Arrays.fill(checked, true);
         }
 
-        AlertDialog dlg = new AlertDialog.Builder(this)
-            .setTitle(R.string.pref_screen_bucket_title)
-            .setMultiChoiceItems(
-                buckets, checked,
-                new DialogInterface.OnMultiChoiceClickListener() {
-                    public void onClick(DialogInterface dialog,
-                                        int which, boolean isChecked) {
-                        checked[which] = isChecked;
-                    }
-                })
-            .setPositiveButton(
-                android.R.string.yes,
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int button) {
-                        applyBucketValue();
-                        dialog.dismiss();
-                    }
-                })
-            .setNegativeButton(
-                android.R.string.no,
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int button) {
-                        dialog.dismiss();
-                    }
-                })
-            .create();
-        dlg.setOnDismissListener(
-            new DialogInterface.OnDismissListener() {
-                public void onDismiss(DialogInterface dialog) {
-                    finish();
-                }
-            });
-        dlg.show();
+        // add album list
+        album_group = (PreferenceGroup)
+            getPreferenceManager().findPreference("album_cat");
+
+        for(int i = 0; i < buckets.length; i++) {
+            CheckBoxPreference check = new CheckBoxPreference(this);
+            check.setPersistent(false);
+            check.setTitle(buckets[i].getName());
+            check.setChecked(checked[i]);
+            album_group.addPreference(check);
+        }
+
+        // order
+        String order_key = MultiPictureSetting.getKey(
+            MultiPictureSetting.SCREEN_ORDER_KEY, key);
+        String order_val = (need_clear ? "" : pref.getString(order_key, ""));
+        try {
+            OrderType.valueOf(order_val);
+        }
+        catch(IllegalArgumentException e) {
+            order_val = "random";
+        }
+
+        ListPreference order = (ListPreference)
+            getPreferenceManager().findPreference("order");
+        order.setKey(order_key);
+        order.setPersistent(true);
+        order.setValue(order_val);
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+
+        if(buckets == null) {
+            new AlertDialog.Builder(this)
+                .setTitle(R.string.pref_album_title)
+                .setMessage(R.string.pref_no_bucket_exist_msg)
+                .setPositiveButton(
+                    android.R.string.ok,
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog,
+                                            int button) {
+                            finish();
+                        }
+                    })
+                .setOnCancelListener(
+                    new DialogInterface.OnCancelListener() {
+                        public void onCancel(DialogInterface dialog) {
+                            finish();
+                        }
+                    })
+                .show();
+        }
+    }
+
+    @Override
+    public void onBackPressed()
+    {
+        applyBucketValue();
+        finish();
     }
 
     private void applyBucketValue()
     {
         boolean c = false;
-        for(boolean check : checked) {
-            c = (c || check);
+        for(int i = 0; i < buckets.length; i++) {
+            CheckBoxPreference check =
+                (CheckBoxPreference)album_group.getPreference(i);
+            checked[i] = check.isChecked();
+            c = (c || checked[i]);
         }
         if(! c) {
             Toast.makeText(
-                this, R.string.pref_screen_no_bucket_select_msg,
+                this, R.string.pref_no_bucket_select_msg,
                 Toast.LENGTH_LONG)
                 .show();
             return;
@@ -133,8 +159,6 @@ public class AlbumSource extends Activity
 
         String val_str = data_val.toString().trim();
         setBuckets(val_str);
-
-        // todo: save order
 
         Intent result = new Intent();
         result.putExtra(PictureSourceContract.EXTRA_DESCRIPTION,
@@ -160,7 +184,6 @@ public class AlbumSource extends Activity
         SharedPreferences.Editor editor =
             PreferenceManager.getDefaultSharedPreferences(this).edit();
         editor.putString(getPreferenceKey(), val);
-        // todo: persist for select order
         editor.commit();
     }
 

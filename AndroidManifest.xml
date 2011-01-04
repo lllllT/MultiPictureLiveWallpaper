@@ -31,7 +31,7 @@
 
     <!-- activity for picture source -->
     <activity android:name=".picsource.SingleSource"
-              android:label="single picture"
+              android:label="@string/pref_single_picture_title"
               android:theme="@android:style/Theme.NoDisplay">
       <intent-filter>
         <action android:name="org.tamanegi.wallpaper.multipicture.action.GET_PICTURE_SOURCE" />
@@ -40,8 +40,7 @@
     </activity>
 
     <activity android:name=".picsource.AlbumSource"
-              android:label="album picture"
-              android:theme="@android:style/Theme.Translucent.NoTitleBar"> <!-- todo: theme -->
+              android:label="@string/pref_album_title">
       <intent-filter>
         <action android:name="org.tamanegi.wallpaper.multipicture.action.GET_PICTURE_SOURCE" />
         <category android:name="android.intent.category.DEFAULT" />
@@ -49,8 +48,7 @@
     </activity>
 
     <activity android:name=".picsource.FolderSource"
-              android:label="folder picture"
-              android:theme="@android:style/Theme.Translucent.NoTitleBar"> <!-- todo: theme -->
+              android:label="@string/pref_folder_title">
       <intent-filter>
         <action android:name="org.tamanegi.wallpaper.multipicture.action.GET_PICTURE_SOURCE" />
         <category android:name="android.intent.category.DEFAULT" />

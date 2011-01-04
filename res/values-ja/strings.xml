@@ -31,10 +31,6 @@
   <string name="pref_screen_type_base_summary">表示する画像の選択方法。</string>
   <string name="pref_screen_type_val1_summary">\n%s</string>
 
-  <string name="pref_screen_bucket_title">アルバム</string>
-  <string name="pref_screen_no_bucket_exist_msg">アルバムが存在しません。</string>
-  <string name="pref_screen_no_bucket_select_msg">アルバムが選択されていません。</string>
-
   <string name="pref_screen_bgcolor_title">背景色</string>
   <string name="pref_screen_bgcolor_summary">画面の背景色。</string>
 
@@ -47,9 +43,6 @@
   <string name="pref_screen_opacity_title">不透明度を下げる</string>
   <string name="pref_screen_opacity_summary">不透明度を下げる (透明度を上げる)。</string>
 
-  <string name="pref_screen_folder_order_title">選択順序</string>
-  <string name="pref_screen_folder_order_summary">画像フォルダまたはアルバム指定の場合の画像選択順序。</string>
-
   <string name="pref_cat_draw_title">描画設定</string>
 
   <string name="pref_draw_transition_title">画面変更時の切替方法</string>
@@ -61,16 +54,13 @@
   <string name="pref_draw_reflection_bottom_title">反射を表示する (下側)</string>
   <string name="pref_draw_reflection_bottom_summary">画像の下側に反射を表示する。</string>
 
-  <string name="pref_cat_folder_title">アルバム指定/フォルダ指定</string>
-
-  <string name="pref_folder_recursive_title">再帰的にフォルダ検索</string>
-  <string name="pref_folder_recursive_summary">画像フォルダの場合は、再帰的に指定されたフォルダ以下の画像を使用する。</string>
+  <string name="pref_cat_changing_title">画像変更設定</string>
 
   <string name="pref_folder_changetap_title">ダブルタップで画像変更</string>
-  <string name="pref_folder_changetap_summary">アルバムまたは画像フォルダ指定の場合、ダブルタップで画像を変更する。</string>
+  <string name="pref_folder_changetap_summary">複数画像を選択できる場合、ダブルタップで画像を変更する。</string>
 
   <string name="pref_folder_duration_title">画像変更頻度</string>
-  <string name="pref_folder_duration_summary">アルバムまたは画像フォルダ指定の場合、自動的に別の画像へ変更する時間間隔。</string>
+  <string name="pref_folder_duration_summary">複数画像を選択できる場合、自動的に別の画像へ変更する時間間隔。</string>
 
   <string name="pref_cat_advanced">高度な設定</string>
 
@@ -79,6 +69,25 @@
 
   <string name="pref_reload_extmedia_mounted_title">更新時に画像再読み込み</string>
   <string name="pref_reload_extmedia_mounted_summary">外部メディア (SDカード等) をマウントした時やファイル更新時等に画像を再読み込みする。</string>
+
+  <string name="pref_single_picture_title">単一画像</string>
+
+  <string name="pref_album_title">アルバム</string>
+  <string name="pref_cat_album_title">アルバム選択</string>
+  <string name="pref_no_bucket_exist_msg">アルバムが存在しません。</string>
+  <string name="pref_no_bucket_select_msg">アルバムが選択されていません。</string>
+
+  <string name="pref_folder_title">画像フォルダ</string>
+  <string name="pref_cat_folder_title">画像フォルダ指定</string>
+  <string name="pref_folder_path_title">フォルダパス</string>
+  <string name="pref_folder_path_summary">画像フォルダへのパス。</string>
+  <string name="pref_folder_recursive_title">再帰的にフォルダ検索</string>
+  <string name="pref_folder_recursive_summary">指定されたフォルダ以下の画像を再帰的に検索する。</string>
+  <string name="pref_no_folder_select_msg">フォルダが選択されていません。</string>
+
+  <string name="pref_cat_selection_title">選択設定</string>
+  <string name="pref_select_order_title">画像選択順序</string>
+  <string name="pref_select_order_summary">画像変更時の選択順序。</string>
 
   <string name="menu_share">共有</string>
   <string name="menu_qr">QRコード</string>

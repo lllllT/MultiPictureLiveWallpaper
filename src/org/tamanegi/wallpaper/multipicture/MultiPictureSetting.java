@@ -152,15 +152,6 @@ public class MultiPictureSetting extends PreferenceActivity
         updateColorSummary(def_color, null);
 
         // backward compatibility
-        boolean is_random = pref.getBoolean("folder.random", true);
-        String order_val = pref.getString(getKey(SCREEN_ORDER_KEY, -1), null);
-        if(order_val == null) {
-            ListPreference order = (ListPreference)
-                getPreferenceManager().findPreference("folder.order");
-            order_val = (is_random ? "random" : "name_asc");
-            order.setValue(order_val);
-        }
-
         String duration_min_str = pref.getString("folder.duration", null);
         String duration_sec_str = pref.getString("folder.duration_sec", null);
         if(duration_sec_str == null) {
@@ -178,8 +169,6 @@ public class MultiPictureSetting extends PreferenceActivity
                           R.string.pref_screen_saturation_summary);
         setupValueSummary(getKey(SCREEN_OPACITY_KEY, -1),
                           R.string.pref_screen_opacity_summary);
-        setupValueSummary(getKey(SCREEN_ORDER_KEY, -1),
-                          R.string.pref_screen_folder_order_summary);
     }
 
     @Override
@@ -369,7 +358,6 @@ public class MultiPictureSetting extends PreferenceActivity
         String clip_key = getKey(SCREEN_CLIP_KEY, idx);
         String satu_key = getKey(SCREEN_SATURATION_KEY, idx);
         String opac_key = getKey(SCREEN_OPACITY_KEY, idx);
-        String order_key = getKey(SCREEN_ORDER_KEY, idx);
 
         if(check_default) {
             String picsource_str = pref.getString(picsource_key, null);
@@ -379,7 +367,6 @@ public class MultiPictureSetting extends PreferenceActivity
             String clip = pref.getString(clip_key, "use_default");
             String satu = pref.getString(satu_key, "use_default");
             String opac = pref.getString(opac_key, "use_default");
-            String order = pref.getString(order_key, "use_default");
 
             if(((picsource_str == null &&
                  ((type_str == null && fname == null) ||
@@ -388,8 +375,7 @@ public class MultiPictureSetting extends PreferenceActivity
                "use_default".equals(bgcolor) &&
                "use_default".equals(clip) &&
                "use_default".equals(satu) &&
-               "use_default".equals(opac) &&
-               "use_default".equals(order)) {
+               "use_default".equals(opac)) {
                 return;
             }
         }
@@ -471,19 +457,6 @@ public class MultiPictureSetting extends PreferenceActivity
         opac.setDefaultValue("use_default");
         sgroup.addPreference(opac);
         setupValueSummary(opac_key, R.string.pref_screen_opacity_summary);
-
-        // selection order
-        ListPreference order = new ListPreference(this);
-        order.setKey(order_key);
-        order.setTitle(R.string.pref_screen_folder_order_title);
-        order.setDialogTitle(order.getTitle());
-        order.setSummary(R.string.pref_screen_folder_order_summary);
-        order.setEntries(R.array.pref_screen_folder_order_entries);
-        order.setEntryValues(R.array.pref_screen_folder_order_entryvalues);
-        order.setDefaultValue("use_default");
-        sgroup.addPreference(order);
-        setupValueSummary(order_key,
-                          R.string.pref_screen_folder_order_summary);
 
         // manage pickable screen numbers
         pickable_screen |= (1 << idx);

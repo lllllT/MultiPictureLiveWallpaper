@@ -1,19 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <!-- picture selection -->
-  <string-array name="pref_screen_type_entries">
-    <item>単一画像</item>
-    <item>アルバム</item>
-    <item>画像フォルダ</item>
-    <item>共通設定と同じ</item>
-  </string-array>
-
-  <string-array name="pref_screen_default_type_entries">
-    <item>単一画像</item>
-    <item>アルバム</item>
-    <item>画像フォルダ</item>
-  </string-array>
-
   <!-- background color -->
   <string-array name="pref_screen_bgcolor_entries">
     <item>黒</item>
@@ -123,17 +109,7 @@
   </string-array>
 
   <!-- folder order -->
-  <string-array name="pref_screen_folder_order_entries">
-    <item>名前 (昇順)</item>
-    <item>名前 (降順)</item>
-    <item>日付 (古い順)</item>
-    <item>日付 (新しい順)</item>
-    <item>ランダム</item>
-    <item>シャッフル</item>
-    <item>共通設定と同じ</item>
-  </string-array>
-
-  <string-array name="pref_screen_default_folder_order_entries">
+  <string-array name="pref_select_order_entries">
     <item>名前 (昇順)</item>
     <item>名前 (降順)</item>
     <item>日付 (古い順)</item>

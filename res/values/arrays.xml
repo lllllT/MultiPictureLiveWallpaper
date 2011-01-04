@@ -1,26 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <!-- picture selection -->
-  <string-array name="pref_screen_type_entries">
-    <item>Single Picture</item>
-    <item>Album</item>
-    <item>Picture Folder</item>
-    <item>Same as Common settings</item>
-  </string-array>
-
-  <string-array name="pref_screen_default_type_entries">
-    <item>Single Picture</item>
-    <item>Album</item>
-    <item>Picture Folder</item>
-  </string-array>
-
-  <string-array name="pref_screen_type_entryvalues">
-    <item>file</item>
-    <item>buckets</item>
-    <item>folder</item>
-    <item>use_default</item>
-  </string-array>
-
   <!-- background color -->
   <string-array name="pref_screen_bgcolor_entries">
     <item>Black</item>
@@ -183,18 +162,8 @@
     <item>use_default</item>
   </string-array>
 
-  <!-- folder order -->
-  <string-array name="pref_screen_folder_order_entries">
-    <item>Name (ascending order)</item>
-    <item>Name (descending order)</item>
-    <item>Date (oldest first)</item>
-    <item>Date (newest first)</item>
-    <item>Random</item>
-    <item>Shuffle</item>
-    <item>Same as Common settings</item>
-  </string-array>
-
-  <string-array name="pref_screen_default_folder_order_entries">
+  <!-- selection order -->
+  <string-array name="pref_select_order_entries">
     <item>Name (ascending order)</item>
     <item>Name (descending order)</item>
     <item>Date (oldest first)</item>
@@ -203,14 +172,13 @@
     <item>Shuffle</item>
   </string-array>
 
-  <string-array name="pref_screen_folder_order_entryvalues">
+  <string-array name="pref_select_order_entryvalues">
     <item>name_asc</item>
     <item>name_desc</item>
     <item>date_asc</item>
     <item>date_desc</item>
     <item>random</item>
     <item>shuffle</item>
-    <item>use_default</item>
   </string-array>
 
   <!-- switching transition -->

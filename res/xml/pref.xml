@@ -46,13 +46,6 @@
            android:entries="@array/pref_screen_default_opacity_entries"
            android:entryValues="@array/pref_screen_opacity_entryvalues"
            android:defaultValue="1.0" />
-        <ListPreference
-           android:key="folder.order"
-           android:title="@string/pref_screen_folder_order_title"
-           android:summary="@string/pref_screen_folder_order_summary"
-           android:entries="@array/pref_screen_default_folder_order_entries"
-           android:entryValues="@array/pref_screen_folder_order_entryvalues"
-           /> <!-- default value is set by MultiPictureSetting#onCreate -->
       </PreferenceScreen>
       <org.tamanegi.wallpaper.multipicture.ScreenPickerPreference
          android:key="screen.picker"
@@ -85,11 +78,6 @@
   </PreferenceCategory>
 
   <PreferenceCategory android:title="@string/pref_cat_folder_title">
-    <CheckBoxPreference
-       android:key="folder.recursive"
-       android:title="@string/pref_folder_recursive_title"
-       android:summary="@string/pref_folder_recursive_summary"
-       android:defaultValue="true" />
     <CheckBoxPreference
        android:key="folder.changetap"
        android:title="@string/pref_folder_changetap_title"
