@@ -17,7 +17,7 @@ import android.preference.ListPreference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
-import android.widget.Toast;
+import android.view.View;
 
 public class AlbumSource extends PreferenceActivity
 {
@@ -34,6 +34,7 @@ public class AlbumSource extends PreferenceActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.button_preference_list);
 
         Intent intent = getIntent();
         need_clear = intent.getBooleanExtra(
@@ -126,14 +127,20 @@ public class AlbumSource extends PreferenceActivity
         }
     }
 
-    @Override
-    public void onBackPressed()
+    public void onButtonOk(View v)
     {
-        applyBucketValue();
+        if(applyBucketValue()) {
+            finish();
+        }
+    }
+
+    public void onButtonCancel(View v)
+    {
+        setResult(RESULT_CANCELED);
         finish();
     }
 
-    private void applyBucketValue()
+    private boolean applyBucketValue()
     {
         boolean c = false;
         for(int i = 0; i < buckets.length; i++) {
@@ -143,11 +150,12 @@ public class AlbumSource extends PreferenceActivity
             c = (c || checked[i]);
         }
         if(! c) {
-            Toast.makeText(
-                this, R.string.pref_no_bucket_select_msg,
-                Toast.LENGTH_LONG)
+            new AlertDialog.Builder(this)
+                .setTitle(R.string.pref_album_title)
+                .setMessage(R.string.pref_no_bucket_select_msg)
+                .setPositiveButton(android.R.string.ok, null)
                 .show();
-            return;
+            return false;
         }
 
         StringBuilder data_val = new StringBuilder();
@@ -169,6 +177,7 @@ public class AlbumSource extends PreferenceActivity
                         new ComponentName(this, AlbumPickService.class));
 
         setResult(RESULT_OK, result);
+        return true;
     }
 
     private String getBuckets()

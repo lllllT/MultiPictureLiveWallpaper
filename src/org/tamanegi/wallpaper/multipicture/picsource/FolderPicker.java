@@ -81,11 +81,6 @@ public class FolderPicker extends Activity
         folder_name = (TextView)findViewById(R.id.folder_name);
         folder_list = (ListView)findViewById(R.id.folder_list);
 
-        findViewById(R.id.button_ok).
-            setOnClickListener(new ButtonOkOnClickListener());
-        findViewById(R.id.button_cancel).
-            setOnClickListener(new ButtonCancelOnClickListener());
-
         // folder list
         list_data = new FolderList();
         folder_list.setAdapter(list_data);
@@ -127,6 +122,20 @@ public class FolderPicker extends Activity
         updateFolder();
     }
 
+    public void onButtonOk(View v)
+    {
+        Intent intent = getIntent();
+        intent.putExtra(EXTRA_PATH, cur_folder.toString());
+        setResult(RESULT_OK, intent);
+        finish();
+    }
+
+    public void onButtonCancel(View v)
+    {
+        setResult(RESULT_CANCELED);
+        finish();
+    }
+
     private void updateFolder()
     {
         // show current folder name
@@ -135,28 +144,6 @@ public class FolderPicker extends Activity
         // show content of current folder
         list_data.updateData();
         folder_list.setSelection(0);
-    }
-
-    private class ButtonOkOnClickListener implements View.OnClickListener
-    {
-        @Override
-        public void onClick(View v)
-        {
-            Intent intent = getIntent();
-            intent.putExtra(EXTRA_PATH, cur_folder.toString());
-            setResult(RESULT_OK, intent);
-            finish();
-        }
-    }
-
-    private class ButtonCancelOnClickListener implements View.OnClickListener
-    {
-        @Override
-        public void onClick(View v)
-        {
-            setResult(RESULT_CANCELED);
-            finish();
-        }
     }
 
     private class FolderList extends BaseAdapter

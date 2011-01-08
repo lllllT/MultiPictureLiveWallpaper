@@ -96,7 +96,6 @@ public class SinglePickService extends LazyPickService
             FileObserver.MOVE_SELF;
 
         private SingleLazyPicker picker;
-        private boolean is_file;
 
         private FileObserver file_observer;
         private ContentObserver content_observer;
@@ -108,10 +107,8 @@ public class SinglePickService extends LazyPickService
 
         private void start()
         {
-            is_file =
-                ContentResolver.SCHEME_FILE.equals(picker.uri.getScheme());
-
-            if(is_file) {
+            if(ContentResolver.SCHEME_FILE.equals(
+                   picker.uri.getScheme())) {
                 file_observer = new FileObserver(picker.uri.getPath()) {
                         @Override 
                         public void onEvent(int event, String path) {
@@ -122,7 +119,8 @@ public class SinglePickService extends LazyPickService
                     };
                 file_observer.startWatching();
             }
-            else {
+            else if(ContentResolver.SCHEME_CONTENT.equals(
+                        picker.uri.getScheme())) {
                 content_observer = new ContentObserver(null) {
                         @Override
                         public boolean deliverSelfNotifications ()
@@ -148,10 +146,12 @@ public class SinglePickService extends LazyPickService
 
         private void stop()
         {
-            if(is_file) {
+            if(ContentResolver.SCHEME_FILE.equals(
+                   picker.uri.getScheme())) {
                 file_observer.stopWatching();
             }
-            else {
+            else if(ContentResolver.SCHEME_CONTENT.equals(
+                        picker.uri.getScheme())) {
                 try {
                     getContentResolver().unregisterContentObserver(
                         content_observer);

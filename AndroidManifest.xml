@@ -60,11 +60,25 @@
 
     <!-- picker service for picture source -->
     <service android:name=".picsource.SinglePickService"
-             android:process=":internalPlugin" />
+             android:process=":internalPlugin">
+      <intent-filter>
+        <action android:name="org.tamanegi.wallpaper.multipicture.plugin.LazyPickService" />
+      </intent-filter>
+    </service>
+
     <service android:name=".picsource.AlbumPickService"
-             android:process=":internalPlugin" />
+             android:process=":internalPlugin">
+      <intent-filter>
+        <action android:name="org.tamanegi.wallpaper.multipicture.plugin.LazyPickService" />
+      </intent-filter>
+    </service>
+
     <service android:name=".picsource.FolderPickService"
-             android:process=":internalPlugin" />
+             android:process=":internalPlugin">
+      <intent-filter>
+        <action android:name="org.tamanegi.wallpaper.multipicture.plugin.LazyPickService" />
+      </intent-filter>
+    </service>
 
     <!-- launch from "open" -->
     <activity android:name=".LaunchDispatcher"

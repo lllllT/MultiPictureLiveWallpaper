@@ -4,6 +4,7 @@ import org.tamanegi.wallpaper.multipicture.MultiPictureSetting;
 import org.tamanegi.wallpaper.multipicture.R;
 import org.tamanegi.wallpaper.multipicture.plugin.PictureSourceContract;
 
+import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -13,7 +14,7 @@ import android.preference.ListPreference;
 import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
-import android.widget.Toast;
+import android.view.View;
 
 public class FolderSource extends PreferenceActivity
 {
@@ -27,6 +28,7 @@ public class FolderSource extends PreferenceActivity
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.button_preference_list);
 
         Intent intent = getIntent();
         need_clear =
@@ -100,29 +102,32 @@ public class FolderSource extends PreferenceActivity
         updatePathSummary();
     }
 
-    @Override
-    public void onBackPressed()
+    public void onButtonOk(View v)
     {
         String path = getFolderPath();
-
-        if(path != null) {
-            Intent result = new Intent();
-            result.putExtra(PictureSourceContract.EXTRA_DESCRIPTION,
-                            getString(R.string.pref_screen_type_folder_desc,
-                                      path));
-            result.putExtra(PictureSourceContract.EXTRA_SERVICE_NAME,
-                            new ComponentName(this, FolderPickService.class));
-
-            setResult(RESULT_OK, result);
-        }
-        else {
-            Toast.makeText(
-                this, R.string.pref_no_folder_select_msg,
-                Toast.LENGTH_LONG)
+        if(path == null) {
+            new AlertDialog.Builder(this)
+                .setTitle(R.string.pref_folder_title)
+                .setMessage(R.string.pref_no_folder_select_msg)
+                .setPositiveButton(android.R.string.ok, null)
                 .show();
-            setResult(RESULT_CANCELED);
+            return;
         }
 
+        Intent result = new Intent();
+        result.putExtra(PictureSourceContract.EXTRA_DESCRIPTION,
+                        getString(R.string.pref_screen_type_folder_desc,
+                                  path));
+        result.putExtra(PictureSourceContract.EXTRA_SERVICE_NAME,
+                        new ComponentName(this, FolderPickService.class));
+
+        setResult(RESULT_OK, result);
+        finish();
+    }
+
+    public void onButtonCancel(View v)
+    {
+        setResult(RESULT_CANCELED);
         finish();
     }
 

@@ -494,6 +494,7 @@ public class MultiPictureRenderer
         // paint
         paint = new Paint();
         paint.setFilterBitmap(true);
+        paint.setAntiAlias(true);
         paint.setDither(true);
         paint.setColor(0xff000000);
 
@@ -1494,15 +1495,26 @@ public class MultiPictureRenderer
         }
 
         for(PictureInfo info : pic) {
-            if(info.loading_cnt == 0) {
-                info.loading_cnt += 1;
-                info.picker.sendGetNext();
+            if(visible) {
+                if(info.loading_cnt == 0) {
+                    info.loading_cnt += 1;
+                    info.picker.sendGetNext();
+                }
 
-                if(fadeout) {
+                if(fadeout && info.loading_cnt != 0) {
                     if(info.status == PictureStatus.NORMAL ||
                        info.status == PictureStatus.FADEIN) {
                         info.setStatus(PictureStatus.FADEOUT);
                     }
+                    else if(info.status == PictureStatus.NOT_AVAILABLE) {
+                        info.setStatus(PictureStatus.BLACKOUT);
+                    }
+                }
+            }
+            else if(! info.is_update_pending) {
+                if(info.loading_cnt == 0) {
+                    info.loading_cnt += 1;
+                    info.is_update_pending = true;
                 }
             }
         }
