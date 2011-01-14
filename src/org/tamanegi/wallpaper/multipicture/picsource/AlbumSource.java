@@ -54,7 +54,10 @@ public class AlbumSource extends PreferenceActivity
         }
 
         checked = new boolean[buckets.length];
-        String bucket_val = getBuckets();
+        String bucket_key = MultiPictureSetting.getKey(
+            MultiPictureSetting.SCREEN_BUCKET_KEY, key);
+        String bucket_val =
+            (need_clear ? null : pref.getString(bucket_key, null));
         if(! need_clear && bucket_val != null) {
             String[] val_ids = bucket_val.split(" ");
             for(int i = 0; i < buckets.length; i++) {
@@ -95,8 +98,6 @@ public class AlbumSource extends PreferenceActivity
 
         ListPreference order = (ListPreference)
             getPreferenceManager().findPreference("order");
-        order.setKey(order_key);
-        order.setPersistent(true);
         order.setValue(order_val);
     }
 
@@ -158,46 +159,39 @@ public class AlbumSource extends PreferenceActivity
             return false;
         }
 
-        StringBuilder data_val = new StringBuilder();
+        StringBuilder bucket_val = new StringBuilder();
         for(int i = 0; i < buckets.length; i++) {
             if(checked[i]) {
-                data_val.append(buckets[i].getId()).append(" ");
+                bucket_val.append(buckets[i].getId()).append(" ");
             }
         }
+        String bucket_val_str = bucket_val.toString().trim();
 
-        String val_str = data_val.toString().trim();
-        setBuckets(val_str);
+        ListPreference order = (ListPreference)
+            getPreferenceManager().findPreference("order");
+        String order_val = order.getValue();
 
+        // save
+        SharedPreferences.Editor editor =
+            PreferenceManager.getDefaultSharedPreferences(this).edit();
+        editor.putString(MultiPictureSetting.getKey(
+                             MultiPictureSetting.SCREEN_BUCKET_KEY, key),
+                         bucket_val_str);
+        editor.putString(MultiPictureSetting.getKey(
+                             MultiPictureSetting.SCREEN_ORDER_KEY, key),
+                         order_val);
+        editor.commit();
+
+        // activity result
         Intent result = new Intent();
         result.putExtra(PictureSourceContract.EXTRA_DESCRIPTION,
                         getString(R.string.pref_screen_type_bucket_desc,
                                   PictureUtils.getBucketNames(
-                                      getContentResolver(), val_str)));
+                                      getContentResolver(), bucket_val_str)));
         result.putExtra(PictureSourceContract.EXTRA_SERVICE_NAME,
                         new ComponentName(this, AlbumPickService.class));
 
         setResult(RESULT_OK, result);
         return true;
-    }
-
-    private String getBuckets()
-    {
-        String val =
-            PreferenceManager.getDefaultSharedPreferences(this).getString(
-                getPreferenceKey(), null);
-        return val;
-    }
-
-    private void setBuckets(String val)
-    {
-        SharedPreferences.Editor editor =
-            PreferenceManager.getDefaultSharedPreferences(this).edit();
-        editor.putString(getPreferenceKey(), val);
-        editor.commit();
-    }
-
-    private String getPreferenceKey()
-    {
-        return String.format(MultiPictureSetting.SCREEN_BUCKET_KEY, key);
     }
 }

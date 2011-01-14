@@ -23,6 +23,7 @@ public class FolderSource extends PreferenceActivity
 
     private SharedPreferences pref;
     private Preference path_pref;
+    private String path_val;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -43,6 +44,10 @@ public class FolderSource extends PreferenceActivity
         pref = PreferenceManager.getDefaultSharedPreferences(this);
 
         // path
+        String path_key = MultiPictureSetting.getKey(
+            MultiPictureSetting.SCREEN_FOLDER_KEY, key);
+        path_val = (need_clear ? null : pref.getString(path_key, null));
+
         path_pref = getPreferenceManager().findPreference("path");
         path_pref.setOnPreferenceClickListener(
             new Preference.OnPreferenceClickListener() {
@@ -66,8 +71,6 @@ public class FolderSource extends PreferenceActivity
 
         ListPreference order = (ListPreference)
             getPreferenceManager().findPreference("order");
-        order.setKey(order_key);
-        order.setPersistent(true);
         order.setValue(order_val);
 
         // recursive
@@ -78,8 +81,6 @@ public class FolderSource extends PreferenceActivity
 
         CheckBoxPreference recursive = (CheckBoxPreference)
             getPreferenceManager().findPreference("recursive");
-        recursive.setKey(recursive_key);
-        recursive.setPersistent(true);
         recursive.setChecked(recursive_val);
     }
 
@@ -96,7 +97,7 @@ public class FolderSource extends PreferenceActivity
             return;
         }
 
-        setFolderPath(path);
+        path_val = path;
         need_clear = false;
 
         updatePathSummary();
@@ -104,25 +105,9 @@ public class FolderSource extends PreferenceActivity
 
     public void onButtonOk(View v)
     {
-        String path = getFolderPath();
-        if(path == null) {
-            new AlertDialog.Builder(this)
-                .setTitle(R.string.pref_folder_title)
-                .setMessage(R.string.pref_no_folder_select_msg)
-                .setPositiveButton(android.R.string.ok, null)
-                .show();
-            return;
+        if(applyFolderValue()) {
+            finish();
         }
-
-        Intent result = new Intent();
-        result.putExtra(PictureSourceContract.EXTRA_DESCRIPTION,
-                        getString(R.string.pref_screen_type_folder_desc,
-                                  path));
-        result.putExtra(PictureSourceContract.EXTRA_SERVICE_NAME,
-                        new ComponentName(this, FolderPickService.class));
-
-        setResult(RESULT_OK, result);
-        finish();
     }
 
     public void onButtonCancel(View v)
@@ -131,14 +116,57 @@ public class FolderSource extends PreferenceActivity
         finish();
     }
 
+    private boolean applyFolderValue()
+    {
+        if(path_val == null) {
+            new AlertDialog.Builder(this)
+                .setTitle(R.string.pref_folder_title)
+                .setMessage(R.string.pref_no_folder_select_msg)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
+            return false;
+        }
+
+        ListPreference order = (ListPreference)
+            getPreferenceManager().findPreference("order");
+        String order_val = order.getValue();
+
+        CheckBoxPreference recursive = (CheckBoxPreference)
+            getPreferenceManager().findPreference("recursive");
+        boolean recursive_val = recursive.isChecked();
+
+        // save
+        SharedPreferences.Editor editor =
+            PreferenceManager.getDefaultSharedPreferences(this).edit();
+        editor.putString(MultiPictureSetting.getKey(
+                             MultiPictureSetting.SCREEN_FOLDER_KEY, key),
+                         path_val);
+        editor.putString(MultiPictureSetting.getKey(
+                             MultiPictureSetting.SCREEN_ORDER_KEY, key),
+                         order_val);
+        editor.putBoolean(MultiPictureSetting.getKey(
+                              MultiPictureSetting.SCREEN_RECURSIVE_KEY, key),
+                          recursive_val);
+        editor.commit();
+
+        // activity result
+        Intent result = new Intent();
+        result.putExtra(PictureSourceContract.EXTRA_DESCRIPTION,
+                        getString(R.string.pref_screen_type_folder_desc,
+                                  path_val));
+        result.putExtra(PictureSourceContract.EXTRA_SERVICE_NAME,
+                        new ComponentName(this, FolderPickService.class));
+
+        setResult(RESULT_OK, result);
+        return true;
+    }
+
     private void startFolderPickerActivity()
     {
         Intent intent = new Intent(getApplicationContext(),
                                    FolderPicker.class);
-
-        String folder_val = getFolderPath();
-        if(folder_val != null) {
-            intent.putExtra(FolderPicker.EXTRA_INIT_PATH, folder_val);
+        if(path_val != null) {
+            intent.putExtra(FolderPicker.EXTRA_INIT_PATH, path_val);
         }
 
         startActivityForResult(intent, 0);
@@ -146,28 +174,9 @@ public class FolderSource extends PreferenceActivity
 
     private void updatePathSummary()
     {
-        String path_val = getFolderPath();
         path_pref.setSummary(
             getString(R.string.pref_folder_path_summary) +
             (path_val != null ?
              getString(R.string.pref_screen_val_summary, path_val) : ""));
-    }
-
-    private String getFolderPath()
-    {
-        return (need_clear ? null : pref.getString(getPreferenceKey(), null));
-    }
-
-    private void setFolderPath(String val)
-    {
-        SharedPreferences.Editor editor =
-            PreferenceManager.getDefaultSharedPreferences(this).edit();
-        editor.putString(getPreferenceKey(), val);
-        editor.commit();
-    }
-
-    private String getPreferenceKey()
-    {
-        return String.format(MultiPictureSetting.SCREEN_FOLDER_KEY, key);
     }
 }
