@@ -27,6 +27,7 @@
      android:layout_height="wrap_content"
      android:minHeight="54dp"
      android:orientation="vertical"
+     android:background="@drawable/bottom_area"
      >
     <LinearLayout
        android:layout_width="fill_parent"

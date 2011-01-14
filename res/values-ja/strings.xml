@@ -95,7 +95,8 @@
   <string name="folder_picker_title">フォルダを選択</string>
   <string name="folder_up">../ (上のフォルダ)</string>
 
-  <string name="str_pic_not_avail">画面%d: 画像が利用できません</string>
+  <string name="str_pic_not_avail_1">画面%d: 画像が利用できません。</string>
+  <string name="str_pic_not_avail_2">設定が必要です。</string>
 
   <string name="chooser_navigation">\'MultiPicture Live Wallpaper\' を選択して下さい。</string>
   <string name="lwp_not_supported">ライブ壁紙に対応していないようです。</string>

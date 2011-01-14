@@ -155,6 +155,12 @@ public abstract class LazyPickerClient
                 public void run() {
                     Log.d(TAG, "plugin disconnected: " + key);
                     send_to = null;
+
+                    synchronized(waiting_next_lock) {
+                        while(waiting_next_cnt > 0) {
+                            doReceiveNext(null);
+                        }
+                    }
                 }
             });
     }

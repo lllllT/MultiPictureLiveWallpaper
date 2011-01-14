@@ -1142,14 +1142,24 @@ public class MultiPictureRenderer
         }
         else if(status == PictureStatus.NOT_AVAILABLE) {
             // show "not available"
-            int str_id = R.string.str_pic_not_avail;
+            String str1 = context.getString(R.string.str_pic_not_avail_1,
+                                            idx + 1);
+            String str2 = context.getString(R.string.str_pic_not_avail_2);
+
+            Rect rect1 = new Rect();
+            Rect rect2 = new Rect();
+            text_paint.getTextBounds(str1, 0, str1.length(), rect1);
+            text_paint.getTextBounds(str2, 0, str2.length(), rect2);
+
+            int str1_h = Math.abs(rect1.top - rect1.bottom);
+            int str2_h = Math.abs(rect2.top - rect2.bottom);
 
             text_paint.setAlpha(alpha);
             paint.setAlpha(alpha);
             c.save();
             c.concat(matrix);
-            c.drawText(context.getString(str_id, idx + 1),
-                       width / 2, height / 2, text_paint);
+            c.drawText(str1, width / 2, height / 2 - str1_h, text_paint);
+            c.drawText(str2, width / 2, height / 2 + str2_h, text_paint);
             c.restore();
         }
         else if(use_bmp) {
