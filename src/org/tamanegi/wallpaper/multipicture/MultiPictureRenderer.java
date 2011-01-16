@@ -59,6 +59,7 @@ public class MultiPictureRenderer
     private static final int MSG_SURFACE_CHANGED = 23;
     private static final int MSG_CHANGE_PIC_BY_TAP = 30;
     private static final int MSG_CHANGE_PIC_BY_TIME = 31;
+    private static final int MSG_CHANGE_PACKAGE_AVAIL = 40;
 
     // message id: for loader
     private static final int MSG_UPDATE_SCREEN = 1001;
@@ -79,9 +80,14 @@ public class MultiPictureRenderer
     private static final int MAX_TOTAL_PIXELS = 4 * 1024 * 1024; // 4MPixels
     private static final int MAX_DETECT_PIXELS = 8 * 1024; // 8kPixels
 
-    // action for broadcast intent
+    // for broadcast intent
     private static final String ACTION_CHANGE_PICTURE =
         "org.tamanegi.wallpaper.multipicture.CHANGE_PICTURE";
+
+    private static final String ACTION_EXTERNAL_APPLICATIONS_AVAILABLE =
+        "android.intent.action.EXTERNAL_APPLICATIONS_AVAILABLE";
+    private static final String EXTRA_CHANGED_PACKAGE_LIST =
+        "android.intent.extra.changed_package_list";
 
     // preference keys for no need to reload bitmap data
     private static final String[] UNNECCESARY_RELOAD_KEYS = {
@@ -145,6 +151,7 @@ public class MultiPictureRenderer
         private PictureContentInfo cur_content;
         private ComponentName picsource_service;
         private String picsource_key;
+        private boolean picsource_need_restart;
         private PickerClient picker;
 
         private boolean is_update_pending;
@@ -465,6 +472,13 @@ public class MultiPictureRenderer
               postDurationCallback();
               break;
 
+          case MSG_CHANGE_PACKAGE_AVAIL:
+              synchronized(pic_whole_lock) {
+                  changePackageAvailable((String[])msg.obj);
+                  drawer_handler.sendEmptyMessage(MSG_DRAW);
+              }
+              break;
+
           default:
               return false;
         }
@@ -527,6 +541,15 @@ public class MultiPictureRenderer
         filter.addAction(ACTION_CHANGE_PICTURE);
         context.registerReceiver(receiver, filter);
 
+        filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_PACKAGE_ADDED);
+        filter.addDataScheme("package");
+        context.registerReceiver(receiver, filter);
+
+        filter = new IntentFilter();
+        filter.addAction(ACTION_EXTERNAL_APPLICATIONS_AVAILABLE);
+        context.registerReceiver(receiver, filter);
+
         // init conf
         pic_whole_lock = new Object();
         synchronized(pic_whole_lock) {
@@ -563,19 +586,24 @@ public class MultiPictureRenderer
 
         // clear for each picture info
         for(PictureInfo info : pic) {
-            if(info == null) {
-                continue;
-            }
-
-            info.picker.sendStop();
-
-            if(info.bmp_info != null) {
-                info.bmp_info.bmp.recycle();
-            }
+            clearPictureSetting(info);
         }
 
         // clear picture info
         pic = null;
+    }
+
+    private void clearPictureSetting(PictureInfo info)
+    {
+        if(info == null) {
+            return;
+        }
+
+        info.picker.sendStop();
+
+        if(info.bmp_info != null) {
+            info.bmp_info.bmp.recycle();
+        }
     }
 
     private void clearPictureBitmap()
@@ -607,8 +635,7 @@ public class MultiPictureRenderer
         if(service_str != null) {
             // lazy picker
             default_picsource_service =
-                (service_str != null ?
-                 ComponentName.unflattenFromString(service_str) : null);
+                ComponentName.unflattenFromString(service_str);
         }
         else {
             // backward compatible
@@ -716,6 +743,23 @@ public class MultiPictureRenderer
         }
     }
 
+    private void changePackageAvailable(String[] pkgnames)
+    {
+        if(pic == null) {
+            return;
+        }
+
+        for(PictureInfo info : pic) {
+            String cur_pkgname = info.picsource_service.getPackageName();
+            for(String pkgname : pkgnames) {
+                if(cur_pkgname.equals(pkgname)) {
+                    info.picsource_need_restart = true;
+                    break;
+                }
+            }
+        }
+    }
+
     private int updatePictureStatus(int add_step)
     {
         int next_duration = 0;
@@ -777,6 +821,16 @@ public class MultiPictureRenderer
         long cur_time = SystemClock.uptimeMillis();
         int cur_duration = 0;
 
+        // check picture data: pic != null
+        if(pic != null) {
+            for(int i = 0; i < pic.length; i++) {
+                if(pic[i].picsource_need_restart) {
+                    clearPictureSetting(pic[i]);
+                    pic[i] = loadPictureInfo(i);
+                }
+            }
+        }
+
         // prepare next draw
         if(pic != null && (is_step || last_duration == 0)) {
             cur_duration = updatePictureStatus(last_duration);
@@ -790,7 +844,7 @@ public class MultiPictureRenderer
             return;
         }
 
-        // check picture data
+        // check picture data: pic == null
         if(pic == null) {
             loadPictureSetting();
             postDurationCallback();
@@ -2002,8 +2056,25 @@ public class MultiPictureRenderer
         @Override
         public void onReceive(Context context, Intent intent)
         {
-            // change by interval
-            drawer_handler.sendEmptyMessage(MSG_CHANGE_PIC_BY_TIME);
+            if(ACTION_CHANGE_PICTURE.equals(intent.getAction())) {
+                // change by interval
+                drawer_handler.sendEmptyMessage(MSG_CHANGE_PIC_BY_TIME);
+            }
+            else if(Intent.ACTION_PACKAGE_ADDED.equals(intent.getAction()) &&
+                    intent.getData() != null) {
+                String pkgname =
+                    intent.getData().getEncodedSchemeSpecificPart();
+                drawer_handler.obtainMessage(MSG_CHANGE_PACKAGE_AVAIL,
+                                             new String[] { pkgname })
+                    .sendToTarget();
+            }
+            else if(ACTION_EXTERNAL_APPLICATIONS_AVAILABLE.equals(
+                        intent.getAction())) {
+                String[] pkgnames = intent.getStringArrayExtra(
+                    EXTRA_CHANGED_PACKAGE_LIST);
+                drawer_handler.obtainMessage(MSG_CHANGE_PACKAGE_AVAIL, pkgnames)
+                    .sendToTarget();
+            }
         }
     }
 
