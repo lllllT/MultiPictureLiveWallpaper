@@ -295,6 +295,8 @@ public class MultiPictureSetting extends PreferenceActivity
         StringBuilder sb = new StringBuilder();
         PackageManager pm = getPackageManager();
 
+        ResolveInfo def_ri = pm.resolveActivity(intent, 0);
+
         List<ResolveInfo> rlist = pm.queryIntentActivities(intent, 0);
 
         sb.append(rlist.size());
@@ -306,6 +308,13 @@ public class MultiPictureSetting extends PreferenceActivity
                 sb.append(" (v")
                     .append(pinfo.versionName).append(", ")
                     .append(pinfo.versionCode).append(")");
+                if(def_ri != null &&
+                   def_ri.activityInfo.packageName.equals(
+                       ri.activityInfo.packageName) &&
+                   def_ri.activityInfo.name.equals(
+                       ri.activityInfo.name)) {
+                    sb.append(", default");
+                }
             }
             catch(NameNotFoundException e) {
                 sb.append(" (unknown, unknown)");
