@@ -169,7 +169,6 @@
     <item>Date (oldest first)</item>
     <item>Date (newest first)</item>
     <item>Random</item>
-    <item>Shuffle</item>
   </string-array>
 
   <string-array name="pref_select_order_entryvalues">
@@ -178,7 +177,6 @@
     <item>date_asc</item>
     <item>date_desc</item>
     <item>random</item>
-    <item>shuffle</item>
   </string-array>
 
   <!-- switching transition -->

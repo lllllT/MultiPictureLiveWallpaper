@@ -139,8 +139,7 @@ public abstract class AbstractFileListPickService extends LazyPickService
                                    OrderType change_order)
         {
             // sort by specified order
-            if(change_order == OrderType.shuffle ||
-               change_order == OrderType.random) {
+            if(change_order == OrderType.random) {
                 Collections.shuffle(flist);
             }
             else {
