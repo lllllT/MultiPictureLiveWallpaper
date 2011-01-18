@@ -93,11 +93,6 @@
        android:title="@string/pref_workaround_htcsense_title"
        android:summary="@string/pref_workaround_htcsense_summary"
        android:defaultValue="true" />
-    <CheckBoxPreference
-       android:key="reload.extmedia.mounted"
-       android:title="@string/pref_reload_extmedia_mounted_title"
-       android:summary="@string/pref_reload_extmedia_mounted_summary"
-       android:defaultValue="true" />
   </PreferenceCategory>
 
 </PreferenceScreen>

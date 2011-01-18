@@ -66,9 +66,6 @@
   <string name="pref_workaround_htcsense_title">HTC Sense 用の回避策を有効にする</string>
   <string name="pref_workaround_htcsense_summary">HTC Sense で利用する際に、画面変更で画像が切替わらない場合の回避策を有効にする。</string>
 
-  <string name="pref_reload_extmedia_mounted_title">更新時に画像再読み込み</string>
-  <string name="pref_reload_extmedia_mounted_summary">外部メディア (SDカード等) をマウントした時やファイル更新時等に画像を再読み込みする。</string>
-
   <string name="pref_single_picture_title">単一画像</string>
 
   <string name="pref_album_title">アルバム</string>

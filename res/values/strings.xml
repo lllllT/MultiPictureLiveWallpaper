@@ -71,9 +71,6 @@
   <string name="pref_workaround_htcsense_title">Enable HTC Sense workaround</string>
   <string name="pref_workaround_htcsense_summary">Enable workaround if using with HTC Sense and pictures are not changed when switching screen.</string>
 
-  <string name="pref_reload_extmedia_mounted_title">Rescan pictures when modified</string>
-  <string name="pref_reload_extmedia_mounted_summary">Rescan pictures when picture is modified; e.g. external media (SD card, etc) was mounted, file is modified, etc.</string>
-
   <string name="pref_single_picture_title">Single Picture</string>
 
   <string name="pref_album_title">Album</string>
