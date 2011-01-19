@@ -108,7 +108,7 @@
   <string name="picsource_not_found">Picture source plugin is not found.</string>
 
   <!-- DO NOT localize below -->
-  <string name="plugin_search_uri">market://search?q=MultiPicture-Live-Wallpaper+plugin</string>
+  <string name="plugin_search_uri">market://search?q=MultiPicture-Live-Wallpaper</string>
 
   <string name="share_text">MultiPicture Live Wallpaper http://market.android.com/details?id=org.tamanegi.wallpaper.multipicture</string>
   <string name="report_uri">mailto:lllllT-mplr@tamanegi.org</string>

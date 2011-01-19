@@ -43,7 +43,7 @@
 
     <activity android:name=".picsource.AlbumSource"
               android:label="@string/pref_album_title"
-              android:icon="@drawable/icon"
+              android:icon="@drawable/ic_picsource_album"
               android:exported="false">
       <intent-filter>
         <action android:name="org.tamanegi.wallpaper.multipicture.action.GET_PICTURE_SOURCE" />
@@ -53,7 +53,7 @@
 
     <activity android:name=".picsource.FolderSource"
               android:label="@string/pref_folder_title"
-              android:icon="@drawable/icon"
+              android:icon="@drawable/ic_picsource_folder"
               android:exported="false">
       <intent-filter>
         <action android:name="org.tamanegi.wallpaper.multipicture.action.GET_PICTURE_SOURCE" />
