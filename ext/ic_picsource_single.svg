@@ -685,14 +685,6 @@
        y1="7"
        x2="50"
        y2="62" />
-    <filter
-       inkscape:collect="always"
-       id="filter3408">
-      <feGaussianBlur
-         inkscape:collect="always"
-         stdDeviation="0.71241909"
-         id="feGaussianBlur3410" />
-    </filter>
     <linearGradient
        inkscape:collect="always"
        xlink:href="#linearGradient4216"
@@ -702,6 +694,14 @@
        y1="14"
        x2="42"
        y2="18" />
+    <filter
+       inkscape:collect="always"
+       id="filter3244">
+      <feGaussianBlur
+         inkscape:collect="always"
+         stdDeviation="1.0686286"
+         id="feGaussianBlur3246" />
+    </filter>
   </defs>
   <sodipodi:namedview
      id="base"
@@ -714,10 +714,10 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="10.333333"
-     inkscape:cx="36"
-     inkscape:cy="36"
+     inkscape:cx="35.999999"
+     inkscape:cy="35.999999"
      inkscape:document-units="px"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="layer2"
      showgrid="true"
      inkscape:window-width="929"
      inkscape:window-height="956"
@@ -749,7 +749,7 @@
      inkscape:label="dropshadow"
      style="display:inline">
     <rect
-       style="opacity:0.75;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.40988004;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;filter:url(#filter3408)"
+       style="opacity:0.75000000000000000;fill:#000000;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.40988004000000000;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;filter:url(#filter3244)"
        id="rect2570"
        width="40.059193"
        height="54.930019"
