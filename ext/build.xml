@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="all">
+  <property name="inkscape.path"
+            location="D:\Program Files\Inkscape\inkscape.exe" />
+
+  <property name="src.dir" location="." />
+  <property name="res.dir" location="../res" />
+
+  <property name="dpi.xhdpi" value="120" />
+  <property name="dpi.hdpi" value="90" />
+  <property name="dpi.mdpi" value="60" />
+  <property name="dpi.ldpi" value="45" />
+
+  <macrodef name="svg2png-dpi">
+    <attribute name="src" />
+    <attribute name="dst" />
+    <attribute name="dpi" />
+    <element name="exec-args" optional="true" />
+    <sequential>
+      <exec executable="${inkscape.path}">
+        <arg value="--export-dpi=@{dpi}" />
+        <arg value="--export-png=@{dst}" />
+        <arg value="@{src}" />
+      </exec>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="svg2png-size">
+    <attribute name="src" />
+    <attribute name="dst" />
+    <attribute name="width" />
+    <attribute name="height" />
+    <element name="exec-args" optional="true" />
+    <sequential>
+      <exec executable="${inkscape.path}">
+        <arg value="--export-width=@{width}" />
+        <arg value="--export-height=@{height}" />
+        <arg value="--export-png=@{dst}" />
+        <arg value="@{src}" />
+      </exec>
+    </sequential>
+  </macrodef>
+
+  <macrodef name="svg2png-drawable">
+    <attribute name="src" />
+    <attribute name="pngname" />
+    <attribute name="resdir" default="${res.dir}" />
+    <sequential>
+
+      <mkdir dir="@{resdir}/drawable-xhdpi/" />
+      <mkdir dir="@{resdir}/drawable-hdpi/" />
+      <mkdir dir="@{resdir}/drawable-mdpi/" />
+      <mkdir dir="@{resdir}/drawable-ldpi/" />
+
+      <svg2png-dpi src="@{src}" dst="@{resdir}/drawable-xhdpi/@{pngname}"
+                   dpi="${dpi.xhdpi}" />
+      <svg2png-dpi src="@{src}" dst="@{resdir}/drawable-hdpi/@{pngname}"
+                   dpi="${dpi.hdpi}" />
+      <svg2png-dpi src="@{src}" dst="@{resdir}/drawable-mdpi/@{pngname}"
+                   dpi="${dpi.mdpi}" />
+      <svg2png-dpi src="@{src}" dst="@{resdir}/drawable-ldpi/@{pngname}"
+                   dpi="${dpi.ldpi}" />
+
+    </sequential>
+  </macrodef>
+
+  <target name="all" depends="svg-drawable" />
+
+  <target name="svg-drawable">
+    <svg2png-drawable src="${src.dir}/icon.svg"
+                      pngname="icon.png" />
+    <svg2png-drawable src="${src.dir}/ic_picsource_single.svg"
+                      pngname="ic_picsource_single.png" />
+    <svg2png-drawable src="${src.dir}/ic_picsource_album.svg"
+                      pngname="ic_picsource_album.png" />
+    <svg2png-drawable src="${src.dir}/ic_picsource_folder.svg"
+                      pngname="ic_picsource_folder.png" />
+
+    <svg2png-drawable src="${src.dir}/btn_decrement.svg"
+                      pngname="btn_decrement.png" />
+    <svg2png-drawable src="${src.dir}/btn_increment.svg"
+                      pngname="btn_increment.png" />
+
+    <svg2png-drawable src="${src.dir}/ic_btn_add_screen.svg"
+                      pngname="ic_btn_add_screen.png" />
+
+    <svg2png-drawable src="${src.dir}/ika.svg" pngname="spinner.png" />
+    <!--
+    <svg2png-drawable src="${src.dir}/spinner.svg" pngname="spinner.png" />
+    -->
+  </target>
+</project>

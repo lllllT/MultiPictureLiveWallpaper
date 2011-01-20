@@ -188,6 +188,7 @@ public class PictureSourcePreference extends DialogPreference
 
         List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
 
+        // todo: exclude package name from resource?
         for(ResolveInfo info : activities) {
             ComponentName comp = new ComponentName(
                 info.activityInfo.packageName, info.activityInfo.name);

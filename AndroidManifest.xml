@@ -33,8 +33,7 @@
     <activity android:name=".picsource.SingleSource"
               android:label="@string/pref_single_picture_title"
               android:icon="@drawable/ic_picsource_single"
-              android:theme="@android:style/Theme.NoDisplay"
-              android:exported="false">
+              android:theme="@android:style/Theme.NoDisplay">
       <intent-filter>
         <action android:name="org.tamanegi.wallpaper.multipicture.action.GET_PICTURE_SOURCE" />
         <category android:name="android.intent.category.DEFAULT" />
@@ -43,8 +42,7 @@
 
     <activity android:name=".picsource.AlbumSource"
               android:label="@string/pref_album_title"
-              android:icon="@drawable/ic_picsource_album"
-              android:exported="false">
+              android:icon="@drawable/ic_picsource_album">
       <intent-filter>
         <action android:name="org.tamanegi.wallpaper.multipicture.action.GET_PICTURE_SOURCE" />
         <category android:name="android.intent.category.DEFAULT" />
@@ -53,8 +51,7 @@
 
     <activity android:name=".picsource.FolderSource"
               android:label="@string/pref_folder_title"
-              android:icon="@drawable/ic_picsource_folder"
-              android:exported="false">
+              android:icon="@drawable/ic_picsource_folder">
       <intent-filter>
         <action android:name="org.tamanegi.wallpaper.multipicture.action.GET_PICTURE_SOURCE" />
         <category android:name="android.intent.category.DEFAULT" />
@@ -66,24 +63,21 @@
 
     <!-- picker service for picture source -->
     <service android:name=".picsource.SinglePickService"
-             android:process=":internalPlugin"
-             android:exported="false">
+             android:process=":internalPlugin">
       <intent-filter>
         <action android:name="org.tamanegi.wallpaper.multipicture.plugin.LazyPickService" />
       </intent-filter>
     </service>
 
     <service android:name=".picsource.AlbumPickService"
-             android:process=":internalPlugin"
-             android:exported="false">
+             android:process=":internalPlugin">
       <intent-filter>
         <action android:name="org.tamanegi.wallpaper.multipicture.plugin.LazyPickService" />
       </intent-filter>
     </service>
 
     <service android:name=".picsource.FolderPickService"
-             android:process=":internalPlugin"
-             android:exported="false">
+             android:process=":internalPlugin">
       <intent-filter>
         <action android:name="org.tamanegi.wallpaper.multipicture.plugin.LazyPickService" />
       </intent-filter>
