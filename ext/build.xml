@@ -7,7 +7,7 @@
   <property name="res.dir" location="../res" />
 
   <property name="dpi.xhdpi" value="120" />
-  <property name="dpi.hdpi" value="90" />
+  <property name="dpi.hdpi" value="90" /> <!-- base dpi -->
   <property name="dpi.mdpi" value="60" />
   <property name="dpi.ldpi" value="45" />
 
@@ -21,6 +21,7 @@
         <arg value="--export-dpi=@{dpi}" />
         <arg value="--export-png=@{dst}" />
         <arg value="@{src}" />
+        <exec-args />
       </exec>
     </sequential>
   </macrodef>
@@ -37,6 +38,7 @@
         <arg value="--export-height=@{height}" />
         <arg value="--export-png=@{dst}" />
         <arg value="@{src}" />
+        <exec-args />
       </exec>
     </sequential>
   </macrodef>
@@ -45,6 +47,7 @@
     <attribute name="src" />
     <attribute name="pngname" />
     <attribute name="resdir" default="${res.dir}" />
+    <element name="args" optional="true" />
     <sequential>
 
       <mkdir dir="@{resdir}/drawable-xhdpi/" />
@@ -53,13 +56,29 @@
       <mkdir dir="@{resdir}/drawable-ldpi/" />
 
       <svg2png-dpi src="@{src}" dst="@{resdir}/drawable-xhdpi/@{pngname}"
-                   dpi="${dpi.xhdpi}" />
+                   dpi="${dpi.xhdpi}">
+        <exec-args>
+          <args />
+        </exec-args>
+      </svg2png-dpi>
       <svg2png-dpi src="@{src}" dst="@{resdir}/drawable-hdpi/@{pngname}"
-                   dpi="${dpi.hdpi}" />
+                   dpi="${dpi.hdpi}">
+        <exec-args>
+          <args />
+        </exec-args>
+      </svg2png-dpi>
       <svg2png-dpi src="@{src}" dst="@{resdir}/drawable-mdpi/@{pngname}"
-                   dpi="${dpi.mdpi}" />
+                   dpi="${dpi.mdpi}">
+        <exec-args>
+          <args />
+        </exec-args>
+      </svg2png-dpi>
       <svg2png-dpi src="@{src}" dst="@{resdir}/drawable-ldpi/@{pngname}"
-                   dpi="${dpi.ldpi}" />
+                   dpi="${dpi.ldpi}">
+        <exec-args>
+          <args />
+        </exec-args>
+      </svg2png-dpi>
 
     </sequential>
   </macrodef>
@@ -75,6 +94,8 @@
                       pngname="ic_picsource_album.png" />
     <svg2png-drawable src="${src.dir}/ic_picsource_folder.svg"
                       pngname="ic_picsource_folder.png" />
+    <svg2png-drawable src="${src.dir}/ic_picsource_use_default.svg"
+                      pngname="ic_picsource_use_default.png" />
 
     <svg2png-drawable src="${src.dir}/btn_decrement.svg"
                       pngname="btn_decrement.png" />
@@ -84,7 +105,11 @@
     <svg2png-drawable src="${src.dir}/ic_btn_add_screen.svg"
                       pngname="ic_btn_add_screen.png" />
 
-    <svg2png-drawable src="${src.dir}/ika.svg" pngname="spinner.png" />
+    <svg2png-drawable src="${src.dir}/ika.svg" pngname="spinner.png">
+      <args>
+        <arg value="--export-background-opacity=0" />
+      </args>
+    </svg2png-drawable>
     <!--
     <svg2png-drawable src="${src.dir}/spinner.svg" pngname="spinner.png" />
     -->

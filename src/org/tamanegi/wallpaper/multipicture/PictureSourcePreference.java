@@ -206,7 +206,8 @@ public class PictureSourcePreference extends DialogPreference
             Map<String, Object> data = new HashMap<String, Object>();
 
             data.put(KEY_ICON,
-                     context.getResources().getDrawable(R.drawable.icon)); // todo: default icon
+                     context.getResources().getDrawable(
+                         R.drawable.ic_picsource_use_default));
             data.put(KEY_LABEL, context.getString(R.string.pref_use_default));
             data.put(KEY_CHECK, (val == null));
             data.put(KEY_COMPONENT, null);
