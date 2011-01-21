@@ -2085,7 +2085,7 @@ public class MultiPictureRenderer
         hint.setScreenColumns(xcnt);
         hint.setScreenRows(ycnt);
         hint.setTargetColumn(idx % xcnt);
-        hint.setTargetRow(idx / ycnt);
+        hint.setTargetRow(idx / xcnt);
         hint.setScreenWidth(width);
         hint.setScreenHeight(height);
         hint.setChangeFrequency(change_duration);
