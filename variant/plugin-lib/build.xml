@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="all">
+
+  <property file="local.properties" />
+  <property file="default.properties" />
+
+  <property name="src.path" location="../../src" />
+  <property name="bin.path" location="bin" />
+  <property name="jar.path" location="mplwp-plugin-${plugin.version}.jar" />
+
+  <property name="android.classpath"
+            location="${sdk.dir}/platforms/android-2.1/android.jar" />
+
+  <target name="all" depends="jar" />
+
+  <target name="compile">
+    <echo message="classpath: ${android.classpath}" />
+    <mkdir dir="${bin.path}" />
+    <javac source="1.5" target="1.5"
+           destdir="${bin.path}"
+           bootclasspath="${android.classpath}"
+           debug="true">
+      <src path="${src.path}" />
+      <include name="org/tamanegi/wallpaper/multipicture/plugin/**" />
+    </javac>
+  </target>
+
+  <target name="jar" depends="compile">
+    <jar basedir="${bin.path}"
+         destfile="${jar.path}" />
+  </target>
+
+  <target name="clean">
+    <delete dir="${bin.path}" />
+    <delete file="${jar.path}" />
+  </target>
+
+</project>
