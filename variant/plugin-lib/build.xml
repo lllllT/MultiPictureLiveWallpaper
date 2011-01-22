@@ -14,7 +14,6 @@
   <target name="all" depends="jar" />
 
   <target name="compile">
-    <echo message="classpath: ${android.classpath}" />
     <mkdir dir="${bin.path}" />
     <javac source="1.5" target="1.5"
            destdir="${bin.path}"
