@@ -130,6 +130,9 @@
     <svg2png-drawable src="${src.dir}/ic_btn_add_screen.svg"
                       pngname="ic_btn_add_screen.png" />
 
+    <svg2png-drawable src="${src.dir}/ic_menu_qr.svg"
+                      pngname="ic_menu_qr.png" />
+
     <svg2png-drawable src="${src.dir}/ika.svg" pngname="spinner.png"
                       args="--export-background-opacity=0" />
     <!--
