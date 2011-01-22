@@ -11,6 +11,8 @@
 
   <property name="icon.512x512.path"
             location="${ext.dir}/icon-512x512.png" />
+  <property name="icon.180x120.path"
+            location="${ext.dir}/icon-180x120.png" />
 
   <property name="dpi.xhdpi" value="120" />
   <property name="dpi.hdpi" value="90" /> <!-- base dpi -->
@@ -104,7 +106,7 @@
     </sequential>
   </macrodef>
 
-  <target name="all" depends="svg-drawable, icon.512x512" />
+  <target name="all" depends="svg-drawable, icon.512x512, icon.180x120" />
 
   <target name="svg-drawable">
     <svg2png-drawable src="${src.dir}/icon.svg"
@@ -159,5 +161,30 @@
       <arg value="${icon.512x512.path}" />
     </exec>
     <delete file="${icon.512x512.path}.tmp" />
+  </target>
+
+  <uptodate property="icon.180x120.updated"
+            srcfile="${src.dir}/icon.svg"
+            targetfile="${icon.180x120.path}" />
+  <target name="icon.180x120" unless="icon.180x120.updated">
+    <svg2png-size src="${src.dir}/icon.svg"
+                  dst="${icon.180x120.path}.tmp"
+                  width="120" height="120">
+      <exec-args>
+        <arg value="--export-background-opacity=1" />
+      </exec-args>
+    </svg2png-size>
+    <exec executable="${imagemagick.convert.path}"
+          failonerror="true">
+      <arg value="${icon.180x120.path}.tmp" />
+      <arg value="-extent" />
+      <arg value="180x120-30" />
+      <arg value="-depth" />
+      <arg value="8" />
+      <arg value="-alpha" />
+      <arg value="off" />
+      <arg value="${icon.180x120.path}" />
+    </exec>
+    <delete file="${icon.180x120.path}.tmp" />
   </target>
 </project>
