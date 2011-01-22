@@ -1491,7 +1491,9 @@ public class MultiPictureRenderer
         // lazy picker
         info.picker = new PickerClient(
             info.picsource_service, info.picsource_key, idx, info);
-        info.picker.start();
+        if(! info.picker.start()) {
+            info.setStatus(PictureStatus.NOT_AVAILABLE);
+        }
 
         // background color
         String bgcolor = pref.getString(

@@ -74,13 +74,14 @@ public abstract class LazyPickerClient
         waiting_next_lock = new Object();
     }
 
-    public void start()
+    public boolean start()
     {
         Intent intent = new Intent(LazyPickService.SERVICE_INTERFACE);
         intent.setComponent(comp);
         conn = new Connection();
-        context.bindService(intent, conn, Context.BIND_AUTO_CREATE);
+
         Log.d(TAG, "bind plugin: " + key + ", " + intent);
+        return context.bindService(intent, conn, Context.BIND_AUTO_CREATE);
     }
 
     public void sendStop()
