@@ -43,43 +43,54 @@
     </sequential>
   </macrodef>
 
+  <uptodate property="svg2png.updated"
+            srcfile="${svg2png.src}"
+            targetfile="${svg2png.todir}/${svg2png.toname}" />
+  <target name="svg2png-dpi" unless="svg2png.updated">
+    <mkdir dir="${svg2png.todir}" />
+    <svg2png-dpi src="${svg2png.src}"
+                 dst="${svg2png.todir}/${svg2png.toname}"
+                 dpi="${svg2png.dpi}">
+      <exec-args>
+        <arg line="${svg2png.args}" />
+      </exec-args>
+    </svg2png-dpi>
+  </target>
+
   <macrodef name="svg2png-drawable">
     <attribute name="src" />
     <attribute name="pngname" />
     <attribute name="resdir" default="${res.dir}" />
-    <element name="args" optional="true" />
+    <attribute name="args" default="" />
     <sequential>
-
-      <mkdir dir="@{resdir}/drawable-xhdpi/" />
-      <mkdir dir="@{resdir}/drawable-hdpi/" />
-      <mkdir dir="@{resdir}/drawable-mdpi/" />
-      <mkdir dir="@{resdir}/drawable-ldpi/" />
-
-      <svg2png-dpi src="@{src}" dst="@{resdir}/drawable-xhdpi/@{pngname}"
-                   dpi="${dpi.xhdpi}">
-        <exec-args>
-          <args />
-        </exec-args>
-      </svg2png-dpi>
-      <svg2png-dpi src="@{src}" dst="@{resdir}/drawable-hdpi/@{pngname}"
-                   dpi="${dpi.hdpi}">
-        <exec-args>
-          <args />
-        </exec-args>
-      </svg2png-dpi>
-      <svg2png-dpi src="@{src}" dst="@{resdir}/drawable-mdpi/@{pngname}"
-                   dpi="${dpi.mdpi}">
-        <exec-args>
-          <args />
-        </exec-args>
-      </svg2png-dpi>
-      <svg2png-dpi src="@{src}" dst="@{resdir}/drawable-ldpi/@{pngname}"
-                   dpi="${dpi.ldpi}">
-        <exec-args>
-          <args />
-        </exec-args>
-      </svg2png-dpi>
-
+      <antcall target="svg2png-dpi">
+        <param name="svg2png.src" value="@{src}" />
+        <param name="svg2png.todir" value="@{resdir}/drawable-xhdpi" />
+        <param name="svg2png.toname" value="@{pngname}" />
+        <param name="svg2png.dpi" value="${dpi.xhdpi}" />
+        <param name="svg2png.args" value="@{args}" />
+      </antcall>
+      <antcall target="svg2png-dpi">
+        <param name="svg2png.src" value="@{src}" />
+        <param name="svg2png.todir" value="@{resdir}/drawable-hdpi" />
+        <param name="svg2png.toname" value="@{pngname}" />
+        <param name="svg2png.dpi" value="${dpi.hdpi}" />
+        <param name="svg2png.args" value="@{args}" />
+      </antcall>
+      <antcall target="svg2png-dpi">
+        <param name="svg2png.src" value="@{src}" />
+        <param name="svg2png.todir" value="@{resdir}/drawable-mdpi" />
+        <param name="svg2png.toname" value="@{pngname}" />
+        <param name="svg2png.dpi" value="${dpi.mdpi}" />
+        <param name="svg2png.args" value="@{args}" />
+      </antcall>
+      <antcall target="svg2png-dpi">
+        <param name="svg2png.src" value="@{src}" />
+        <param name="svg2png.todir" value="@{resdir}/drawable-ldpi" />
+        <param name="svg2png.toname" value="@{pngname}" />
+        <param name="svg2png.dpi" value="${dpi.ldpi}" />
+        <param name="svg2png.args" value="@{args}" />
+      </antcall>
     </sequential>
   </macrodef>
 
@@ -105,11 +116,8 @@
     <svg2png-drawable src="${src.dir}/ic_btn_add_screen.svg"
                       pngname="ic_btn_add_screen.png" />
 
-    <svg2png-drawable src="${src.dir}/ika.svg" pngname="spinner.png">
-      <args>
-        <arg value="--export-background-opacity=0" />
-      </args>
-    </svg2png-drawable>
+    <svg2png-drawable src="${src.dir}/ika.svg" pngname="spinner.png"
+                      args="--export-background-opacity=0" />
     <!--
     <svg2png-drawable src="${src.dir}/spinner.svg" pngname="spinner.png" />
     -->

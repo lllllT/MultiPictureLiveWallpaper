@@ -33,41 +33,6 @@
          offset="1"
          id="stop11830" />
     </linearGradient>
-    <inkscape:perspective
-       sodipodi:type="inkscape:persp3d"
-       inkscape:vp_x="0 : 526.18109 : 1"
-       inkscape:vp_y="0 : 1000 : 0"
-       inkscape:vp_z="744.09448 : 526.18109 : 1"
-       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
-       id="perspective10" />
-    <inkscape:perspective
-       id="perspective2390"
-       inkscape:persp3d-origin="372.04724 : 350.78739 : 1"
-       inkscape:vp_z="744.09448 : 526.18109 : 1"
-       inkscape:vp_y="0 : 1000 : 0"
-       inkscape:vp_x="0 : 526.18109 : 1"
-       sodipodi:type="inkscape:persp3d" />
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient11826"
-       id="linearGradient11832"
-       x1="62"
-       y1="36"
-       x2="28"
-       y2="66"
-       gradientUnits="userSpaceOnUse" />
-    <filter
-       inkscape:collect="always"
-       id="filter11958"
-       x="-0.5306381"
-       width="2.0612762"
-       y="-0.54431861"
-       height="2.0886372">
-      <feGaussianBlur
-         inkscape:collect="always"
-         stdDeviation="9.0719769"
-         id="feGaussianBlur11960" />
-    </filter>
     <clipPath
        clipPathUnits="userSpaceOnUse"
        id="clipPath11963">
@@ -77,15 +42,6 @@
          id="path11965"
          sodipodi:nodetypes="cccsccsccc" />
     </clipPath>
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient11826"
-       id="linearGradient12367"
-       gradientUnits="userSpaceOnUse"
-       x1="63"
-       y1="34"
-       x2="35"
-       y2="64" />
     <filter
        inkscape:collect="always"
        id="filter12569"
@@ -98,24 +54,6 @@
          stdDeviation="2.7304008"
          id="feGaussianBlur12571" />
     </filter>
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient11826"
-       id="linearGradient12581"
-       gradientUnits="userSpaceOnUse"
-       x1="63"
-       y1="34"
-       x2="35"
-       y2="64" />
-    <linearGradient
-       inkscape:collect="always"
-       xlink:href="#linearGradient11826"
-       id="linearGradient12585"
-       gradientUnits="userSpaceOnUse"
-       x1="63"
-       y1="34"
-       x2="35"
-       y2="64" />
     <linearGradient
        inkscape:collect="always"
        xlink:href="#linearGradient11826"
