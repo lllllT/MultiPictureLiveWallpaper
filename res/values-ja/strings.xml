@@ -26,9 +26,8 @@
 
   <string name="pref_screen_val_summary">\n%s</string>
 
-  <string name="pref_screen_type_title">画面タイプ</string>
-  <string name="pref_screen_type_base_summary">表示する画像の選択方法。</string>
-  <string name="pref_screen_type_val1_summary">\n%s</string>
+  <string name="pref_screen_type_title">画像ソース</string>
+  <string name="pref_screen_type_base_summary">表示する画像の選択。</string>
 
   <string name="pref_screen_bgcolor_title">背景色</string>
   <string name="pref_screen_bgcolor_summary">画面の背景色。</string>

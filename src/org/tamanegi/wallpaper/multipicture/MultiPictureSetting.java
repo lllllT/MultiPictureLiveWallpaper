@@ -551,13 +551,13 @@ public class MultiPictureSetting extends PreferenceActivity
             String desc_val = pref.getString(desc_key, "");
             if(desc_val.length() != 0) {
                 summary.append(
-                    getString(R.string.pref_screen_type_val1_summary,
+                    getString(R.string.pref_screen_val_summary,
                               desc_val));
             }
         }
         else if(idx >= 0) {
             summary.append(
-                getString(R.string.pref_screen_type_val1_summary,
+                getString(R.string.pref_screen_val_summary,
                           getString(R.string.pref_use_default)));
         }
 

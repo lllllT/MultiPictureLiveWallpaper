@@ -31,9 +31,8 @@
 
   <string name="pref_screen_val_summary">\n%s</string>
 
-  <string name="pref_screen_type_title">Type of screen</string>
-  <string name="pref_screen_type_base_summary">Type of screen to select pictures.</string>
-  <string name="pref_screen_type_val1_summary">\n%s</string>
+  <string name="pref_screen_type_title">Picture source</string>
+  <string name="pref_screen_type_base_summary">Select pictures to display.</string>
 
   <string name="pref_screen_bgcolor_title">Background Color</string>
   <string name="pref_screen_bgcolor_summary">Background Color of screen.</string>
