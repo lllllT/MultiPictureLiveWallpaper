@@ -117,6 +117,15 @@ public class MultiPictureSetting extends PreferenceActivity
         resolver = getContentResolver();
         handler = new Handler();
 
+        if(! "org.tamanegi.wallpaper.multipicture".equals(getPackageName())) {
+            getPreferenceScreen().removePreference(
+                getPreferenceManager().findPreference("other.cat"));
+        }
+        else {
+            getPreferenceManager().findPreference("other.dnt")
+                .setOnPreferenceClickListener(new OnDntClickListener());
+        }
+
         // setup screen-N setting item
         pref_group = (PreferenceGroup)
             getPreferenceManager().findPreference("screen.cat");
@@ -769,6 +778,30 @@ public class MultiPictureSetting extends PreferenceActivity
         {
             updateValueSummary((ListPreference)item, res_id, (String)val);
             return true;
+        }
+    }
+
+    private class OnDntClickListener
+        implements  Preference.OnPreferenceClickListener
+    {
+        @Override
+        public boolean onPreferenceClick(Preference preference)
+        {
+            Intent intent = new Intent(
+                Intent.ACTION_VIEW,
+                Uri.parse(getString(R.string.dnt_search_uri)));
+
+            try {
+                startActivity(intent);
+            }
+            catch(ActivityNotFoundException e) {
+                Toast.makeText(MultiPictureSetting.this,
+                               R.string.market_not_found,
+                               Toast.LENGTH_SHORT)
+                    .show();
+            }
+
+            return false;
         }
     }
 }

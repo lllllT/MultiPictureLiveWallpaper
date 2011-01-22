@@ -65,6 +65,10 @@
   <string name="pref_workaround_htcsense_title">HTC Sense 用の回避策を有効にする</string>
   <string name="pref_workaround_htcsense_summary">HTC Sense で利用する際に、画面変更で画像が切替わらない場合の回避策を有効にする。</string>
 
+  <string name="pref_cat_other">その他</string>
+  <string name="pref_other_dnt_title">Dontion版</string>
+  <string name="pref_other_dnt_summary">Donation版をダウンロード。</string>
+
   <string name="pref_single_picture_title">単一画像</string>
 
   <string name="pref_album_title">アルバム</string>

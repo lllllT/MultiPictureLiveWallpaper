@@ -70,6 +70,10 @@
   <string name="pref_workaround_htcsense_title">Enable HTC Sense workaround</string>
   <string name="pref_workaround_htcsense_summary">Enable workaround if using with HTC Sense and pictures are not changed when switching screen.</string>
 
+  <string name="pref_cat_other">Other</string>
+  <string name="pref_other_dnt_title">Dontion version</string>
+  <string name="pref_other_dnt_summary">Get donation version.</string>
+
   <string name="pref_single_picture_title">Single Picture</string>
 
   <string name="pref_album_title">Album</string>
@@ -108,6 +112,7 @@
 
   <!-- DO NOT localize below -->
   <string name="plugin_search_uri">market://search?q=MultiPicture-Live-Wallpaper</string>
+  <string name="dnt_search_uri">market://search?q=org.tamanegi.wallpaper.multipicture.dnt</string>
 
   <string name="share_text">MultiPicture Live Wallpaper http://market.android.com/details?id=org.tamanegi.wallpaper.multipicture</string>
   <string name="report_uri">mailto:lllllT-mplr@tamanegi.org</string>

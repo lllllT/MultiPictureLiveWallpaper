@@ -35,6 +35,11 @@ public class PictureSourcePreference extends DialogPreference
     private static final String KEY_CHECK = "check";
     private static final String KEY_COMPONENT = "component";
 
+    private static final String[] VARIANT_PACKAGES = {
+        "org.tamanegi.wallpaper.multipicture",
+        "org.tamanegi.wallpaper.multipicture.dnt",
+    };
+
     private static final String[] ITEM_FROM = {
         KEY_ICON, KEY_LABEL, KEY_CHECK
     };
@@ -188,8 +193,16 @@ public class PictureSourcePreference extends DialogPreference
 
         List<Map<String, Object>> list = new ArrayList<Map<String, Object>>();
 
-        // todo: exclude package name from resource?
-        for(ResolveInfo info : activities) {
+        resolve_list: for(ResolveInfo info : activities) {
+            for(String excl_pkgname : VARIANT_PACKAGES) {
+                if(excl_pkgname.equals(context.getPackageName())) {
+                    continue;
+                }
+                else if(excl_pkgname.equals(info.activityInfo.packageName)) {
+                    continue resolve_list;
+                }
+            }
+
             ComponentName comp = new ComponentName(
                 info.activityInfo.packageName, info.activityInfo.name);
 

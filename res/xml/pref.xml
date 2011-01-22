@@ -95,4 +95,12 @@
        android:defaultValue="true" />
   </PreferenceCategory>
 
+  <PreferenceCategory android:title="@string/pref_cat_other"
+                      android:key="other.cat">
+    <Preference
+       android:key="other.dnt"
+       android:title="@string/pref_other_dnt_title"
+       android:summary="@string/pref_other_dnt_summary" />
+  </PreferenceCategory>
+
 </PreferenceScreen>
