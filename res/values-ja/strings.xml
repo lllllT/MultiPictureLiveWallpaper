@@ -85,8 +85,12 @@
   <string name="pref_no_folder_select_msg">フォルダが選択されていません。</string>
 
   <string name="pref_cat_selection_title">選択設定</string>
+
   <string name="pref_select_order_title">画像選択順序</string>
   <string name="pref_select_order_summary">画像変更時の選択順序。</string>
+
+  <string name="pref_select_rescan_title">更新時に画像再読み込み</string>
+  <string name="pref_select_rescan_summary">更新時に画像再読み込みする。画像ファイルの追加、削除、修正時等。</string>
 
   <string name="menu_share">共有</string>
   <string name="menu_qr">QRコード</string>

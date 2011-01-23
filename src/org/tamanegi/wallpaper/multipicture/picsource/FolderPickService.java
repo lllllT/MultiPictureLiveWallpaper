@@ -32,6 +32,7 @@ public class FolderPickService extends AbstractFileListPickService
     private class FolderLazyPicker extends FileListLazyPicker
     {
         private String key;
+        private boolean rescan = true;
         private List<File> folders = null;
 
         @Override
@@ -64,6 +65,9 @@ public class FolderPickService extends AbstractFileListPickService
             String order = pref.getString(
                 MultiPictureSetting.getKey(
                     MultiPictureSetting.SCREEN_ORDER_KEY, key), "");
+            rescan = pref.getBoolean(
+                MultiPictureSetting.getKey(
+                    MultiPictureSetting.SCREEN_RESCAN_KEY, key), true);
 
             OrderType change_order;
             try {
@@ -99,6 +103,12 @@ public class FolderPickService extends AbstractFileListPickService
             // set file list
             setFileList(flist, change_order);
             this.folders = folders;
+        }
+
+        @Override
+        protected boolean acceptRescan()
+        {
+            return rescan;
         }
     }
 

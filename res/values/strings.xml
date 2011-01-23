@@ -90,8 +90,12 @@
   <string name="pref_no_folder_select_msg">Folder is not selected.</string>
 
   <string name="pref_cat_selection_title">Selection Settings</string>
+
   <string name="pref_select_order_title">Picture selection order</string>
   <string name="pref_select_order_summary">Selection order when changing picture.</string>
+
+  <string name="pref_select_rescan_title">Rescan pictures when modified</string>
+  <string name="pref_select_rescan_summary">Rescan pictures when picture is modified; e.g. when picture file is add, delete, modified, etc.</string>
 
   <string name="menu_share">Share</string>
   <string name="menu_qr">QR Code</string>

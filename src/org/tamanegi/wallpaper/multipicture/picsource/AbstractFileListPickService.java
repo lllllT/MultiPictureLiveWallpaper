@@ -170,9 +170,14 @@ public abstract class AbstractFileListPickService extends LazyPickService
             this.change_order = change_order;
         }
 
+        protected boolean acceptRescan()
+        {
+            return true;
+        }
+
         private void rescan()
         {
-            if(need_rescan.getAndSet(false)) {
+            if(need_rescan.getAndSet(false) && acceptRescan()) {
                 loadSettings();
 
                 // always notify, even if current Uri is not changed.

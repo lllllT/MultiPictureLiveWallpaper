@@ -99,6 +99,16 @@ public class AlbumSource extends PreferenceActivity
         ListPreference order = (ListPreference)
             getPreferenceManager().findPreference("order");
         order.setValue(order_val);
+
+        // rescan
+        String rescan_key = MultiPictureSetting.getKey(
+            MultiPictureSetting.SCREEN_RESCAN_KEY, key);
+        boolean rescan_val =
+            (need_clear ? true : pref.getBoolean(rescan_key, true));
+
+        CheckBoxPreference rescan = (CheckBoxPreference)
+            getPreferenceManager().findPreference("rescan");
+        rescan.setChecked(rescan_val);
     }
 
     @Override
@@ -171,6 +181,10 @@ public class AlbumSource extends PreferenceActivity
             getPreferenceManager().findPreference("order");
         String order_val = order.getValue();
 
+        CheckBoxPreference rescan = (CheckBoxPreference)
+            getPreferenceManager().findPreference("rescan");
+        boolean rescan_val = rescan.isChecked();
+
         // save
         SharedPreferences.Editor editor =
             PreferenceManager.getDefaultSharedPreferences(this).edit();
@@ -180,6 +194,9 @@ public class AlbumSource extends PreferenceActivity
         editor.putString(MultiPictureSetting.getKey(
                              MultiPictureSetting.SCREEN_ORDER_KEY, key),
                          order_val);
+        editor.putBoolean(MultiPictureSetting.getKey(
+                              MultiPictureSetting.SCREEN_RESCAN_KEY, key),
+                          rescan_val);
         editor.commit();
 
         // activity result

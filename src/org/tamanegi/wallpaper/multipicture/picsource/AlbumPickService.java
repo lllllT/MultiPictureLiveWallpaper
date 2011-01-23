@@ -28,6 +28,7 @@ public class AlbumPickService extends AbstractFileListPickService
     private class AlbumLazyPicker extends FileListLazyPicker
     {
         private String key;
+        private boolean rescan = true;
 
         @Override
         protected void onStart(String key, ScreenInfo hint)
@@ -48,6 +49,9 @@ public class AlbumPickService extends AbstractFileListPickService
             String order = pref.getString(
                 MultiPictureSetting.getKey(
                     MultiPictureSetting.SCREEN_ORDER_KEY, key), "");
+            rescan = pref.getBoolean(
+                MultiPictureSetting.getKey(
+                    MultiPictureSetting.SCREEN_RESCAN_KEY, key), true);
 
             OrderType change_order;
             try {
@@ -64,6 +68,12 @@ public class AlbumPickService extends AbstractFileListPickService
 
             // set file list
             setFileList(flist, change_order);
+        }
+
+        @Override
+        protected boolean acceptRescan()
+        {
+            return rescan;
         }
     }
 

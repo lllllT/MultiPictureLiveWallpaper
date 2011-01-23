@@ -82,6 +82,16 @@ public class FolderSource extends PreferenceActivity
         CheckBoxPreference recursive = (CheckBoxPreference)
             getPreferenceManager().findPreference("recursive");
         recursive.setChecked(recursive_val);
+
+        // rescan
+        String rescan_key = MultiPictureSetting.getKey(
+            MultiPictureSetting.SCREEN_RESCAN_KEY, key);
+        boolean rescan_val =
+            (need_clear ? true : pref.getBoolean(rescan_key, true));
+
+        CheckBoxPreference rescan = (CheckBoxPreference)
+            getPreferenceManager().findPreference("rescan");
+        rescan.setChecked(rescan_val);
     }
 
     @Override
@@ -135,6 +145,10 @@ public class FolderSource extends PreferenceActivity
             getPreferenceManager().findPreference("recursive");
         boolean recursive_val = recursive.isChecked();
 
+        CheckBoxPreference rescan = (CheckBoxPreference)
+            getPreferenceManager().findPreference("rescan");
+        boolean rescan_val = rescan.isChecked();
+
         // save
         SharedPreferences.Editor editor =
             PreferenceManager.getDefaultSharedPreferences(this).edit();
@@ -147,6 +161,9 @@ public class FolderSource extends PreferenceActivity
         editor.putBoolean(MultiPictureSetting.getKey(
                               MultiPictureSetting.SCREEN_RECURSIVE_KEY, key),
                           recursive_val);
+        editor.putBoolean(MultiPictureSetting.getKey(
+                              MultiPictureSetting.SCREEN_RESCAN_KEY, key),
+                          rescan_val);
         editor.commit();
 
         // activity result

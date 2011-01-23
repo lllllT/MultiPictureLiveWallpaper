@@ -16,6 +16,13 @@
        android:entryValues="@array/pref_select_order_entryvalues"
        android:defaultValue="random"
        />
+    <CheckBoxPreference
+       android:key="rescan"
+       android:persistent="false"
+       android:title="@string/pref_select_rescan_title"
+       android:summary="@string/pref_select_rescan_summary"
+       android:defaultValue="true"
+       />
   </PreferenceCategory>
 
 </PreferenceScreen>
