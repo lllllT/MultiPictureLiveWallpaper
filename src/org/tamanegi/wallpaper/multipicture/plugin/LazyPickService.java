@@ -123,7 +123,7 @@ public abstract class LazyPickService extends Service
         private HandlerThread thread;
         private Handler handler;
         private LazyPicker picker;
-        private Messenger reply_to;
+        private Messenger reply_to = null;
 
         private LazyPickManager(LazyPicker picker)
         {
@@ -159,6 +159,13 @@ public abstract class LazyPickService extends Service
                   }
 
               case MSG_STOP:
+                  synchronized(this) {
+                      if(reply_to == null) {
+                          // not yet started
+                          return true;
+                      }
+                  }
+
                   picker.doStop();
                   picker = null;
 
