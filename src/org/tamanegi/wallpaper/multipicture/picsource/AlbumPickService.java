@@ -99,7 +99,12 @@ public class AlbumPickService extends AbstractFileListPickService
     protected void onRemoveLastPicker()
     {
         // broadcast receiver
-        unregisterReceiver(receiver);
+        try {
+            unregisterReceiver(receiver);
+        }
+        catch(Exception e) {
+            // ignore
+        }
 
         // content observer
         try {

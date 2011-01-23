@@ -123,13 +123,20 @@ public class FolderPickService extends AbstractFileListPickService
     protected void onRemoveLastPicker()
     {
         // receiver
-        unregisterReceiver(receiver);
+        try {
+            unregisterReceiver(receiver);
+        }
+        catch(Exception e) {
+            // ignore
+        }
 
         // clear observers
-        for(FolderObserver observer : observer_map.values()) {
-            observer.stopWatching();
+        if(observer_map != null) {
+            for(FolderObserver observer : observer_map.values()) {
+                observer.stopWatching();
+            }
+            observer_map.clear();
         }
-        observer_map.clear();
     }
 
     private class Receiver extends BroadcastReceiver

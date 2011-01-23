@@ -1677,7 +1677,9 @@ public class MultiPictureRenderer
                    pic[idx] == null ||
                    pic[idx] != pic_info) {
                     // already cleared: discard
-                    bmp_info.bmp.recycle();
+                    if(bmp_info != null) {
+                        bmp_info.bmp.recycle();
+                    }
                     return;
                 }
 
