@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="org.tamanegi.wallpaper.multipicture"
-          android:versionCode="21"
-          android:versionName="0.5.1">
+          android:versionCode="22"
+          android:versionName="0.5.1a">
 
   <uses-sdk android:minSdkVersion="7" />
   <uses-feature android:name="android.software.live_wallpaper" />

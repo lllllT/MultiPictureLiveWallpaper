@@ -112,7 +112,7 @@
 
   <!-- DO NOT localize below -->
   <string name="plugin_search_uri">market://search?q=MultiPicture-Live-Wallpaper</string>
-  <string name="dnt_search_uri">market://search?q=org.tamanegi.wallpaper.multipicture.dnt</string>
+  <string name="dnt_search_uri">market://search?q=pname:org.tamanegi.wallpaper.multipicture.dnt</string>
 
   <string name="share_text">MultiPicture Live Wallpaper http://market.android.com/details?id=org.tamanegi.wallpaper.multipicture</string>
   <string name="report_uri">mailto:lllllT-mplr@tamanegi.org</string>
