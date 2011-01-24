@@ -8,9 +8,13 @@ import java.util.LinkedList;
 import org.tamanegi.wallpaper.multipicture.R;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -142,24 +146,24 @@ public class FolderPicker extends Activity
         folder_name.setText(cur_folder.getPath());
 
         // show content of current folder
-        list_data.updateData();
-        folder_list.setSelection(0);
+        list_data.requestUpdateData();
     }
 
     private class FolderList extends BaseAdapter
         implements AdapterView.OnItemClickListener
     {
-        private File[] files;
+        private File[] files = null;
+        private AsyncFileList async_list = null;
 
         private FolderList()
         {
-            files = getFileList();
+            requestUpdateData();
         }
 
         @Override
         public int getCount()
         {
-            return files.length + 1;
+            return (files != null ? files.length + 1 : 0);
         }
 
         @Override
@@ -241,13 +245,49 @@ public class FolderPicker extends Activity
             updateFolder();
         }
 
-        private void updateData()
+        private void requestUpdateData()
         {
-            files = getFileList();
-            notifyDataSetChanged();
+            if(async_list != null) {
+                async_list.cancel(false);
+            }
+
+            async_list = new AsyncFileList();
+            async_list.execute();
         }
 
-        private File[] getFileList()
+        private void updateData(File[] data)
+        {
+            files = data;
+            notifyDataSetChanged();
+
+            folder_list.setSelection(0);
+
+            async_list = null;
+        }
+    }
+
+    private class AsyncFileList
+        extends AsyncTask<Void, Void, File[]>
+        implements DialogInterface.OnCancelListener
+    {
+        private ProgressDialog dlg = null;
+        private Handler handler;
+        private Runnable progress_starter = new Runnable() {
+                public void run() {
+                    dlg = ProgressDialog.show(
+                        FolderPicker.this,
+                        null, getString(R.string.folder_loading),
+                        true, true, AsyncFileList.this);
+                }
+            };
+
+        protected void onPreExecute()
+        {
+            handler = new Handler();
+            handler.postDelayed(progress_starter, 500);
+        }
+
+        protected File[] doInBackground(Void... params)
         {
             File[] list = cur_folder.listFiles();
             if(list == null) {
@@ -256,6 +296,29 @@ public class FolderPicker extends Activity
 
             Arrays.sort(list, list_comparator);
             return list;
+        }
+
+        protected void onPostExecute(File[] result)
+        {
+            list_data.updateData(result);
+
+            handler.removeCallbacks(progress_starter);
+            if(dlg != null) {
+                dlg.dismiss();
+            }
+        }
+
+        protected void onCancelled()
+        {
+            handler.removeCallbacks(progress_starter);
+            if(dlg != null) {
+                dlg.dismiss();
+            }
+        }
+
+        public void onCancel(DialogInterface dialog)
+        {
+            cancel(false);
         }
     }
 

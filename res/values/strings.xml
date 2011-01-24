@@ -103,6 +103,7 @@
 
   <string name="folder_picker_title">Select Folder</string>
   <string name="folder_up">../ (Up folder)</string>
+  <string name="folder_loading">Loading...</string>
 
   <string name="str_pic_not_avail_1">Screen %d: Picture is unavailable.</string>
   <string name="str_pic_not_avail_2">Need to setup.</string>
