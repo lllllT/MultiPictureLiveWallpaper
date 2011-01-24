@@ -1981,7 +1981,7 @@ public class MultiPictureRenderer
             (src.hasAlpha() || (m != null && ! m.rectStaysRect()));
         Bitmap.Config format =
             (has_alpha ? Bitmap.Config.ARGB_4444 : Bitmap.Config.RGB_565);
-        Paint paint;
+        Paint paint = new Paint();
 
         Rect src_rect = new Rect(x, y, x + width, y + height);
         RectF dst_rect = new RectF(0, 0, width, height);
@@ -1989,7 +1989,6 @@ public class MultiPictureRenderer
         if(m == null || m.isIdentity()) {
             // no scale
             bmp = Bitmap.createBitmap(width, height, format);
-            paint = null;
         }
         else {
             // with scale
@@ -2006,7 +2005,6 @@ public class MultiPictureRenderer
             canvas.translate(-device_rect.left, -device_rect.top);
             canvas.concat(m);
 
-            paint = new Paint();
             paint.setFilterBitmap(true);
             if(! m.rectStaysRect()) {
                 paint.setAntiAlias(true);
@@ -2015,14 +2013,12 @@ public class MultiPictureRenderer
 
         // color filter
         if(saturation != 1.0f) {
-            if(paint == null) {
-                paint = new Paint();
-            }
-
             ColorMatrix cm = new ColorMatrix();
             cm.setSaturation(saturation);
             paint.setColorFilter(new ColorMatrixColorFilter(cm));
         }
+
+        paint.setDither(true);
 
         bmp.setDensity(src.getDensity());
         canvas.setBitmap(bmp);

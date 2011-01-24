@@ -91,10 +91,8 @@ public class FolderPickService extends AbstractFileListPickService
             addFolderObservers(folders, this);
 
             // clear prev observers
-            if(this.folders != null) {
-                removeFolderObservers(this.folders, this);
-                this.folders = null;
-            }
+            removeFolderObservers(this.folders, this);
+            this.folders = null;
 
             // list picture files
             ArrayList<FileInfo> flist =
@@ -186,6 +184,10 @@ public class FolderPickService extends AbstractFileListPickService
     private void removeFolderObservers(List<File> folders,
                                        FolderLazyPicker picker)
     {
+        if(folders == null) {
+            return;
+        }
+
         synchronized(observer_map) {
             for(File folder : folders) {
                 String path = folder.getPath();

@@ -70,7 +70,7 @@ public class SingleSource extends Activity
         result.putExtra(PictureSourceContract.EXTRA_DESCRIPTION,
                         getString(R.string.pref_screen_type_file_desc,
                                   PictureUtils.getUriFileName(
-                                      getContentResolver(), data.getData())));
+                                      getContentResolver(), uri)));
         result.putExtra(PictureSourceContract.EXTRA_SERVICE_NAME,
                         new ComponentName(this, SinglePickService.class));
 

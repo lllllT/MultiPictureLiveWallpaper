@@ -76,25 +76,27 @@ public abstract class LazyPickService extends Service
 
         public final void notifyChanged()
         {
-            manager.sendNotifyChanged();
+            if(manager != null) {
+                manager.sendNotifyChanged();
+            }
         }
 
         public final void finish()
         {
-            manager.sendFinish();
+            if(manager != null) {
+                manager.sendFinish();
+            }
         }
 
         private void doStart(String key, ScreenInfo hint, LazyPickManager mgr)
         {
             this.manager = mgr;
             onStart(key, hint);
-            manager.sendStartCompleted();
         }
 
         private void doStop()
         {
             onStop();
-            manager.sendStopCompleted();
             manager = null;
         }
     }
@@ -148,12 +150,15 @@ public abstract class LazyPickService extends Service
                           reply_to = msg.replyTo;
                       }
 
-                      Bundle data = msg.getData();
-                      String key = data.getString(DATA_KEY);
-                      Bundle info = data.getBundle(DATA_HINT);
-                      ScreenInfo hint = ScreenInfo.unfoldFromBundle(info);
+                      if(picker != null) {
+                          Bundle data = msg.getData();
+                          String key = data.getString(DATA_KEY);
+                          Bundle info = data.getBundle(DATA_HINT);
+                          ScreenInfo hint = ScreenInfo.unfoldFromBundle(info);
 
-                      picker.doStart(key, hint, this);
+                          picker.doStart(key, hint, this);
+                      }
+                      sendStartCompleted();
 
                       return true;
                   }
@@ -166,8 +171,11 @@ public abstract class LazyPickService extends Service
                       }
                   }
 
-                  picker.doStop();
-                  picker = null;
+                  if(picker != null) {
+                      picker.doStop();
+                      picker = null;
+                  }
+                  sendStopCompleted();
 
                   synchronized(this) {
                       reply_to = null;
@@ -176,7 +184,11 @@ public abstract class LazyPickService extends Service
                   return true;
 
               case MSG_GET_NEXT:
-                  PictureContentInfo content = picker.getNext();
+                  PictureContentInfo content = null;
+                  if(picker != null) {
+                      content = picker.getNext();
+                  }
+
                   sendResultNext(content);
                   return true;
 
