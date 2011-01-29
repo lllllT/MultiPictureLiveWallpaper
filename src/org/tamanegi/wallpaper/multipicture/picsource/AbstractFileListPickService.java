@@ -48,7 +48,14 @@ public abstract class AbstractFileListPickService extends LazyPickService
     {
         super.onDestroy();
 
-        handler.removeCallbacks(rescan_callback);
+        synchronized(picker_list) {
+            if(picker_list.size() != 0) {
+                onRemoveLastPicker();
+                picker_list.clear();
+            }
+
+            handler.removeCallbacks(rescan_callback);
+        }
     }
 
     protected void postRescanAllCallback()

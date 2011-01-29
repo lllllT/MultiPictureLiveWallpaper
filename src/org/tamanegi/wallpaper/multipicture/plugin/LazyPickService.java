@@ -145,23 +145,21 @@ public abstract class LazyPickService extends Service
         {
             switch(msg.what) {
               case MSG_START:
-                  {
-                      synchronized(this) {
-                          reply_to = msg.replyTo;
-                      }
-
-                      if(picker != null) {
-                          Bundle data = msg.getData();
-                          String key = data.getString(DATA_KEY);
-                          Bundle info = data.getBundle(DATA_HINT);
-                          ScreenInfo hint = ScreenInfo.unfoldFromBundle(info);
-
-                          picker.doStart(key, hint, this);
-                      }
-                      sendStartCompleted();
-
-                      return true;
+                  synchronized(this) {
+                      reply_to = msg.replyTo;
                   }
+
+                  if(picker != null) {
+                      Bundle data = msg.getData();
+                      String key = data.getString(DATA_KEY);
+                      Bundle info = data.getBundle(DATA_HINT);
+                      ScreenInfo hint = ScreenInfo.unfoldFromBundle(info);
+
+                      picker.doStart(key, hint, this);
+                  }
+                  sendStartCompleted();
+
+                  return true;
 
               case MSG_STOP:
                   synchronized(this) {

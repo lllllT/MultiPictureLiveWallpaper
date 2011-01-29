@@ -60,8 +60,7 @@
               android:label="@string/folder_picker_title" />
 
     <!-- picker service for picture source -->
-    <service android:name="org.tamanegi.wallpaper.multipicture.picsource.SinglePickService"
-             android:process=":internalPlugin">
+    <service android:name="org.tamanegi.wallpaper.multipicture.picsource.SinglePickService">
       <intent-filter>
         <action android:name="org.tamanegi.wallpaper.multipicture.plugin.LazyPickService" />
       </intent-filter>

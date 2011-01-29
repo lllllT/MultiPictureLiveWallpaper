@@ -424,7 +424,9 @@ public class MultiPictureRenderer
               break;
 
           case MSG_HIDE:
-              visible = false;
+              synchronized(pic_whole_lock) {
+                  visible = false;
+              }
               break;
 
           case MSG_PREF_CHANGED:
@@ -1493,6 +1495,7 @@ public class MultiPictureRenderer
             info.picsource_service, info.picsource_key, idx, info);
         if(! info.picker.start()) {
             info.setStatus(PictureStatus.NOT_AVAILABLE);
+            info.loading_cnt = 0;
         }
 
         // background color
