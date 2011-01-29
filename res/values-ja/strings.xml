@@ -98,7 +98,7 @@
 
   <string name="folder_picker_title">フォルダを選択</string>
   <string name="folder_up">../ (上のフォルダ)</string>
-  <string name="folder_loading">ロード中...</string>
+  <string name="folder_loading">読み込み中...</string>
 
   <string name="str_pic_not_avail_1">画面%d: 画像が利用できません。</string>
   <string name="str_pic_not_avail_2">設定が必要です。</string>
