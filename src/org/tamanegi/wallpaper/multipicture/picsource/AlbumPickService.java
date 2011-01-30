@@ -15,6 +15,7 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.ContentObserver;
 import android.database.Cursor;
+import android.net.Uri;
 import android.preference.PreferenceManager;
 import android.provider.MediaStore;
 
@@ -201,8 +202,14 @@ public class AlbumPickService extends AbstractFileListPickService
             // query
             Cursor cur;
             try {
+                Uri list_uri = PictureUtils.IMAGE_LIST_URI;
+                if(change_order != OrderType.random) {
+                    list_uri = list_uri.buildUpon()
+                        .appendQueryParameter("limit", "1").build();
+                }
+
                 cur = resolver.query(
-                    PictureUtils.IMAGE_LIST_URI,
+                    list_uri,
                     PictureUtils.IMAGE_LIST_COLUMNS,
                     bucket_where +
                     (selection != null ? " AND ( " + selection + " )" : ""),
