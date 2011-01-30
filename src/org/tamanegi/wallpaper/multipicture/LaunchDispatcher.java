@@ -5,6 +5,7 @@ import android.app.WallpaperInfo;
 import android.app.WallpaperManager;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -27,8 +28,18 @@ public class LaunchDispatcher extends Activity
                                 info.getSettingsActivity());
         }
         else {
+            PackageManager pm = getPackageManager();
+
             intent = new Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER);
-            msg = getString(R.string.chooser_navigation);
+            if(pm.resolveActivity(intent, 0) != null) {
+                msg = getString(R.string.chooser_navigation);
+            }
+            else {
+                intent = Intent.createChooser(
+                    new Intent(Intent.ACTION_SET_WALLPAPER),
+                    getText(R.string.chooser_wallpaper));
+                msg = getString(R.string.chooser_live_wallpaper);
+            }
         }
 
         try {
