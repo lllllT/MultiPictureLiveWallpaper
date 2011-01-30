@@ -66,8 +66,7 @@
       </intent-filter>
     </service>
 
-    <service android:name="org.tamanegi.wallpaper.multipicture.picsource.AlbumPickService"
-             android:process=":internalPlugin">
+    <service android:name="org.tamanegi.wallpaper.multipicture.picsource.AlbumPickService">
       <intent-filter>
         <action android:name="org.tamanegi.wallpaper.multipicture.plugin.LazyPickService" />
       </intent-filter>

@@ -289,7 +289,13 @@ public class FolderPicker extends Activity
 
         protected File[] doInBackground(Void... params)
         {
-            File[] list = cur_folder.listFiles();
+            File[] list = null;
+            try {
+                list = cur_folder.listFiles();
+            }
+            catch(SecurityException e) {
+                // ignore
+            }
             if(list == null) {
                 return new File[0];
             }

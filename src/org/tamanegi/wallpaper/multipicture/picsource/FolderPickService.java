@@ -2,10 +2,13 @@ package org.tamanegi.wallpaper.multipicture.picsource;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
 import org.tamanegi.wallpaper.multipicture.MultiPictureSetting;
+import org.tamanegi.wallpaper.multipicture.plugin.PictureContentInfo;
 import org.tamanegi.wallpaper.multipicture.plugin.ScreenInfo;
 
 import android.content.BroadcastReceiver;
@@ -34,6 +37,10 @@ public class FolderPickService extends AbstractFileListPickService
         private String key;
         private boolean rescan = true;
         private List<File> folders = null;
+
+        private ArrayList<FileInfo> file_list = null;
+        private OrderType change_order;
+        private int cur_file_idx = -1;
 
         @Override
         protected void onStart(String key, ScreenInfo hint)
@@ -107,6 +114,81 @@ public class FolderPickService extends AbstractFileListPickService
         protected boolean acceptRescan()
         {
             return rescan;
+        }
+
+        @Override
+        protected PictureContentInfo getNextContent()
+        {
+            if(file_list == null) {
+                return null;
+            }
+
+            int retry_saved_idx = -1;
+
+            int cnt = file_list.size();
+            for(int i = 0; i < cnt; i++) {
+                int next_idx = (cur_file_idx + i + 1) % cnt;
+                if(change_order == OrderType.random && next_idx == 0) {
+                    Collections.shuffle(file_list);
+                }
+
+                FileInfo next_file = file_list.get(next_idx);
+                if(change_order == OrderType.random &&
+                   matchLastUri(next_file.getUri())) {
+                    if(i == 0) {
+                        retry_saved_idx = next_idx;
+                    }
+                    continue;
+                }
+
+                cur_file_idx = next_idx;
+                return new PictureContentInfo(
+                    next_file.getUri(), next_file.getOrientation());
+            }
+
+            if(retry_saved_idx >= 0) {
+                cur_file_idx = retry_saved_idx;
+                FileInfo next_file = file_list.get(cur_file_idx);
+                return new PictureContentInfo(
+                    next_file.getUri(), next_file.getOrientation());
+            }
+
+            return null;
+        }
+
+        private void setFileList(ArrayList<FileInfo> flist,
+                                 OrderType change_order)
+        {
+            // sort by specified order
+            if(change_order == OrderType.random) {
+                Collections.shuffle(flist);
+            }
+            else {
+                Comparator<FileInfo> comparator =
+                    FileInfo.getComparator(change_order);
+                Collections.sort(flist, comparator);
+            }
+
+            // preserve current index if same content exist
+            if(file_list != null && cur_file_idx >= 0) {
+                FileInfo cur_file = file_list.get(cur_file_idx);
+                cur_file_idx = -1;
+
+                int cnt = flist.size();
+                for(int i = 0; i < cnt; i++) {
+                    if(flist.get(i).equalsUri(cur_file)) {
+                        cur_file_idx = i;
+                        break;
+                    }
+                }
+            }
+            else {
+                cur_file_idx = -1;
+            }
+
+            // replace list
+            this.file_list = flist;
+            this.change_order = change_order;
         }
     }
 

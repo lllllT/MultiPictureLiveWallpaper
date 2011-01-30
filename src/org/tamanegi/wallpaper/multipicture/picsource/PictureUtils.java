@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 
 import android.content.ContentResolver;
-import android.content.ContentUris;
 import android.database.Cursor;
 import android.graphics.BitmapFactory;
 import android.media.ExifInterface;
@@ -32,7 +31,7 @@ public class PictureUtils
 
     public static final Uri IMAGE_LIST_URI =
         MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-    private static final String[] IMAGE_LIST_COLUMNS = {
+    public static final String[] IMAGE_LIST_COLUMNS = {
         MediaStore.Images.ImageColumns._ID,
         MediaStore.Images.ImageColumns.BUCKET_ID,
         MediaStore.Images.ImageColumns.BUCKET_DISPLAY_NAME,
@@ -40,13 +39,11 @@ public class PictureUtils
         MediaStore.Images.ImageColumns.DATE_TAKEN,
         MediaStore.Images.ImageColumns.ORIENTATION,
     };
-    private static final int IMAGE_LIST_COL_ID = 0;
-    private static final int IMAGE_LIST_COL_BUCKET_NAME = 2;
-    private static final int IMAGE_LIST_COL_DISPLAY_NAME = 3;
-    private static final int IMAGE_LIST_COL_DATE = 4;
-    private static final int IMAGE_LIST_COL_ORIENTATION = 5;
-    private static final String IMAGE_LIST_WHERE =
-        MediaStore.Images.ImageColumns.BUCKET_ID + " = ?";
+    public static final int IMAGE_LIST_COL_ID = 0;
+    public static final int IMAGE_LIST_COL_BUCKET_NAME = 2;
+    public static final int IMAGE_LIST_COL_DISPLAY_NAME = 3;
+    public static final int IMAGE_LIST_COL_DATE = 4;
+    public static final int IMAGE_LIST_COL_ORIENTATION = 5;
 
     public static String getUriFileName(ContentResolver resolver, String str)
     {
@@ -276,7 +273,13 @@ public class PictureUtils
         ArrayList<File> list = new ArrayList<File>();
         list.add(folder);
 
-        File[] files = folder.listFiles();
+        File[] files = null;
+        try {
+            files = folder.listFiles();
+        }
+        catch(SecurityException e) {
+            // ignore
+        }
         if(files == null) {
             return list;
         }
@@ -296,7 +299,13 @@ public class PictureUtils
         ArrayList<FileInfo> list = new ArrayList<FileInfo>();
 
         for(File folder : folders) {
-            File[] files = folder.listFiles();
+            File[] files = null;
+            try {
+                files = folder.listFiles();
+            }
+            catch(SecurityException e) {
+                // ignore
+            }
             if(files == null) {
                 continue;
             }
@@ -325,62 +334,6 @@ public class PictureUtils
                     }
                 }
             }
-        }
-
-        return list;
-    }
-
-    public static ArrayList<FileInfo> listBucketPictures(
-        ContentResolver resolver, String[] buckets)
-    {
-        ArrayList<FileInfo> list = new ArrayList<FileInfo>();
-
-        StringBuilder where = new StringBuilder();
-        for(int i = 0; i < buckets.length; i++) {
-            if(i != 0) {
-                where.append(" OR ");
-            }
-            where.append(IMAGE_LIST_WHERE);
-        }
-
-        Uri uri = IMAGE_LIST_URI;
-        Cursor cur;
-        try {
-            cur = resolver.query(
-                uri,
-                IMAGE_LIST_COLUMNS,
-                where.toString(), buckets,
-                null);
-        }
-        catch(Exception e) {
-            return list;
-        }
-        if(cur == null) {
-            return list;
-        }
-
-        try {
-            if(cur.moveToFirst()) {
-                do {
-                    FileInfo fi = new FileInfo();
-
-                    fi.setUri(
-                        ContentUris.withAppendedId(
-                            uri,
-                            cur.getLong(IMAGE_LIST_COL_ID)));
-                    fi.setFullName(
-                        cur.getString(IMAGE_LIST_COL_BUCKET_NAME) +
-                        "/" +
-                        cur.getString(IMAGE_LIST_COL_DISPLAY_NAME));
-                    fi.setDate(cur.getLong(IMAGE_LIST_COL_DATE));
-                    fi.setOrientation(cur.getInt(IMAGE_LIST_COL_ORIENTATION));
-
-                    list.add(fi);
-                } while(cur.moveToNext());
-            }
-        }
-        finally {
-            cur.close();
         }
 
         return list;
