@@ -2142,6 +2142,11 @@ public class MultiPictureRenderer
                         pic_info.loading_cnt += 1;
                         pic_info.is_update_pending = true;
                     }
+
+                    if(pic_info.status == PictureStatus.NOT_AVAILABLE) {
+                        pic_info.setStatus(PictureStatus.BLACKOUT);
+                        drawer_handler.sendEmptyMessage(MSG_DRAW);
+                    }
                 }
             }
         }
