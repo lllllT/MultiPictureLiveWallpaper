@@ -11,6 +11,7 @@ import org.tamanegi.wallpaper.multipicture.plugin.LazyPickerClient;
 import org.tamanegi.wallpaper.multipicture.plugin.PictureContentInfo;
 import org.tamanegi.wallpaper.multipicture.plugin.ScreenInfo;
 
+import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
@@ -77,8 +78,10 @@ public class MultiPictureRenderer
     private static final int TRANSITION_RANDOM_TIMEOUT = 500; // msec
 
     // maximum size of pictures
-    private static final int MAX_TOTAL_PIXELS = 4 * 1024 * 1024; // 4MPixels
+    private static final int MAX_MCLASS_PIXELS = 170 * 1024; // 170kPixels/MB
     private static final int MAX_DETECT_PIXELS = 8 * 1024; // 8kPixels
+
+    private static final int MIN_MEMORY_CLASS = 16;
 
     // for broadcast intent
     private static final String ACTION_CHANGE_PICTURE =
@@ -258,6 +261,7 @@ public class MultiPictureRenderer
     private float xcur = 0f;
     private float ycur = 0f;
 
+    private int max_screen_pixels;
     private int max_work_pixels;
     private int max_width;
     private int max_height;
@@ -723,26 +727,35 @@ public class MultiPictureRenderer
     {
         int cnt = xcnt * ycnt;
 
-        // screen size
-        this.width = info.width;
-        this.height = info.height;
+        if(info != null) {
+            // screen size
+            this.width = info.width;
+            this.height = info.height;
+        }
+
+        // restrict by memory class
+        int mclass = ((ActivityManager)context.getSystemService(
+                          Context.ACTIVITY_SERVICE)).getMemoryClass();
+        mclass = Math.max(mclass, MIN_MEMORY_CLASS);
+        int max_total_pixels = MAX_MCLASS_PIXELS * mclass;
 
         // restrict size
-        if(width * height * (cnt + 3) > MAX_TOTAL_PIXELS) {
-            // mw * mh * (cnt + 3) = MAX_TOTAL_PIXELS
+        if(width * height * (cnt + 3) > max_total_pixels) {
+            // mw * mh * (cnt + 3) = max_total_pixels
             // mw / mh = width / height
             //  -> mh = mw * height / width
-            //  -> mw^2 = MAX_TOTAL_PIXELS / (height * (cnt + 3)) * width
+            //  -> mw^2 = max_total_pixels / (height * (cnt + 3)) * width
             max_width = (int)
-                Math.sqrt(MAX_TOTAL_PIXELS / (height * (cnt + 3)) * width);
+                Math.sqrt(max_total_pixels / (height * (cnt + 3)) * width);
             max_height = max_width * height / width;
-            max_work_pixels = MAX_TOTAL_PIXELS / (cnt + 3) * 2;
         }
         else {
             max_width = width;
             max_height = height;
-            max_work_pixels = (MAX_TOTAL_PIXELS - width * height * cnt) * 2 / 3;
         }
+
+        max_screen_pixels = max_total_pixels / (cnt + 3);
+        max_work_pixels = max_screen_pixels * 2;
     }
 
     private void changePackageAvailable(String[] pkgnames)
@@ -1382,6 +1395,7 @@ public class MultiPictureRenderer
                 xcnt = xn;
                 ycnt = yn;
                 clearPictureSetting();
+                updateScreenSize(null);
             }
         }
 
@@ -1982,8 +1996,10 @@ public class MultiPictureRenderer
         Bitmap bmp;
         boolean has_alpha =
             (src.hasAlpha() || (m != null && ! m.rectStaysRect()));
+        boolean allow_8888 = (width * height <= max_screen_pixels);
         Bitmap.Config format =
-            (has_alpha ? Bitmap.Config.ARGB_4444 : Bitmap.Config.RGB_565);
+            (allow_8888 ? Bitmap.Config.ARGB_8888 :
+             has_alpha ? Bitmap.Config.ARGB_4444 : Bitmap.Config.RGB_565);
         Paint paint = new Paint();
 
         Rect src_rect = new Rect(x, y, x + width, y + height);
