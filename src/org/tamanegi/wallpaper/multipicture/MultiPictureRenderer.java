@@ -1995,10 +1995,7 @@ public class MultiPictureRenderer
         Bitmap bmp;
         boolean has_alpha =
             (src.hasAlpha() || (m != null && ! m.rectStaysRect()));
-        boolean allow_8888 = (width * height <= max_screen_pixels);
-        Bitmap.Config format =
-            (allow_8888 ? Bitmap.Config.ARGB_8888 :
-             has_alpha ? Bitmap.Config.ARGB_4444 : Bitmap.Config.RGB_565);
+        Bitmap.Config format = getBitmapFormat(width, height, has_alpha);
         Paint paint = new Paint();
 
         Rect src_rect = new Rect(x, y, x + width, y + height);
@@ -2012,8 +2009,10 @@ public class MultiPictureRenderer
             // with scale
             RectF device_rect = new RectF();
             m.mapRect(device_rect, dst_rect);
+
             width = Math.round(device_rect.width());
             height = Math.round(device_rect.height());
+            format = getBitmapFormat(width, height, has_alpha);
 
             bmp = Bitmap.createBitmap(width, height, format);
             if(has_alpha) {
@@ -2043,6 +2042,15 @@ public class MultiPictureRenderer
         canvas.drawBitmap(src, src_rect, dst_rect, paint);
 
         return bmp;
+    }
+
+    private Bitmap.Config getBitmapFormat(int width, int height,
+                                          boolean has_alpha)
+    {
+        boolean allow_8888 = (width * height * 2 <= max_screen_pixels);
+        return (allow_8888 ? Bitmap.Config.ARGB_8888 :
+                has_alpha ? Bitmap.Config.ARGB_4444 :
+                Bitmap.Config.RGB_565);
     }
 
     private class PreferenceChangedListener
