@@ -158,13 +158,19 @@ public abstract class AbstractFileListPickService extends LazyPickService
 
         public void startLoading()
         {
+            startLoading(0);
+        }
+
+        public void startLoading(long delay)
+        {
             synchronized(this) {
                 if(is_loading) {
                     return;
                 }
 
                 is_loading = true;
-                handler.obtainMessage(MSG_LOAD, this).sendToTarget();
+                handler.sendMessageDelayed(
+                    handler.obtainMessage(MSG_LOAD, this), delay);
             }
         }
 

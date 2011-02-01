@@ -21,6 +21,8 @@ import android.provider.MediaStore;
 
 public class AlbumPickService extends AbstractFileListPickService
 {
+    private static final int NEXT_LOADING_DELAY = 2000; // msec
+
     private Observer observer;
     private BroadcastReceiver receiver;
 
@@ -85,7 +87,7 @@ public class AlbumPickService extends AbstractFileListPickService
         @Override
         protected PictureContentInfo getNextContent()
         {
-            startLoading();
+            startLoading(NEXT_LOADING_DELAY);
             return next_content;
         }
 
