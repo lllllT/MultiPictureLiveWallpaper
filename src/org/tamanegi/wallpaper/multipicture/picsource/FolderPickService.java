@@ -34,39 +34,25 @@ public class FolderPickService extends AbstractFileListPickService
 
     private class FolderLazyPicker extends FileListLazyPicker
     {
-        private String key;
-        private boolean rescan = true;
-        private List<File> folders = null;
-
-        private ArrayList<FileInfo> file_list = null;
+        private String folder;
+        private boolean recursive;
         private OrderType change_order;
+        private boolean rescan = true;
+
+        private List<File> folders = null;
+        private ArrayList<FileInfo> file_list = null;
         private int cur_file_idx = -1;
 
         @Override
         protected void onStart(String key, ScreenInfo hint)
         {
-            this.key = key;
-            super.onStart(key, hint);
-        }
-
-        @Override
-        protected void onStop()
-        {
-            super.onStop();
-            removeFolderObservers(folders, this);
-            folders = null;
-        }
-
-        @Override
-        protected void onLoadFileList()
-        {
             // read preferences
             SharedPreferences pref = PreferenceManager.
                 getDefaultSharedPreferences(FolderPickService.this);
-            String folder = pref.getString(
+            folder = pref.getString(
                 MultiPictureSetting.getKey(
                     MultiPictureSetting.SCREEN_FOLDER_KEY, key), "");
-            boolean recursive = pref.getBoolean(
+            recursive = pref.getBoolean(
                 MultiPictureSetting.getKey(
                     MultiPictureSetting.SCREEN_RECURSIVE_KEY, key), true);
             String order = pref.getString(
@@ -76,7 +62,6 @@ public class FolderPickService extends AbstractFileListPickService
                 MultiPictureSetting.getKey(
                     MultiPictureSetting.SCREEN_RESCAN_KEY, key), true);
 
-            OrderType change_order;
             try {
                 change_order = OrderType.valueOf(order);
             }
@@ -84,6 +69,20 @@ public class FolderPickService extends AbstractFileListPickService
                 change_order = OrderType.random;
             }
 
+            super.onStart(key, hint);
+        }
+
+        @Override
+        protected void onStop()
+        {
+            removeFolderObservers(folders, this);
+            folders = null;
+            super.onStop();
+        }
+
+        @Override
+        protected void onLoad()
+        {
             // list folders
             List<File> folders;
             if(recursive) {

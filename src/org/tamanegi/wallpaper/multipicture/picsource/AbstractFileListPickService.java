@@ -9,8 +9,10 @@ import org.tamanegi.wallpaper.multipicture.plugin.PictureContentInfo;
 import org.tamanegi.wallpaper.multipicture.plugin.ScreenInfo;
 
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Handler;
+import android.os.HandlerThread;
+import android.os.Message;
+import android.os.Process;
 
 public abstract class AbstractFileListPickService extends LazyPickService
 {
@@ -18,10 +20,13 @@ public abstract class AbstractFileListPickService extends LazyPickService
 
     private static final int LAST_URI_CNT_FACTOR = 2;
 
+    private static final int MSG_RESCAN_ALL = 1;
+    private static final int MSG_LOAD = 2;
+
     private ArrayList<FileListLazyPicker> picker_list;
     private LinkedList<Uri> last_uris;
+    private HandlerThread worker_thread;
     private Handler handler;
-    private Runnable rescan_callback;
 
     protected abstract void onAddFirstPicker();
     protected abstract void onRemoveLastPicker();
@@ -33,12 +38,12 @@ public abstract class AbstractFileListPickService extends LazyPickService
 
         picker_list = new ArrayList<FileListLazyPicker>();
         last_uris = new LinkedList<Uri>();
-        handler = new Handler();
-        rescan_callback = new Runnable() {
-                public void run() {
-                    rescanAll();
-                }
-            };
+
+        worker_thread = new HandlerThread(
+            "AbstractFileListPickService.worker",
+            Process.THREAD_PRIORITY_BACKGROUND);
+        worker_thread.start();
+        handler = new Handler(worker_thread.getLooper(), new WorkerCallback());
     }
 
     @Override
@@ -51,43 +56,75 @@ public abstract class AbstractFileListPickService extends LazyPickService
                 onRemoveLastPicker();
                 picker_list.clear();
             }
-
-            handler.removeCallbacks(rescan_callback);
         }
+        worker_thread.quit();
     }
 
     protected void postRescanAllCallback()
     {
-        handler.removeCallbacks(rescan_callback);
+        handler.removeMessages(MSG_RESCAN_ALL);
 
         synchronized(picker_list) {
             for(FileListLazyPicker picker : picker_list) {
                 picker.need_rescan.set(true);
             }
         }
-        handler.postDelayed(rescan_callback, RESCAN_DELAY);
+        handler.sendEmptyMessageDelayed(MSG_RESCAN_ALL, RESCAN_DELAY);
     }
 
     protected void postRescanCallback(FileListLazyPicker picker)
     {
-        handler.removeCallbacks(rescan_callback);
+        handler.removeMessages(MSG_RESCAN_ALL);
 
         picker.need_rescan.set(true);
-        handler.postDelayed(rescan_callback, RESCAN_DELAY);
+        handler.sendEmptyMessageDelayed(MSG_RESCAN_ALL, RESCAN_DELAY);
+    }
+
+    private class WorkerCallback implements Handler.Callback
+    {
+        public boolean handleMessage(Message msg)
+        {
+            switch(msg.what) {
+              case MSG_RESCAN_ALL:
+                  synchronized(picker_list) {
+                      for(FileListLazyPicker picker : picker_list) {
+                          picker.rescan();
+                      }
+                  }
+                  break;
+
+              case MSG_LOAD:
+                  {
+                      FileListLazyPicker picker = (FileListLazyPicker)msg.obj;
+                      picker.onLoad();
+                      synchronized(picker) {
+                          picker.is_loading = false;
+                          picker.notifyAll();
+                      }
+                  }
+                  break;
+
+              default:
+                  return false;
+            }
+
+            return true;
+        }
     }
 
     public abstract class FileListLazyPicker extends LazyPicker
     {
         private AtomicBoolean need_rescan = new AtomicBoolean(false);
+        private boolean is_loading = false;
 
-        protected abstract void onLoadFileList();
+        protected abstract void onLoad();
         protected abstract PictureContentInfo getNextContent();
 
         @Override
         protected void onStart(String key, ScreenInfo hint)
         {
             addPicker(this);
-            loadSettings();
+            startLoading();
         }
 
         @Override
@@ -101,6 +138,15 @@ public abstract class AbstractFileListPickService extends LazyPickService
         {
             PictureContentInfo info;
             synchronized(this) {
+                if(is_loading) {
+                    try {
+                        wait();
+                    }
+                    catch(InterruptedException e) {
+                        // ignore
+                    }
+                }
+
                 info = getNextContent();
             }
             if(info != null) {
@@ -108,6 +154,18 @@ public abstract class AbstractFileListPickService extends LazyPickService
             }
 
             return info;
+        }
+
+        public void startLoading()
+        {
+            synchronized(this) {
+                if(is_loading) {
+                    return;
+                }
+
+                is_loading = true;
+                handler.obtainMessage(MSG_LOAD, this).sendToTarget();
+            }
         }
 
         protected boolean acceptRescan()
@@ -118,17 +176,9 @@ public abstract class AbstractFileListPickService extends LazyPickService
         private void rescan()
         {
             if(need_rescan.getAndSet(false) && acceptRescan()) {
-                loadSettings();
-
-                // always notify, even if current Uri is not changed.
-                // (maybe changed inner content)
+                startLoading();
                 notifyChanged();
             }
-        }
-
-        private synchronized void loadSettings()
-        {
-            onLoadFileList();
         }
     }
 
@@ -151,7 +201,7 @@ public abstract class AbstractFileListPickService extends LazyPickService
 
             if(picker_list.size() == 0) {
                 onRemoveLastPicker();
-                handler.removeCallbacks(rescan_callback);
+                handler.removeMessages(MSG_RESCAN_ALL);
             }
         }
     }
@@ -175,26 +225,6 @@ public abstract class AbstractFileListPickService extends LazyPickService
     {
         while(last_uris.size() > picker_list.size() * LAST_URI_CNT_FACTOR) {
             last_uris.removeFirst();
-        }
-    }
-
-    private void rescanAll()
-    {
-        synchronized(picker_list) {
-            for(FileListLazyPicker picker : picker_list) {
-                new AsyncRescan().execute(picker);
-            }
-        }
-    }
-
-    // just to use system allocated thread pool
-    private class AsyncRescan extends AsyncTask<FileListLazyPicker, Void, Void>
-    {
-        @Override
-        protected Void doInBackground(FileListLazyPicker... pickers)
-        {
-            pickers[0].rescan();
-            return null;
         }
     }
 }

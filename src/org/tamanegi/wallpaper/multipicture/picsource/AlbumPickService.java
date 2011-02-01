@@ -40,12 +40,11 @@ public class AlbumPickService extends AbstractFileListPickService
 
         private int[] idx_list;
         private FileInfo last_file = null;
+        private PictureContentInfo next_content = null;
 
         @Override
         protected void onStart(String key, ScreenInfo hint)
         {
-            super.onStart(key, hint);
-
             // read preference
             SharedPreferences pref = PreferenceManager.
                 getDefaultSharedPreferences(AlbumPickService.this);
@@ -67,12 +66,14 @@ public class AlbumPickService extends AbstractFileListPickService
             catch(IllegalArgumentException e) {
                 change_order = OrderType.random;
             }
+
+            super.onStart(key, hint);
         }
 
         @Override
-        protected void onLoadFileList()
+        protected void onLoad()
         {
-            idx_list = null;
+            next_content = prepareNextContent(true);
         }
 
         @Override
@@ -84,10 +85,11 @@ public class AlbumPickService extends AbstractFileListPickService
         @Override
         protected PictureContentInfo getNextContent()
         {
-            return getNextContent(true);
+            startLoading();
+            return next_content;
         }
 
-        private PictureContentInfo getNextContent(boolean use_last)
+        private PictureContentInfo prepareNextContent(boolean use_last)
         {
             ContentResolver resolver = getContentResolver();
 
@@ -226,7 +228,7 @@ public class AlbumPickService extends AbstractFileListPickService
             try {
                 if(cur.getCount() < 1) {
                     if(use_last) {
-                        return getNextContent(false);
+                        return prepareNextContent(false);
                     }
                     else {
                         return null;
