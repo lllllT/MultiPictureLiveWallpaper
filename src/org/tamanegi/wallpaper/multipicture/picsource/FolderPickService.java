@@ -236,7 +236,7 @@ public class FolderPickService extends AbstractFileListPickService
             synchronized(path_avail_map) {
                 path_avail_map.clear();
             }
-            postRescanAllCallback();
+            postNotifyChangedAll();
         }
     }
 
@@ -333,7 +333,7 @@ public class FolderPickService extends AbstractFileListPickService
                 }
                 synchronized(pickers) {
                     for(FolderLazyPicker picker : pickers) {
-                        postRescanCallback(picker);
+                        postNotifyChanged(picker);
                     }
                 }
             }

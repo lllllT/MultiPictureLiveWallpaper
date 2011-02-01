@@ -395,7 +395,7 @@ public class AlbumPickService extends AbstractFileListPickService
         @Override
         public void onChange(boolean selfChange)
         {
-            postRescanAllCallback();
+            postNotifyChangedAll();
         }
     }
 
@@ -404,7 +404,7 @@ public class AlbumPickService extends AbstractFileListPickService
         @Override
         public void onReceive(Context context, Intent intent)
         {
-            postRescanAllCallback();
+            postNotifyChangedAll();
         }
     }
 }

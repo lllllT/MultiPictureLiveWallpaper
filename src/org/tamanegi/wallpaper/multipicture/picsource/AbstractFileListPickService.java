@@ -60,7 +60,7 @@ public abstract class AbstractFileListPickService extends LazyPickService
         worker_thread.quit();
     }
 
-    protected void postRescanAllCallback()
+    protected void postNotifyChangedAll()
     {
         handler.removeMessages(MSG_RESCAN_ALL);
 
@@ -72,7 +72,7 @@ public abstract class AbstractFileListPickService extends LazyPickService
         handler.sendEmptyMessageDelayed(MSG_RESCAN_ALL, RESCAN_DELAY);
     }
 
-    protected void postRescanCallback(FileListLazyPicker picker)
+    protected void postNotifyChanged(FileListLazyPicker picker)
     {
         handler.removeMessages(MSG_RESCAN_ALL);
 
@@ -88,7 +88,7 @@ public abstract class AbstractFileListPickService extends LazyPickService
               case MSG_RESCAN_ALL:
                   synchronized(picker_list) {
                       for(FileListLazyPicker picker : picker_list) {
-                          picker.rescan();
+                          picker.notifyChangedIfNeed();
                       }
                   }
                   break;
@@ -96,9 +96,15 @@ public abstract class AbstractFileListPickService extends LazyPickService
               case MSG_LOAD:
                   {
                       FileListLazyPicker picker = (FileListLazyPicker)msg.obj;
-                      picker.onLoad();
+                      int pre_loading_cnt;
                       synchronized(picker) {
-                          picker.is_loading = false;
+                          pre_loading_cnt = picker.loading_cnt;
+                      }
+
+                      picker.onLoad();
+
+                      synchronized(picker) {
+                          picker.loading_cnt -= pre_loading_cnt;
                           picker.notifyAll();
                       }
                   }
@@ -115,7 +121,7 @@ public abstract class AbstractFileListPickService extends LazyPickService
     public abstract class FileListLazyPicker extends LazyPicker
     {
         private AtomicBoolean need_rescan = new AtomicBoolean(false);
-        private boolean is_loading = false;
+        private int loading_cnt = 0;
 
         protected abstract void onLoad();
         protected abstract PictureContentInfo getNextContent();
@@ -136,9 +142,13 @@ public abstract class AbstractFileListPickService extends LazyPickService
         @Override
         public PictureContentInfo getNext()
         {
+            if(need_rescan.getAndSet(false)) {
+                startLoading();
+            }
+
             PictureContentInfo info;
             synchronized(this) {
-                if(is_loading) {
+                while(loading_cnt > 0) {
                     try {
                         wait();
                     }
@@ -164,11 +174,7 @@ public abstract class AbstractFileListPickService extends LazyPickService
         public void startLoading(long delay)
         {
             synchronized(this) {
-                if(is_loading) {
-                    return;
-                }
-
-                is_loading = true;
+                loading_cnt += 1;
                 handler.sendMessageDelayed(
                     handler.obtainMessage(MSG_LOAD, this), delay);
             }
@@ -179,10 +185,9 @@ public abstract class AbstractFileListPickService extends LazyPickService
             return true;
         }
 
-        private void rescan()
+        private void notifyChangedIfNeed()
         {
-            if(need_rescan.getAndSet(false) && acceptRescan()) {
-                startLoading();
+            if(acceptRescan()) {
                 notifyChanged();
             }
         }
