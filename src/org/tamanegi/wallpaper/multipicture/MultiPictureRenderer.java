@@ -1195,7 +1195,7 @@ public class MultiPictureRenderer
             paint.setStyle(Paint.Style.FILL);
             matrix.preRotate(
                 360f *
-                (int)((SystemClock.uptimeMillis() /(SPINNER_FRAME_DURATION)) %
+                (int)((SystemClock.uptimeMillis() / SPINNER_FRAME_DURATION) %
                       SPINNER_TOTAL_FRAMES) / SPINNER_TOTAL_FRAMES,
                 width / 2f, height / 2f);
 
