@@ -106,7 +106,7 @@
   <string name="folder_loading">Loading...</string>
 
   <string name="str_pic_not_avail_1">Screen %d: Picture is unavailable.</string>
-  <string name="str_pic_not_avail_2">Need to setup.</string>
+  <string name="str_pic_not_avail_2">Need to setup or reload.</string>
 
   <string name="chooser_wallpaper">Select wallpaper from</string>
   <string name="chooser_live_wallpaper">Select \'Live wallpapers\'</string>

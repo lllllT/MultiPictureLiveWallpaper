@@ -24,7 +24,7 @@ public class AlbumPickService extends AbstractFileListPickService
     private static final int NEXT_LOADING_DELAY = 2000; // msec
 
     private Observer observer;
-    private BroadcastReceiver receiver;
+    private Receiver receiver;
 
     @Override
     public LazyPicker onCreateLazyPicker()
@@ -40,7 +40,7 @@ public class AlbumPickService extends AbstractFileListPickService
 
         private int cur_file_idx = -1;
 
-        private int[] idx_list;
+        private int[] idx_list = null;
         private FileInfo last_file = null;
         private PictureContentInfo next_content = null;
 
@@ -336,47 +336,18 @@ public class AlbumPickService extends AbstractFileListPickService
     {
         // content observer
         observer = new Observer();
-        try {
-            getContentResolver().registerContentObserver(
-                PictureUtils.IMAGE_LIST_URI, true, observer);
-        }
-        catch(Exception e) {
-            // ignore
-        }
+        observer.start();
 
         // receiver for broadcast
-        IntentFilter filter;
         receiver = new Receiver();
-
-        filter = new IntentFilter();
-        filter.addAction(Intent.ACTION_MEDIA_SCANNER_FINISHED);
-        filter.addDataScheme(ContentResolver.SCHEME_FILE);
-        registerReceiver(receiver, filter);
-
-        filter = new IntentFilter();
-        filter.addAction(Intent.ACTION_MEDIA_MOUNTED);
-        filter.addDataScheme(ContentResolver.SCHEME_FILE);
-        registerReceiver(receiver, filter);
+        receiver.start();
     }
 
     @Override
     protected void onRemoveLastPicker()
     {
-        // broadcast receiver
-        try {
-            unregisterReceiver(receiver);
-        }
-        catch(Exception e) {
-            // ignore
-        }
-
-        // content observer
-        try {
-            getContentResolver().unregisterContentObserver(observer);
-        }
-        catch(Exception e) {
-            // ignore
-        }
+        receiver.stop();
+        observer.stop();
     }
 
     private class Observer extends ContentObserver
@@ -384,6 +355,27 @@ public class AlbumPickService extends AbstractFileListPickService
         private Observer()
         {
             super(null);
+        }
+
+        private void start()
+        {
+            try {
+                getContentResolver().registerContentObserver(
+                    PictureUtils.IMAGE_LIST_URI, true, this);
+            }
+            catch(Exception e) {
+                // ignore
+            }
+        }
+
+        private void stop()
+        {
+            try {
+                getContentResolver().unregisterContentObserver(this);
+            }
+            catch(Exception e) {
+                // ignore
+            }
         }
 
         @Override
@@ -401,6 +393,31 @@ public class AlbumPickService extends AbstractFileListPickService
 
     private class Receiver extends BroadcastReceiver
     {
+        private void start()
+        {
+            IntentFilter filter;
+
+            filter = new IntentFilter();
+            filter.addAction(Intent.ACTION_MEDIA_SCANNER_FINISHED);
+            filter.addDataScheme(ContentResolver.SCHEME_FILE);
+            registerReceiver(this, filter);
+
+            filter = new IntentFilter();
+            filter.addAction(Intent.ACTION_MEDIA_MOUNTED);
+            filter.addDataScheme(ContentResolver.SCHEME_FILE);
+            registerReceiver(this, filter);
+        }
+
+        private void stop()
+        {
+            try {
+                unregisterReceiver(this);
+            }
+            catch(Exception e) {
+                // ignore
+            }
+        }
+
         @Override
         public void onReceive(Context context, Intent intent)
         {

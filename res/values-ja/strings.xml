@@ -101,7 +101,7 @@
   <string name="folder_loading">読み込み中...</string>
 
   <string name="str_pic_not_avail_1">画面%d: 画像が利用できません。</string>
-  <string name="str_pic_not_avail_2">設定が必要です。</string>
+  <string name="str_pic_not_avail_2">設定または再読み込みが必要です。</string>
 
   <string name="chooser_wallpaper">壁紙を選択</string>
   <string name="chooser_live_wallpaper">\'ライブ壁紙\' を選択して下さい</string>

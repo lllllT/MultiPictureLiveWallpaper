@@ -82,6 +82,7 @@ public abstract class AbstractFileListPickService extends LazyPickService
 
     private class WorkerCallback implements Handler.Callback
     {
+        @Override
         public boolean handleMessage(Message msg)
         {
             switch(msg.what) {

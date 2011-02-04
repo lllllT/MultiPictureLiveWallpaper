@@ -1,11 +1,17 @@
 package org.tamanegi.wallpaper.multipicture.picsource;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 import org.tamanegi.wallpaper.multipicture.MultiPictureSetting;
 import org.tamanegi.wallpaper.multipicture.plugin.LazyPickService;
 import org.tamanegi.wallpaper.multipicture.plugin.PictureContentInfo;
 import org.tamanegi.wallpaper.multipicture.plugin.ScreenInfo;
 
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.ContentObserver;
 import android.net.Uri;
@@ -26,9 +32,10 @@ public class SinglePickService extends LazyPickService
     private class SingleLazyPicker extends LazyPicker
     {
         private Uri uri;
-        private boolean content_changed;
+        private AtomicBoolean content_changed;
 
         private PictureObserver observer;
+        private Receiver receiver;
 
         private Handler handler;
         private Runnable rescan_callback;
@@ -46,36 +53,38 @@ public class SinglePickService extends LazyPickService
                     MultiPictureSetting.SCREEN_FILE_KEY, key), "");
             uri = Uri.parse(fname);
 
-            content_changed = true;
+            content_changed = new AtomicBoolean(true);
 
-            // picture file observer
-            observer = new PictureObserver(this);
+            // picture file observer, receiver
             rescan_callback = new Runnable() {
                     @Override
                     public void run() {
-                        content_changed = true;
+                        content_changed.set(true);
                         notifyChanged();
                     }
                 };
 
+            observer = new PictureObserver(this);
             observer.start();
+
+            receiver = new Receiver(this);
+            receiver.start();
         }
 
         @Override
         protected void onStop()
         {
             observer.stop();
+            receiver.stop();
             handler.removeCallbacks(rescan_callback);
         }
 
         @Override
         public PictureContentInfo getNext()
         {
-            if(! content_changed) {
+            if(! content_changed.getAndSet(false)) {
                 return null;
             }
-
-            content_changed = false;
 
             int orientation = PictureUtils.getContentOrientation(
                 getContentResolver(), uri);
@@ -160,6 +169,47 @@ public class SinglePickService extends LazyPickService
                     // ignore
                 }
             }
+        }
+    }
+
+    private class Receiver extends BroadcastReceiver
+    {
+        private SingleLazyPicker picker;
+
+        private Receiver(SingleLazyPicker picker)
+        {
+            this.picker = picker;
+        }
+
+        private void start()
+        {
+            IntentFilter filter;
+
+            filter = new IntentFilter();
+            filter.addAction(Intent.ACTION_MEDIA_SCANNER_FINISHED);
+            filter.addDataScheme(ContentResolver.SCHEME_FILE);
+            registerReceiver(this, filter);
+
+            filter = new IntentFilter();
+            filter.addAction(Intent.ACTION_MEDIA_MOUNTED);
+            filter.addDataScheme(ContentResolver.SCHEME_FILE);
+            registerReceiver(this, filter);
+        }
+
+        private void stop()
+        {
+            try {
+                unregisterReceiver(this);
+            }
+            catch(Exception e) {
+                // ignore
+            }
+        }
+
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            picker.postRescanCallback();
         }
     }
 }
