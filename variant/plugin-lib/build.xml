@@ -8,6 +8,10 @@
   <property name="bin.path" location="bin" />
   <property name="jar.path" location="mplwp-plugin-${plugin.version}.jar" />
 
+  <property name="javadoc.path" location="javadoc" />
+  <property name="javadoc.pkg"
+            value="org.tamanegi.wallpaper.multipicture.plugin" />
+
   <property name="android.classpath"
             location="${sdk.dir}/platforms/android-2.1/android.jar" />
 
@@ -27,6 +31,15 @@
   <target name="jar" depends="compile">
     <jar basedir="${bin.path}"
          destfile="${jar.path}" />
+  </target>
+
+  <target name="javadoc">
+    <javadoc destdir="${javadoc.path}"
+             sourcepath="${src.path}"
+             packagenames="${javadoc.pkgs}"
+             locale="en">
+      <package name="${javadoc.pkg}" />
+    </javadoc>
   </target>
 
   <target name="clean">

@@ -16,22 +16,22 @@ public abstract class LazyPickService extends Service
     public static final String SERVICE_INTERFACE =
         "org.tamanegi.wallpaper.multipicture.plugin.LazyPickService";
 
-    public static final int MSG_CREATE          = 0x00100000;
-    public static final int MSG_RESULT_CREATE   = 0x00200000;
-    public static final int MSG_START           = 0x00100010;
-    public static final int MSG_START_COMPLETED = 0x00200010;
-    public static final int MSG_STOP            = 0x00100020;
-    public static final int MSG_STOP_COMPLETED  = 0x00200020;
-    public static final int MSG_GET_NEXT        = 0x00100030;
-    public static final int MSG_RESULT_NEXT     = 0x00200030;
-    public static final int MSG_NOTIFY_CHANGED  = 0x00200040;
-    public static final int MSG_FINISH          = 0x00200050;
+    static final int MSG_CREATE          = 0x00100000;
+    static final int MSG_RESULT_CREATE   = 0x00200000;
+    static final int MSG_START           = 0x00100010;
+    static final int MSG_START_COMPLETED = 0x00200010;
+    static final int MSG_STOP            = 0x00100020;
+    static final int MSG_STOP_COMPLETED  = 0x00200020;
+    static final int MSG_GET_NEXT        = 0x00100030;
+    static final int MSG_RESULT_NEXT     = 0x00200030;
+    static final int MSG_NOTIFY_CHANGED  = 0x00200040;
+    static final int MSG_FINISH          = 0x00200050;
 
-    public static final String DATA_KEY = "key";
-    public static final String DATA_HINT = "hint";
+    static final String DATA_KEY = "key";
+    static final String DATA_HINT = "hint";
 
     // for reply of get next content
-    public static final String DATA_NEXT_CONTENT = "nextContent";
+    static final String DATA_NEXT_CONTENT = "nextContent";
 
     private Messenger main_messenger;
 
