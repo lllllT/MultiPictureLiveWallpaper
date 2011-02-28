@@ -1,5 +1,7 @@
 package org.tamanegi.wallpaper.multipicture.picsource;
 
+import java.io.File;
+
 import org.tamanegi.wallpaper.multipicture.MultiPictureSetting;
 import org.tamanegi.wallpaper.multipicture.R;
 import org.tamanegi.wallpaper.multipicture.plugin.PictureSourceContract;
@@ -7,11 +9,14 @@ import org.tamanegi.wallpaper.multipicture.plugin.PictureSourceContract;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.MediaStore;
 import android.widget.Toast;
 
 public class SingleSource extends Activity
@@ -64,13 +69,35 @@ public class SingleSource extends Activity
             return;
         }
 
+        ContentResolver resolver = getContentResolver();
+        if(ContentResolver.SCHEME_CONTENT.equals(uri.getScheme())) {
+            Cursor cur = resolver.query(
+                uri, new String[] { MediaStore.MediaColumns.DATA },
+                null, null, null);
+            if(cur != null) {
+                try {
+                    if(cur.moveToFirst()) {
+                        String path = cur.getString(0);
+                        if(path != null) {
+                            File file_path = new File(path);
+                            if(file_path.isAbsolute()) {
+                                uri = Uri.fromFile(file_path);
+                            }
+                        }
+                    }
+                }
+                finally {
+                    cur.close();
+                }
+            }
+        }
+
         setFilePath(uri);
 
         Intent result = new Intent();
         result.putExtra(PictureSourceContract.EXTRA_DESCRIPTION,
                         getString(R.string.pref_screen_type_file_desc,
-                                  PictureUtils.getUriFileName(
-                                      getContentResolver(), uri)));
+                                  PictureUtils.getUriFileName(resolver, uri)));
         result.putExtra(PictureSourceContract.EXTRA_SERVICE_NAME,
                         new ComponentName(this, SinglePickService.class));
 

@@ -1,5 +1,7 @@
 package org.tamanegi.wallpaper.multipicture.picsource;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.tamanegi.wallpaper.multipicture.MultiPictureSetting;
@@ -23,6 +25,16 @@ public class SinglePickService extends LazyPickService
 {
     private static final int RESCAN_DELAY = 5000; // msec
 
+    private HashMap<Uri, PictureObserver> observer_map;
+
+    @Override
+    public void onCreate()
+    {
+        super.onCreate();
+
+        observer_map = new HashMap<Uri, PictureObserver>();
+    }
+
     @Override
     public LazyPicker onCreateLazyPicker()
     {
@@ -34,7 +46,6 @@ public class SinglePickService extends LazyPickService
         private Uri uri;
         private AtomicBoolean content_changed;
 
-        private PictureObserver observer;
         private Receiver receiver;
 
         private Handler handler;
@@ -64,8 +75,7 @@ public class SinglePickService extends LazyPickService
                     }
                 };
 
-            observer = new PictureObserver(this);
-            observer.start();
+            addObserver(this);
 
             receiver = new Receiver(this);
             receiver.start();
@@ -74,8 +84,8 @@ public class SinglePickService extends LazyPickService
         @Override
         protected void onStop()
         {
-            observer.stop();
             receiver.stop();
+            removeObserver(this);
             handler.removeCallbacks(rescan_callback);
         }
 
@@ -98,38 +108,91 @@ public class SinglePickService extends LazyPickService
         }
     }
 
+    private void addObserver(SingleLazyPicker picker)
+    {
+        synchronized(observer_map) {
+            if(! observer_map.containsKey(picker.uri)) {
+                PictureObserver observer = new PictureObserver(picker.uri);
+                observer_map.put(picker.uri, observer);
+                observer.start();
+            }
+
+            observer_map.get(picker.uri).addPicker(picker);
+        }
+    }
+
+    private void removeObserver(SingleLazyPicker picker)
+    {
+        synchronized(observer_map) {
+            PictureObserver observer = observer_map.get(picker.uri);
+            if(observer != null) {
+                observer.removePicker(picker);
+                if(observer.getPickerCount() == 0) {
+                    observer_map.remove(observer);
+                    observer.stop();
+                }
+            }
+        }
+    }
+
     private class PictureObserver
     {
         private static final int EVENTS =
             FileObserver.DELETE_SELF | FileObserver.MODIFY |
             FileObserver.MOVE_SELF;
 
-        private SingleLazyPicker picker;
+        private Uri uri;
+        private ArrayList<SingleLazyPicker> picker_list;
 
         private FileObserver file_observer;
         private ContentObserver content_observer;
 
-        private PictureObserver(SingleLazyPicker picker)
+        private PictureObserver(Uri uri)
         {
-            this.picker = picker;
+            this.uri = uri;
+            picker_list = new ArrayList<SingleLazyPicker>();
+        }
+
+        private void addPicker(SingleLazyPicker picker)
+        {
+            synchronized(picker_list) {
+                picker_list.add(picker);
+            }
+        }
+
+        private void removePicker(SingleLazyPicker picker)
+        {
+            synchronized(picker_list) {
+                picker_list.remove(picker);
+            }
+        }
+
+        private int getPickerCount()
+        {
+            return picker_list.size();
         }
 
         private void start()
         {
-            if(ContentResolver.SCHEME_FILE.equals(
-                   picker.uri.getScheme())) {
-                file_observer = new FileObserver(picker.uri.getPath()) {
+            if(ContentResolver.SCHEME_FILE.equals(uri.getScheme())) {
+                file_observer = new FileObserver(uri.getPath(), EVENTS) {
                         @Override 
                         public void onEvent(int event, String path) {
                             if((event & EVENTS) != 0) {
-                                picker.postRescanCallback();
+                                synchronized(picker_list) {
+                                    for(SingleLazyPicker picker : picker_list) {
+                                        picker.postRescanCallback();
+                                    }
+                                }
+
+                                stop();
+                                start();
                             }
                         }
                     };
                 file_observer.startWatching();
             }
-            else if(ContentResolver.SCHEME_CONTENT.equals(
-                        picker.uri.getScheme())) {
+            else if(ContentResolver.SCHEME_CONTENT.equals(uri.getScheme())) {
                 content_observer = new ContentObserver(null) {
                         @Override
                         public boolean deliverSelfNotifications ()
@@ -140,12 +203,16 @@ public class SinglePickService extends LazyPickService
                         @Override
                         public void onChange(boolean selfChange)
                         {
-                            picker.postRescanCallback();
+                            synchronized(picker_list) {
+                                for(SingleLazyPicker picker : picker_list) {
+                                    picker.postRescanCallback();
+                                }
+                            }
                         }
                     };
                 try {
                     getContentResolver().registerContentObserver(
-                        picker.uri, false, content_observer);
+                        uri, false, content_observer);
                 }
                 catch(Exception e) {
                     // ignore
@@ -155,12 +222,10 @@ public class SinglePickService extends LazyPickService
 
         private void stop()
         {
-            if(ContentResolver.SCHEME_FILE.equals(
-                   picker.uri.getScheme())) {
+            if(ContentResolver.SCHEME_FILE.equals(uri.getScheme())) {
                 file_observer.stopWatching();
             }
-            else if(ContentResolver.SCHEME_CONTENT.equals(
-                        picker.uri.getScheme())) {
+            else if(ContentResolver.SCHEME_CONTENT.equals(uri.getScheme())) {
                 try {
                     getContentResolver().unregisterContentObserver(
                         content_observer);
