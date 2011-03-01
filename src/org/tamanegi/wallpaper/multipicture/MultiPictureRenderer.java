@@ -1620,6 +1620,9 @@ public class MultiPictureRenderer
         PictureContentInfo content = update_info.content;
         boolean force_reload = update_info.force_reload;
 
+        int max_width;
+        int max_height;
+
         synchronized(pic_whole_lock) {
             // check target screen
             if(pic == null ||
@@ -1669,12 +1672,17 @@ public class MultiPictureRenderer
 
             // request to start redraw
             drawer_handler.sendEmptyMessage(MSG_DRAW);
+
+            // save current width/height
+            max_width = this.max_width;
+            max_height = this.max_height;
         }
 
         // load bitmap
         BitmapInfo bmp_info = loadBitmap(
             content.getUri(), content.getOrientation(),
-            pic_info.clip_ratio, pic_info.saturation);
+            pic_info.clip_ratio, pic_info.saturation,
+            max_width, max_height);
 
         int bgcolor = 0;
         if(bmp_info != null) {
@@ -1696,6 +1704,13 @@ public class MultiPictureRenderer
                     if(bmp_info != null) {
                         bmp_info.bmp.recycle();
                     }
+                    return;
+                }
+
+                if(max_width != this.max_width ||
+                   max_height != this.max_height) {
+                    // retry to load same content
+                    sendUpdateScreen(idx, pic_info, content, force_reload);
                     return;
                 }
 
@@ -1734,8 +1749,8 @@ public class MultiPictureRenderer
             }
             else if(pic_info.cur_content != null) {
                 // reload cur_content: not change status
-                pic[idx].loading_cnt += 1;
                 sendUpdateScreen(idx, pic_info, null, true);
+                return;
             }
             else {
                 // picture not available
@@ -1750,7 +1765,8 @@ public class MultiPictureRenderer
     }
 
     private BitmapInfo loadBitmap(Uri uri, int orientation,
-                                  float clip_ratio, float saturation)
+                                  float clip_ratio, float saturation,
+                                  int max_width, int max_height)
     {
         try {
             InputStream instream;
