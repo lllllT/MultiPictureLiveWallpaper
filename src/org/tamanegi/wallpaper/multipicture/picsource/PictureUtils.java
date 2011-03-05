@@ -54,25 +54,25 @@ public class PictureUtils
 
     public static String getUriFileName(ContentResolver resolver, Uri uri)
     {
-        Cursor cur = null;
         try {
-            cur = resolver.query(
+            Cursor cur = resolver.query(
                 uri,
                 new String[] { OpenableColumns.DISPLAY_NAME },
                 null, null, null);
+
+            if(cur != null) {
+                try {
+                    if(cur.moveToFirst()) {
+                        return cur.getString(0);
+                    }
+                }
+                finally {
+                    cur.close();
+                }
+            }
         }
         catch(Exception e) {
             // ignore
-        }
-        if(cur != null) {
-            try {
-                if(cur.moveToFirst()) {
-                    return cur.getString(0);
-                }
-            }
-            finally {
-                cur.close();
-            }
         }
 
         String name = uri.getLastPathSegment();
@@ -85,39 +85,38 @@ public class PictureUtils
 
     public static BucketItem[] getAvailBuckets(ContentResolver resolver)
     {
-        Cursor cur;
         try {
-            cur = resolver.query(IMAGE_BUCKET_URI,
-                                 IMAGE_BUCKET_COLUMNS, null, null,
-                                 IMAGE_BUCKET_SORT_ORDER);
-        }
-        catch(Exception e) {
-            return null;
-        }
-
-        if(cur == null) {
-            return null;
-        }
-
-        try {
-            int cnt = cur.getCount();
-            if(cnt < 1) {
+            Cursor cur = resolver.query(
+                IMAGE_BUCKET_URI,
+                IMAGE_BUCKET_COLUMNS, null, null,
+                IMAGE_BUCKET_SORT_ORDER);
+            if(cur == null) {
                 return null;
             }
 
-            BucketItem[] list = new BucketItem[cnt];
-            cur.moveToFirst();
-            for(int i = 0; i < cnt; i++) {
-                list[i] = new BucketItem();
-                list[i].id = cur.getString(IMAGE_BUCKET_COL_BUCKET_ID);
-                list[i].name = cur.getString(IMAGE_BUCKET_COL_DISPLAY_NAME);
-                cur.moveToNext();
-            }
+            try {
+                int cnt = cur.getCount();
+                if(cnt < 1) {
+                    return null;
+                }
 
-            return list;
+                BucketItem[] list = new BucketItem[cnt];
+                cur.moveToFirst();
+                for(int i = 0; i < cnt; i++) {
+                    list[i] = new BucketItem();
+                    list[i].id = cur.getString(IMAGE_BUCKET_COL_BUCKET_ID);
+                    list[i].name = cur.getString(IMAGE_BUCKET_COL_DISPLAY_NAME);
+                    cur.moveToNext();
+                }
+
+                return list;
+            }
+            finally {
+                cur.close();
+            }
         }
-        finally {
-            cur.close();
+        catch(Exception e) {
+            return null;
         }
     }
 
@@ -246,25 +245,25 @@ public class PictureUtils
         }
 
         // get from media store
-        Cursor cur = null;
         try {
-            cur = resolver.query(
+            Cursor cur = resolver.query(
                 uri,
                 new String[] { MediaStore.Images.ImageColumns.ORIENTATION },
                 null, null, null);
+
+            if(cur != null) {
+                try {
+                    if(cur.moveToFirst()) {
+                        return cur.getInt(0);
+                    }
+                }
+                finally {
+                    cur.close();
+                }
+            }
         }
         catch(Exception e) {
             // ignore
-        }
-        if(cur != null) {
-            try {
-                if(cur.moveToFirst()) {
-                    return cur.getInt(0);
-                }
-            }
-            finally {
-                cur.close();
-            }
         }
 
         return 0;

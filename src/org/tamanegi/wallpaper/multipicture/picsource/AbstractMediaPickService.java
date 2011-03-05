@@ -35,7 +35,13 @@ public abstract class AbstractMediaPickService
         @Override
         protected void onLoad()
         {
-            next_content = prepareNextContent(true);
+            try {
+                next_content = prepareNextContent(true);
+            }
+            catch(Exception e) {
+                e.printStackTrace();
+                next_content = null;
+            }
         }
 
         @Override
@@ -48,14 +54,7 @@ public abstract class AbstractMediaPickService
         private PictureContentInfo prepareNextContent(boolean use_last)
         {
             // query
-            Cursor cur;
-            try {
-                cur = queryImages(use_last ? last_file : null);
-            }
-            catch(Exception e) {
-                e.printStackTrace();
-                return null;
-            }
+            Cursor cur = queryImages(use_last ? last_file : null);
             if(cur == null) {
                 return null;
             }
