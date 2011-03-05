@@ -71,24 +71,29 @@ public class SingleSource extends Activity
 
         ContentResolver resolver = getContentResolver();
         if(ContentResolver.SCHEME_CONTENT.equals(uri.getScheme())) {
-            Cursor cur = resolver.query(
-                uri, new String[] { MediaStore.MediaColumns.DATA },
-                null, null, null);
-            if(cur != null) {
-                try {
-                    if(cur.moveToFirst()) {
-                        String path = cur.getString(0);
-                        if(path != null) {
-                            File file_path = new File(path);
-                            if(file_path.isAbsolute()) {
-                                uri = Uri.fromFile(file_path);
+            try {
+                Cursor cur = resolver.query(
+                    uri, new String[] { MediaStore.MediaColumns.DATA },
+                    null, null, null);
+                if(cur != null) {
+                    try {
+                        if(cur.moveToFirst()) {
+                            String path = cur.getString(0);
+                            if(path != null) {
+                                File file_path = new File(path);
+                                if(file_path.isAbsolute()) {
+                                    uri = Uri.fromFile(file_path);
+                                }
                             }
                         }
                     }
+                    finally {
+                        cur.close();
+                    }
                 }
-                finally {
-                    cur.close();
-                }
+            }
+            catch(Exception e) {
+                // ignore
             }
         }
 

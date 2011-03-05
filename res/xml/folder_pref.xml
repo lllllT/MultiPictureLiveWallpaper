@@ -34,6 +34,13 @@
        android:summary="@string/pref_select_rescan_summary"
        android:defaultValue="true"
        />
+    <CheckBoxPreference
+       android:key="use_mediaprovider"
+       android:persistent="false"
+       android:title="@string/pref_select_use_mediaprovider_title"
+       android:summary="@string/pref_select_use_mediaprovider_summary"
+       android:defaultValue="true"
+       />
   </PreferenceCategory>
 
 </PreferenceScreen>

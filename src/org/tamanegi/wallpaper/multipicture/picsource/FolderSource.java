@@ -92,6 +92,16 @@ public class FolderSource extends PreferenceActivity
         CheckBoxPreference rescan = (CheckBoxPreference)
             getPreferenceManager().findPreference("rescan");
         rescan.setChecked(rescan_val);
+
+        // use mediaprovider
+        String mprov_key = MultiPictureSetting.getKey(
+            MultiPictureSetting.SCREEN_MEDIAPROVIDER_KEY, key);
+        boolean mprov_val =
+            (need_clear ? true : pref.getBoolean(mprov_key, true));
+
+        CheckBoxPreference mprov = (CheckBoxPreference)
+            getPreferenceManager().findPreference("use_mediaprovider");
+        mprov.setChecked(mprov_val);
     }
 
     @Override
@@ -149,6 +159,10 @@ public class FolderSource extends PreferenceActivity
             getPreferenceManager().findPreference("rescan");
         boolean rescan_val = rescan.isChecked();
 
+        CheckBoxPreference mprov = (CheckBoxPreference)
+            getPreferenceManager().findPreference("use_mediaprovider");
+        boolean mprov_val = mprov.isChecked();
+
         // save
         SharedPreferences.Editor editor =
             PreferenceManager.getDefaultSharedPreferences(this).edit();
@@ -164,6 +178,10 @@ public class FolderSource extends PreferenceActivity
         editor.putBoolean(MultiPictureSetting.getKey(
                               MultiPictureSetting.SCREEN_RESCAN_KEY, key),
                           rescan_val);
+        editor.putBoolean(
+            MultiPictureSetting.getKey(
+                MultiPictureSetting.SCREEN_MEDIAPROVIDER_KEY, key),
+            mprov_val);
         editor.commit();
 
         // activity result
@@ -171,8 +189,11 @@ public class FolderSource extends PreferenceActivity
         result.putExtra(PictureSourceContract.EXTRA_DESCRIPTION,
                         getString(R.string.pref_screen_type_folder_desc,
                                   path_val));
-        result.putExtra(PictureSourceContract.EXTRA_SERVICE_NAME,
-                        new ComponentName(this, FolderPickService.class));
+        result.putExtra(
+            PictureSourceContract.EXTRA_SERVICE_NAME,
+            new ComponentName(this, (mprov_val ?
+                                     FolderPickService.class :
+                                     FolderDirectPickService.class)));
 
         setResult(RESULT_OK, result);
         return true;

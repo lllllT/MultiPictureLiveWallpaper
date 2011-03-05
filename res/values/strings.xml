@@ -97,6 +97,9 @@
   <string name="pref_select_rescan_title">Rescan pictures when modified</string>
   <string name="pref_select_rescan_summary">Rescan pictures when picture is modified; e.g. when picture file is add, delete, modified, etc.</string>
 
+  <string name="pref_select_use_mediaprovider_title">Search from gallery</string>
+  <string name="pref_select_use_mediaprovider_summary">If disabled, it may take time to load.</string>
+
   <string name="menu_share">Share</string>
   <string name="menu_qr">QR Code</string>
   <string name="menu_report">Report/Request</string>

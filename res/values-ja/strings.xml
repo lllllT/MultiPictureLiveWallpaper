@@ -92,6 +92,9 @@
   <string name="pref_select_rescan_title">更新時に画像再読み込み</string>
   <string name="pref_select_rescan_summary">更新時に画像再読み込みする。画像ファイルの追加、削除、修正時等。</string>
 
+  <string name="pref_select_use_mediaprovider_title">ギャラリーから検索する</string>
+  <string name="pref_select_use_mediaprovider_summary">無効にした場合は読み込みに時間がかかる場合がある。</string>
+
   <string name="menu_share">共有</string>
   <string name="menu_qr">QRコード</string>
   <string name="menu_report">報告/要望</string>

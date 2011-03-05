@@ -38,12 +38,14 @@ public class PictureUtils
         MediaStore.Images.ImageColumns.DISPLAY_NAME,
         MediaStore.Images.ImageColumns.DATE_TAKEN,
         MediaStore.Images.ImageColumns.ORIENTATION,
+        MediaStore.Images.ImageColumns.DATA,
     };
     public static final int IMAGE_LIST_COL_ID = 0;
     public static final int IMAGE_LIST_COL_BUCKET_NAME = 2;
     public static final int IMAGE_LIST_COL_DISPLAY_NAME = 3;
     public static final int IMAGE_LIST_COL_DATE = 4;
     public static final int IMAGE_LIST_COL_ORIENTATION = 5;
+    public static final int IMAGE_LIST_COL_DATA = 6;
 
     public static String getUriFileName(ContentResolver resolver, String str)
     {

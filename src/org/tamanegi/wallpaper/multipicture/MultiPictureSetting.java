@@ -59,6 +59,8 @@ public class MultiPictureSetting extends PreferenceActivity
     public static final String SCREEN_RECURSIVE_KEY = "screen.%s.recursive";
     public static final String SCREEN_ORDER_KEY = "screen.%s.order";
     public static final String SCREEN_RESCAN_KEY = "screen.%s.rescan";
+    public static final String SCREEN_MEDIAPROVIDER_KEY =
+        "screen.%s.mediaprovider";
 
     public static final String SCREEN_TYPE_KEY = "screen.%s.type";
     public static final String SCREEN_FILE_KEY = "screen.%s.file";
