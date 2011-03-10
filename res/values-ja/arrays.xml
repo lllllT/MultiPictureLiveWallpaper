@@ -154,4 +154,11 @@
     <item>1週間</item>
     <item>なし</item>
   </string-array>
+
+  <!-- launcher workaround -->
+  <string-array name="pref_workaround_launcher_entries">
+    <item>なし</item>
+    <item>HTC Sense 用</item>
+    <item>縦移動を無効</item>
+  </string-array>
 </resources>

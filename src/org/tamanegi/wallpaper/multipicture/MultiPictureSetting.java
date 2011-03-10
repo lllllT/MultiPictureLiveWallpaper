@@ -174,6 +174,17 @@ public class MultiPictureSetting extends PreferenceActivity
             duration.setValue(Integer.toString(duration_sec));
         }
 
+        boolean workaround_sense_val =
+            pref.getBoolean("workaround.htcsense", true);
+        String workaround_launcher_str =
+            pref.getString("workaround.launcher", null);
+        if(workaround_launcher_str == null) {
+            ListPreference workaround_launcher = (ListPreference)
+                getPreferenceManager().findPreference("workaround.launcher");
+            workaround_launcher.setValue(
+                workaround_sense_val ? "htc_sense" : "none");
+        }
+
         // for summary
         setupValueSummary(getKey(SCREEN_CLIP_KEY, -1),
                           R.string.pref_screen_clipratio_summary);

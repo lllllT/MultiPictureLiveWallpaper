@@ -127,6 +127,12 @@ public class MultiPictureRenderer
         file, folder, buckets, use_default
     }
 
+    // louncher workaround type
+    private static enum LauncherWorkaroundType
+    {
+        none, htc_sense, no_vertical
+    }
+
     // picture status
     private static enum PictureStatus
     {
@@ -279,7 +285,7 @@ public class MultiPictureRenderer
     private boolean show_reflection_bottom;
     private boolean change_tap;
     private int change_duration;
-    private boolean enable_workaround_htcsense;
+    private LauncherWorkaroundType launcher_workaround;
 
     private int last_duration = 0;
     private boolean is_in_transition = false;
@@ -718,8 +724,13 @@ public class MultiPictureRenderer
         }
 
         // workaround
-        enable_workaround_htcsense = pref.getBoolean(
-            "workaround.htcsense", true);
+        boolean sense_workaround_val =
+            pref.getBoolean("workaround.htcsense", true);
+        String launcher_workaround_str =
+            pref.getString("workaround.launcher",
+                           (sense_workaround_val ? "htc_sense" : "none"));
+        launcher_workaround =
+            LauncherWorkaroundType.valueOf(launcher_workaround_str);
     }
 
     private void updateScreenSize(SurfaceInfo info)
@@ -1378,12 +1389,17 @@ public class MultiPictureRenderer
 
     private void changeOffsets(OffsetInfo info)
     {
-        if(enable_workaround_htcsense) {
+        if(launcher_workaround == LauncherWorkaroundType.htc_sense) {
             // workaround for f*cking HTC Sense home app
             if(info.xstep < 0) {
                 info.xstep = 1.0f / 6.0f;
                 info.xoffset = (info.xoffset - 0.125f) * (1.0f / 0.75f);
             }
+        }
+        else if(launcher_workaround == LauncherWorkaroundType.no_vertical) {
+            // disable vertical: such as Honeycomb's tablet launcher
+            info.ystep = 0;
+            info.yoffset = 0;
         }
 
         // num of screens
