@@ -15,6 +15,11 @@
   <property name="android.classpath"
             location="${sdk.dir}/platforms/android-2.1/android.jar" />
 
+  <property name="android.docs.url"
+            value="http://developer.android.com/reference/" />
+  <property name="android.docs.reference"
+            location="${sdk.dir}/docs/reference/" />
+
   <target name="all" depends="jar" />
 
   <target name="compile">
@@ -36,8 +41,12 @@
   <target name="javadoc">
     <javadoc destdir="${javadoc.path}"
              sourcepath="${src.path}"
+             bootclasspath="${android.classpath}"
              packagenames="${javadoc.pkgs}"
              locale="en">
+      <link href="${android.docs.url}"
+            offline="true"
+            packagelistLoc="${android.docs.reference}" />
       <package name="${javadoc.pkg}" />
     </javadoc>
   </target>
