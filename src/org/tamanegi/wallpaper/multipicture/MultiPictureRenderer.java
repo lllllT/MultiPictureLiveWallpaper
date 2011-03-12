@@ -77,10 +77,11 @@ public class MultiPictureRenderer
     private static final int TRANSITION_RANDOM_TIMEOUT = 500; // msec
 
     // maximum size of pictures
-    private static final int MAX_MCLASS_PIXELS = 170 * 1024; // 170kPixels/MB
+    private static final int MAX_MCLASS_PIXELS = 160 * 1024; // 150kPixels/MB
     private static final int MAX_DETECT_PIXELS = 8 * 1024; // 8kPixels
 
     private static final int MIN_MEMORY_CLASS = 16;
+    private static final int MEMORY_CLASS_OFFSET = 4;
 
     // for broadcast intent
     private static final String ACTION_CHANGE_PICTURE =
@@ -746,7 +747,7 @@ public class MultiPictureRenderer
         // restrict by memory class
         int mclass = ((ActivityManager)context.getSystemService(
                           Context.ACTIVITY_SERVICE)).getMemoryClass();
-        mclass = Math.max(mclass, MIN_MEMORY_CLASS);
+        mclass = Math.max(mclass, MIN_MEMORY_CLASS) - MEMORY_CLASS_OFFSET;
         int max_total_pixels = MAX_MCLASS_PIXELS * mclass;
 
         // restrict size
