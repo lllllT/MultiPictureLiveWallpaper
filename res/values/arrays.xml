@@ -256,8 +256,8 @@
   <!-- launcher workaround -->
   <string-array name="pref_workaround_launcher_entries">
     <item>None</item>
-    <item>for HTC Sense</item>
-    <item>Disable vertical movement</item>
+    <item>For HTC Sense</item>
+    <item>Ignore vertical movement</item>
   </string-array>
 
   <string-array name="pref_workaround_launcher_entryvalues">

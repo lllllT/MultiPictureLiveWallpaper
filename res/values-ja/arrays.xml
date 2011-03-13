@@ -159,6 +159,6 @@
   <string-array name="pref_workaround_launcher_entries">
     <item>なし</item>
     <item>HTC Sense 用</item>
-    <item>縦移動を無効</item>
+    <item>縦移動を無視</item>
   </string-array>
 </resources>
