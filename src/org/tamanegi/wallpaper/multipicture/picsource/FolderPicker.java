@@ -310,7 +310,12 @@ public class FolderPicker extends Activity
 
             handler.removeCallbacks(progress_starter);
             if(dlg != null) {
-                dlg.dismiss();
+                try {
+                    dlg.dismiss();
+                }
+                catch(Exception e) {
+                    // ignore
+                }
             }
         }
 
