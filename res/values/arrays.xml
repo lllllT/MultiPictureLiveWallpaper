@@ -259,12 +259,14 @@
   <string-array name="pref_workaround_launcher_entries">
     <item>None</item>
     <item>For HTC Sense</item>
+    <item>For Honeycomb Tablet</item>
     <item>Ignore vertical movement</item>
   </string-array>
 
   <string-array name="pref_workaround_launcher_entryvalues">
     <item>none</item>
     <item>htc_sense</item>
+    <item>honeycomb_launcher</item>
     <item>no_vertical</item>
   </string-array>
 </resources>

@@ -22,6 +22,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.SharedPreferences;
+import android.content.res.Configuration;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Camera;
@@ -138,7 +139,7 @@ public class MultiPictureRenderer
     // louncher workaround type
     private static enum LauncherWorkaroundType
     {
-        none, htc_sense, no_vertical
+        none, htc_sense, honeycomb_launcher, no_vertical
     }
 
     // picture status
@@ -1505,6 +1506,21 @@ public class MultiPictureRenderer
                 info.xstep = 1.0f / 6.0f;
                 info.xoffset = (info.xoffset - 0.125f) * (1.0f / 0.75f);
             }
+        }
+        else if(launcher_workaround ==
+                LauncherWorkaroundType.honeycomb_launcher) {
+            // workaround for Honeycomb Tablet's launcher
+            if(context.getResources().getConfiguration().orientation ==
+               Configuration.ORIENTATION_PORTRAIT) {
+                info.xoffset = (info.xoffset - 0.25f) * 2;
+            }
+
+            if(info.yoffset != 0.5) {
+                info.xoffset = xcur * info.xstep;
+            }
+
+            info.ystep = 0;
+            info.yoffset = 0;
         }
         else if(launcher_workaround == LauncherWorkaroundType.no_vertical) {
             // disable vertical: such as Honeycomb's tablet launcher
