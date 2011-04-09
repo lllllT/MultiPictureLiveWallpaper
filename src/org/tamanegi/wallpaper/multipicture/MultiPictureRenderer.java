@@ -1295,9 +1295,7 @@ public class MultiPictureRenderer
 
             c.save();
             c.concat(matrix);
-            c.drawRect(-width * (1 - xratio) / 2,
-                       -height * (1 - yratio) / 2,
-                       width, height, paint);
+            c.drawRect(0, 0, width, height, paint);
             c.restore();
         }
 
