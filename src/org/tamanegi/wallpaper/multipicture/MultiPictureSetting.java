@@ -44,7 +44,9 @@ import android.widget.Toast;
 public class MultiPictureSetting extends PreferenceActivity
 {
     public static final String SCREEN_DEFAULT = "default";
+    public static final String SCREEN_KEYGUARD = "keyguard";
 
+    public static final String SCREEN_ENABLE_KEY = "screen.%s.enable";
     public static final String SCREEN_PICSOURCE_KEY = "screen.%s.picsource";
     public static final String SCREEN_PICSOURCE_DESC_KEY =
         "screen.%s.picsource.desc";

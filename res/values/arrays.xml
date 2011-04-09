@@ -224,6 +224,7 @@
     <item>30 minutes</item>
     <item>1 hour</item>
     <item>2 hours</item>
+    <item>4 hours</item>
     <item>6 hours</item>
     <item>12 hours</item>
     <item>24 hours</item>
@@ -244,6 +245,7 @@
     <item>1800</item>
     <item>3600</item>
     <item>7200</item>
+    <item>14400</item>
     <item>21600</item>
     <item>43200</item>
     <item>86400</item>

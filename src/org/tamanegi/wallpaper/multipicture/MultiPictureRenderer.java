@@ -13,6 +13,7 @@ import org.tamanegi.wallpaper.multipicture.plugin.ScreenInfo;
 
 import android.app.ActivityManager;
 import android.app.AlarmManager;
+import android.app.KeyguardManager;
 import android.app.PendingIntent;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -58,6 +59,7 @@ public class MultiPictureRenderer
     private static final int MSG_PREF_CHANGED_NORELOAD = 21;
     private static final int MSG_OFFSET_CHANGED = 22;
     private static final int MSG_SURFACE_CHANGED = 23;
+    private static final int MSG_KEYGUARD_CHANGED = 24;
     private static final int MSG_CHANGE_PIC_BY_TAP = 30;
     private static final int MSG_CHANGE_PIC_BY_TIME = 31;
     private static final int MSG_CHANGE_PACKAGE_AVAIL = 40;
@@ -76,12 +78,17 @@ public class MultiPictureRenderer
     // transition params
     private static final int TRANSITION_RANDOM_TIMEOUT = 500; // msec
 
+    // keyguard params
+    private static final int KEYGUARD_FRAME_DURATION = 70;  // msec
+    private static final int KEYGUARD_FADE_DURATION = 1000;  // msec
+
     // maximum size of pictures
-    private static final int MAX_MCLASS_PIXELS = 160 * 1024; // 150kPixels/MB
+    private static final int PIXELS_PER_MB = 1024 * 1024 / 2; // 512kPixels/MB
     private static final int MAX_DETECT_PIXELS = 8 * 1024; // 8kPixels
 
     private static final int MIN_MEMORY_CLASS = 16;
-    private static final int MEMORY_CLASS_OFFSET = 4;
+    private static final int MAX_MEMORY_CLASS = 32;
+    private static final int MEMORY_CLASS_OFFSET = 8;
 
     // for broadcast intent
     private static final String ACTION_CHANGE_PICTURE =
@@ -294,6 +301,13 @@ public class MultiPictureRenderer
     private TransitionType cur_transition;
     private int cur_color;
 
+    private boolean use_keyguard_pic;
+    private boolean is_in_keyguard;
+    private boolean is_keyguard_visible;
+    private float keyguard_dx;
+    private PictureInfo keyguard_pic;
+    private long keyguard_prev_time = 0;
+
     private boolean is_duration_pending = false;
 
     private Bitmap spinner = null;
@@ -429,6 +443,13 @@ public class MultiPictureRenderer
                       }
                   }
 
+                  if(use_keyguard_pic && keyguard_pic != null) {
+                      if(keyguard_pic.is_update_pending) {
+                          keyguard_pic.picker.sendGetNext();
+                      }
+                      keyguard_pic.is_update_pending = false;
+                  }
+
                   drawer_handler.sendEmptyMessage(MSG_DRAW);
               }
               break;
@@ -464,6 +485,11 @@ public class MultiPictureRenderer
                   clearPictureBitmap();
                   drawer_handler.sendEmptyMessage(MSG_DRAW);
               }
+              break;
+
+          case MSG_KEYGUARD_CHANGED:
+              keyguard_prev_time = msg.getWhen();
+              drawer_handler.sendEmptyMessage(MSG_DRAW);
               break;
 
           case MSG_CHANGE_PIC_BY_TAP:
@@ -562,6 +588,10 @@ public class MultiPictureRenderer
         filter.addAction(ACTION_EXTERNAL_APPLICATIONS_AVAILABLE);
         context.registerReceiver(receiver, filter);
 
+        filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_USER_PRESENT);
+        context.registerReceiver(receiver, filter);
+
         // init conf
         pic_whole_lock = new Object();
         synchronized(pic_whole_lock) {
@@ -591,18 +621,20 @@ public class MultiPictureRenderer
 
     private void clearPictureSetting()
     {
-        // is already cleared
-        if(pic == null) {
-            return;
+        if(pic != null) {
+            // clear for each picture info
+            for(PictureInfo info : pic) {
+                clearPictureSetting(info);
+            }
+
+            pic = null;
         }
 
-        // clear for each picture info
-        for(PictureInfo info : pic) {
-            clearPictureSetting(info);
+        if(keyguard_pic != null) {
+            // clear keyguard picture info
+            clearPictureSetting(keyguard_pic);
+            keyguard_pic = null;
         }
-
-        // clear picture info
-        pic = null;
     }
 
     private void clearPictureSetting(PictureInfo info)
@@ -620,20 +652,27 @@ public class MultiPictureRenderer
 
     private void clearPictureBitmap()
     {
-        if(pic == null) {
+        if(pic != null) {
+            for(PictureInfo info : pic) {
+                clearPictureBitmap(info);
+            }
+        }
+
+        if(keyguard_pic != null) {
+            clearPictureBitmap(keyguard_pic);
+        }
+    }
+
+    private void clearPictureBitmap(PictureInfo info)
+    {
+        if(info.bmp_info == null) {
             return;
         }
 
-        for(PictureInfo info : pic) {
-            if(info.bmp_info == null) {
-                continue;
-            }
+        info.bmp_info.bmp.recycle();
+        info.bmp_info = null;
 
-            info.bmp_info.bmp.recycle();
-            info.bmp_info = null;
-
-            info.setStatus(PictureStatus.BLACKOUT);
-        }
+        info.setStatus(PictureStatus.BLACKOUT);
     }
 
     private void loadGlobalSetting()
@@ -724,6 +763,14 @@ public class MultiPictureRenderer
                  60 * 60);
         }
 
+        // keyguard screen
+        use_keyguard_pic = pref.getBoolean(
+            MultiPictureSetting.getKey(MultiPictureSetting.SCREEN_ENABLE_KEY,
+                                       MultiPictureSetting.SCREEN_KEYGUARD),
+            //false);
+            true);                              // dbg:
+        is_in_keyguard = false;
+
         // workaround
         boolean sense_workaround_val =
             pref.getBoolean("workaround.htcsense", true);
@@ -736,7 +783,7 @@ public class MultiPictureRenderer
 
     private void updateScreenSize(SurfaceInfo info)
     {
-        int cnt = xcnt * ycnt;
+        int cnt = xcnt * ycnt + (use_keyguard_pic ? 1 : 0);
 
         if(info != null) {
             // screen size
@@ -747,8 +794,9 @@ public class MultiPictureRenderer
         // restrict by memory class
         int mclass = ((ActivityManager)context.getSystemService(
                           Context.ACTIVITY_SERVICE)).getMemoryClass();
-        mclass = Math.max(mclass, MIN_MEMORY_CLASS) - MEMORY_CLASS_OFFSET;
-        int max_total_pixels = MAX_MCLASS_PIXELS * mclass;
+        mclass = Math.min(Math.max(mclass, MIN_MEMORY_CLASS),
+                          MAX_MEMORY_CLASS) - MEMORY_CLASS_OFFSET;
+        int max_total_pixels = mclass * PIXELS_PER_MB;
 
         // restrict size
         if(width * height * (cnt + 3) > max_total_pixels) {
@@ -771,17 +819,24 @@ public class MultiPictureRenderer
 
     private void changePackageAvailable(String[] pkgnames)
     {
-        if(pic == null) {
-            return;
+        if(pic != null) {
+            for(PictureInfo info : pic) {
+                changePackageAvailable(info, pkgnames);
+            }
         }
 
-        for(PictureInfo info : pic) {
-            String cur_pkgname = info.picsource_service.getPackageName();
-            for(String pkgname : pkgnames) {
-                if(cur_pkgname.equals(pkgname)) {
-                    info.picsource_need_restart = true;
-                    break;
-                }
+        if(use_keyguard_pic && keyguard_pic != null) {
+            changePackageAvailable(keyguard_pic, pkgnames);
+        }
+    }
+
+    private void changePackageAvailable(PictureInfo info, String[] pkgnames)
+    {
+        String cur_pkgname = info.picsource_service.getPackageName();
+        for(String pkgname : pkgnames) {
+            if(cur_pkgname.equals(pkgname)) {
+                info.picsource_need_restart = true;
+                break;
             }
         }
     }
@@ -790,13 +845,30 @@ public class MultiPictureRenderer
     {
         int next_duration = 0;
 
-        for(int i = 0; i < pic.length; i++) {
-            int xn = i % xcnt;
-            int yn = i / xcnt;
-            boolean is_visible = (visible &&
-                                  Math.abs(xn - xcur) < 1 &&
-                                  Math.abs(yn - ycur) < 1);
-            PictureInfo info = pic[i];
+        for(int i = -1; i < pic.length; i++) {
+            if(i < 0 && ! use_keyguard_pic) {
+                continue;
+            }
+
+            boolean is_visible;
+            PictureInfo info;
+            if(i >= 0) {
+                int xn = i % xcnt;
+                int yn = i / xcnt;
+                is_visible = (visible &&
+                              Math.abs(xn - xcur) < 1 &&
+                              Math.abs(yn - ycur) < 1);
+                info = pic[i];
+            }
+            else {
+                is_visible = is_keyguard_visible;
+                info = keyguard_pic;
+
+                if(! is_visible) {
+                    keyguard_prev_time = 0;
+                    keyguard_dx = 1;
+                }
+            }
 
             if(info.status == PictureStatus.FADEIN) {
                 if((is_visible && info.progress >= FADE_TOTAL_DURATION) ||
@@ -819,6 +891,7 @@ public class MultiPictureRenderer
 
             if(is_visible) {
                 int duration = next_duration;
+
                 if(info.status == PictureStatus.BLACKOUT ||
                    info.status == PictureStatus.FADEIN ||
                    info.status == PictureStatus.FADEOUT) {
@@ -827,9 +900,13 @@ public class MultiPictureRenderer
                 else if(info.status == PictureStatus.SPINNER) {
                     duration = SPINNER_FRAME_DURATION;
                 }
+                next_duration = (next_duration == 0 ? duration :
+                                 Math.min(next_duration, duration));
 
-                next_duration = (next_duration == 0 ?
-                                 duration :
+                if(i < 0 && ! is_in_keyguard) {
+                    duration = KEYGUARD_FRAME_DURATION;
+                }
+                next_duration = (next_duration == 0 ? duration :
                                  Math.min(next_duration, duration));
             }
 
@@ -847,6 +924,22 @@ public class MultiPictureRenderer
         long cur_time = SystemClock.uptimeMillis();
         int cur_duration = 0;
 
+        // update keyguard state
+        if(use_keyguard_pic) {
+            is_in_keyguard =
+                ((KeyguardManager)context.getSystemService(
+                    Context.KEYGUARD_SERVICE)).inKeyguardRestrictedInputMode();
+            if(is_in_keyguard) {
+                keyguard_prev_time = cur_time;
+            }
+
+            keyguard_dx =
+                (float)(cur_time - keyguard_prev_time) / KEYGUARD_FADE_DURATION;
+            keyguard_dx = Math.min(keyguard_dx, 1);
+            is_keyguard_visible =
+                (visible && (is_in_keyguard || keyguard_dx < 1));
+        }
+
         // check picture data: pic != null
         if(pic != null) {
             for(int i = 0; i < pic.length; i++) {
@@ -854,6 +947,12 @@ public class MultiPictureRenderer
                     clearPictureSetting(pic[i]);
                     pic[i] = loadPictureInfo(i);
                 }
+            }
+        }
+        if(use_keyguard_pic && keyguard_pic != null) {
+            if(keyguard_pic.picsource_need_restart) {
+                clearPictureSetting(keyguard_pic);
+                keyguard_pic = loadPictureInfo(-1);
             }
         }
 
@@ -884,6 +983,15 @@ public class MultiPictureRenderer
                info.bmp_info == null) {
                 info.loading_cnt += 1;
                 sendUpdateScreen(i, info, null, true);
+            }
+        }
+
+        if(use_keyguard_pic) {
+            if(keyguard_pic.loading_cnt == 0 &&
+               keyguard_pic.cur_content != null &&
+               keyguard_pic.bmp_info == null) {
+                keyguard_pic.loading_cnt += 1;
+                sendUpdateScreen(-1, keyguard_pic, null, true);
             }
         }
 
@@ -925,24 +1033,31 @@ public class MultiPictureRenderer
         // delta for each screen
         class ScreenDelta implements Comparable<ScreenDelta>
         {
-            int xn;
-            int yn;
+            int idx;
             float dx;
             float dy;
+            float da;
             boolean visible;
+            boolean for_lock;
 
-            ScreenDelta(int xn, int yn, float dx, float dy, boolean visible)
+            ScreenDelta(int xn, int yn, float dx, float dy,
+                        boolean visible, boolean for_lock)
             {
-                this.xn = xn;
-                this.yn = yn;
+                this.idx = xcnt * yn + xn;
                 this.dx = dx;
                 this.dy = dy;
-                this.visible = visible;
+                this.da = (for_lock ? 1 : keyguard_dx);
+                this.visible = (visible && idx < pic.length && da > 0);
+                this.for_lock = for_lock;
             }
 
             @Override
             public int compareTo(ScreenDelta o2)
             {
+                if(for_lock != o2.for_lock) {
+                    return (for_lock ? +1 : -1);
+                }
+
                 // reverse order
                 float d1 = Math.max(Math.abs(this.dx), Math.abs(this.dy));
                 float d2 = Math.max(Math.abs(o2.dx), Math.abs(o2.dy));
@@ -953,11 +1068,12 @@ public class MultiPictureRenderer
         }
 
         ScreenDelta[] ds = {
-            new ScreenDelta(xn,     yn,     dx,     dy,     true),
-            new ScreenDelta(xn + 1, yn,     dx + 1, dy,     (dx != 0)),
-            new ScreenDelta(xn,     yn + 1, dx,     dy + 1, (dy != 0)),
+            new ScreenDelta(xn,     yn,     dx,     dy,     true, false),
+            new ScreenDelta(xn + 1, yn,     dx + 1, dy,     (dx != 0), false),
+            new ScreenDelta(xn,     yn + 1, dx,     dy + 1, (dy != 0), false),
             new ScreenDelta(xn + 1, yn + 1, dx + 1, dy + 1,
-                            (dx != 0 && dy != 0)),
+                            (dx != 0 && dy != 0), false),
+            new ScreenDelta(-1, 0, keyguard_dx, 0, is_keyguard_visible, true),
         };
 
         // for random transition
@@ -987,7 +1103,7 @@ public class MultiPictureRenderer
         int color = 0;
         for(ScreenDelta s : ds) {
             if(s.visible) {
-                int cc = getBackgroundColor(s.xn, s.yn, s.dx, s.dy);
+                int cc = getBackgroundColor(s.idx, s.dx, s.dy, s.da);
                 color = mergeColor(color, cc);
             }
         }
@@ -1003,68 +1119,65 @@ public class MultiPictureRenderer
         }
         for(ScreenDelta s : ds) {
             if(s.visible) {
-                drawPicture(c, s.xn, s.yn, s.dx, s.dy);
+                drawPicture(c, s.idx, s.dx, s.dy, s.da);
             }
         }
     }
 
-    private void drawPicture(Canvas c, int xn, int yn, float dx, float dy)
+    private void drawPicture(Canvas c, int idx, float dx, float dy, float da)
     {
-        int idx = xcnt * yn + xn;
-        if(idx < 0 || idx >= pic.length) {
-            return;
-        }
-
-        PictureStatus status = pic[idx].status;
+        PictureInfo pic_info = (idx >= 0 ? pic[idx] : keyguard_pic);
+        PictureStatus status = pic_info.status;
 
         Matrix matrix = new Matrix();
         RectF clip_rect = null;
-        int alpha = 0xff;
+        int alpha = (int)(0xff * da);
         boolean fill_background = false;
         boolean need_border = false;
 
         // transition effect
-        if(cur_transition == TransitionType.none) {
+        TransitionType transition =
+            (idx >= 0 ? cur_transition : TransitionType.fade_inout);
+        if(transition == TransitionType.none) {
             if(dx <= -0.5 || dx > 0.5 ||
                dy <= -0.5 || dy > 0.5) {
                 return;
             }
             fill_background = true;
         }
-        else if(cur_transition == TransitionType.crossfade) {
-            alpha = (int)((1 - Math.abs(dx)) * (1 - Math.abs(dy)) * 255);
+        else if(transition == TransitionType.crossfade) {
+            alpha *= ((1 - Math.abs(dx)) * (1 - Math.abs(dy)));
         }
-        else if(cur_transition == TransitionType.fade_inout) {
+        else if(transition == TransitionType.fade_inout) {
             if(dx <= -0.5 || dx > 0.5 ||
                dy <= -0.5 || dy > 0.5) {
                 return;
             }
-            alpha = (int)(
-                (1 - Math.max(Math.abs(dx), Math.abs(dy)) * 2) * 255);
+            alpha *= (1 - Math.max(Math.abs(dx), Math.abs(dy)) * 2);
         }
-        else if(cur_transition == TransitionType.slide) {
+        else if(transition == TransitionType.slide) {
             matrix.postTranslate(width * dx, height * dy);
             fill_background = true;
         }
-        else if(cur_transition == TransitionType.zoom_inout) {
+        else if(transition == TransitionType.zoom_inout) {
             float fact = Math.min(1 - Math.abs(dx), 1 - Math.abs(dy));
             matrix.postScale(fact, fact, width / 2f, height / 2f);
             matrix.postTranslate(width * dx / 2, height * dy / 2);
         }
-        else if(cur_transition == TransitionType.wipe) {
+        else if(transition == TransitionType.wipe) {
             clip_rect = new RectF((dx <= 0 ? 0 : width * dx),
                                   (dy <= 0 ? 0 : height * dy),
                                   (dx <= 0 ? width * (1 + dx) : width),
                                   (dy <= 0 ? height * (1 + dy) : height));
             fill_background = true;
         }
-        else if(cur_transition == TransitionType.card) {
+        else if(transition == TransitionType.card) {
             int sx = (dx < 0 ? 0 : (int)(width * dx));
             int sy = (dy < 0 ? 0 : (int)(height * dy));
             matrix.postTranslate(sx, sy);
             fill_background = true;
         }
-        else if(cur_transition == TransitionType.slide_3d) {
+        else if(transition == TransitionType.slide_3d) {
             if(dx > 0.6 || dy > 0.6) {
                 return;
             }
@@ -1079,9 +1192,9 @@ public class MultiPictureRenderer
             matrix.preTranslate(-width * center, -height * center);
             matrix.postTranslate(width * center, height * center);
 
-            alpha = Math.min((int)((Math.min(dx, dy) + 1) * 0xff), 0xff);
+            alpha *= Math.min(Math.min(dx, dy) + 1, 1);
         }
-        else if(cur_transition == TransitionType.rotation_3d) {
+        else if(transition == TransitionType.rotation_3d) {
             if(dx <= -0.5 || dx > 0.5 ||
                dy <= -0.5 || dy > 0.5) {
                 return;
@@ -1099,7 +1212,7 @@ public class MultiPictureRenderer
 
             need_border = true;
         }
-        else if(cur_transition == TransitionType.swing) {
+        else if(transition == TransitionType.swing) {
             Camera camera = new Camera();
             camera.rotateY(dx * -90);
             camera.rotateX(dy * 90);
@@ -1112,7 +1225,7 @@ public class MultiPictureRenderer
 
             need_border = true;
         }
-        else if(cur_transition == TransitionType.swap) {
+        else if(transition == TransitionType.swap) {
             float fact = Math.max(Math.abs(dx), Math.abs(dy));
             float ang1 = (float)(fact * Math.PI);
             float ang2 = (float)Math.atan2(-dy, dx);
@@ -1127,9 +1240,9 @@ public class MultiPictureRenderer
             matrix.preTranslate(-width / 2, -height / 2);
             matrix.postTranslate(width / 2, height / 2);
 
-            alpha = Math.min((int)((FloatMath.cos(ang1) + 1) * 2 * 0xff), 0xff);
+            alpha *= Math.min((FloatMath.cos(ang1) + 1) * 2, 1);
         }
-        else if(cur_transition == TransitionType.cube) {
+        else if(transition == TransitionType.cube) {
             float fact = Math.max(Math.abs(dx), Math.abs(dy));
             float ang1 = (float)(fact * Math.PI / 2);
             float ang2 = (float)Math.atan2(-dy, dx);
@@ -1146,7 +1259,7 @@ public class MultiPictureRenderer
             matrix.preTranslate(-width / 2, -height / 2);
             matrix.postTranslate(width / 2, height / 2);
 
-            alpha = Math.min((int)(FloatMath.cos(ang1) * 0xff), 0xff);
+            alpha *= Math.min(FloatMath.cos(ang1), 1);
             need_border = true;
         }
 
@@ -1160,15 +1273,15 @@ public class MultiPictureRenderer
         boolean use_bmp = (status == PictureStatus.NORMAL ||
                            status == PictureStatus.FADEIN ||
                            status == PictureStatus.FADEOUT);
-        Bitmap bmp = (use_bmp ? pic[idx].bmp_info.bmp : null);
-        float xratio = (use_bmp ? pic[idx].bmp_info.xratio : 1);
-        float yratio = (use_bmp ? pic[idx].bmp_info.yratio : 1);
+        Bitmap bmp = (use_bmp ? pic_info.bmp_info.bmp : null);
+        float xratio = (use_bmp ? pic_info.bmp_info.xratio : 1);
+        float yratio = (use_bmp ? pic_info.bmp_info.yratio : 1);
         int bgcolor = getBackgroundColorNoAlpha(idx);
         int fade_step =
             (status == PictureStatus.NORMAL ? 0 :
-             status == PictureStatus.FADEOUT ? pic[idx].progress :
+             status == PictureStatus.FADEOUT ? pic_info.progress :
              status == PictureStatus.FADEIN ?
-             FADE_TOTAL_DURATION - pic[idx].progress :
+             FADE_TOTAL_DURATION - pic_info.progress :
              FADE_TOTAL_DURATION);
         fade_step = (fade_step < 0 ? 0 :
                      fade_step > FADE_TOTAL_DURATION ? FADE_TOTAL_DURATION :
@@ -1221,8 +1334,10 @@ public class MultiPictureRenderer
         }
         else if(status == PictureStatus.NOT_AVAILABLE) {
             // show "not available"
-            String str1 = context.getString(R.string.str_pic_not_avail_1,
-                                            idx + 1);
+            String str1 =
+                (idx >= 0 ?
+                 context.getString(R.string.str_pic_not_avail_1, idx + 1) :
+                 context.getString(R.string.str_pic_not_avail_keyguard));
             String str2 = context.getString(R.string.str_pic_not_avail_2);
 
             Rect rect1 = new Rect();
@@ -1261,7 +1376,7 @@ public class MultiPictureRenderer
 
             // draw content picture
             paint.setColor(cur_color);
-            paint.setAlpha((int)(alpha * pic[idx].opacity));
+            paint.setAlpha((int)(alpha * pic_info.opacity));
             if(cfilter != null) {
                 paint.setColorFilter(cfilter);
             }
@@ -1286,7 +1401,7 @@ public class MultiPictureRenderer
                 }
 
                 paint.setColor(cur_color);
-                paint.setAlpha((int)(alpha * pic[idx].opacity / 4));
+                paint.setAlpha((int)(alpha * pic_info.opacity / 4));
                 if(cfilter != null) {
                     paint.setColorFilter(cfilter);
                 }
@@ -1312,7 +1427,7 @@ public class MultiPictureRenderer
                 }
 
                 paint.setColor(cur_color);
-                paint.setAlpha((int)(alpha * pic[idx].opacity / 4));
+                paint.setAlpha((int)(alpha * pic_info.opacity / 4));
                 if(cfilter != null) {
                     paint.setColorFilter(cfilter);
                 }
@@ -1331,7 +1446,8 @@ public class MultiPictureRenderer
 
     private int getBackgroundColorNoAlpha(int idx)
     {
-        PictureStatus status = pic[idx].status;
+        PictureInfo pic_info = (idx >= 0 ? pic[idx] : keyguard_pic);
+        PictureStatus status = pic_info.status;
 
         if(status == PictureStatus.BLACKOUT ||
            status == PictureStatus.SPINNER ||
@@ -1339,12 +1455,12 @@ public class MultiPictureRenderer
             return 0xff000000;
         }
 
-        int color = pic[idx].bgcolor;
+        int color = pic_info.bgcolor;
         if(status == PictureStatus.FADEIN ||
            status == PictureStatus.FADEOUT) {
-            int p = (pic[idx].status == PictureStatus.FADEIN ?
-                     pic[idx].progress :
-                     FADE_TOTAL_DURATION - pic[idx].progress);
+            int p = (pic_info.status == PictureStatus.FADEIN ?
+                     pic_info.progress :
+                     FADE_TOTAL_DURATION - pic_info.progress);
             p = (p < 0 ? 0 :
                  p > FADE_TOTAL_DURATION ? FADE_TOTAL_DURATION :
                  p);
@@ -1357,15 +1473,10 @@ public class MultiPictureRenderer
         return color;
     }
 
-    private int getBackgroundColor(int xn, int yn, float dx, float dy)
+    private int getBackgroundColor(int idx, float dx, float dy, float da)
     {
-        int idx = xcnt * yn + xn;
-        if(idx < 0 || idx >= pic.length) {
-            return 0;
-        }
-
         int color = getBackgroundColorNoAlpha(idx);
-        float a = (1 - Math.abs(dx)) * (1 - Math.abs(dy));
+        float a = (1 - Math.abs(dx)) * (1 - Math.abs(dy)) * da;
         return ((color & 0x00ffffff) |
                 ((int)(0xff * a) << 24));
     }
@@ -1455,10 +1566,19 @@ public class MultiPictureRenderer
         for(int i = 0; i < cnt; i++) {
             pic[i] = loadPictureInfo(i);
         }
+
+        // for keyguard screen
+        if(use_keyguard_pic) {
+            keyguard_pic = loadPictureInfo(-1);
+        }
     }
 
     private PictureInfo loadPictureInfo(int idx)
     {
+        // (idx == -1) for keyguard screen
+        String idx_key = (idx >= 0 ? String.valueOf(idx) :
+                          MultiPictureSetting.SCREEN_KEYGUARD);
+
         // allocate info
         PictureInfo info = new PictureInfo();
 
@@ -1470,9 +1590,10 @@ public class MultiPictureRenderer
         // picture source service
         String service_str = pref.getString(
             MultiPictureSetting.getKey(
-                MultiPictureSetting.SCREEN_PICSOURCE_SERVICE_KEY, idx), null);
+                MultiPictureSetting.SCREEN_PICSOURCE_SERVICE_KEY, idx_key),
+            null);
 
-        info.picsource_key = String.valueOf(idx);
+        info.picsource_key = idx_key;
 
         if("".equals(service_str)) {
             // same as default
@@ -1488,10 +1609,10 @@ public class MultiPictureRenderer
             // backward compatible
             String type_str = pref.getString(
                 MultiPictureSetting.getKey(
-                    MultiPictureSetting.SCREEN_TYPE_KEY, idx), null);
+                    MultiPictureSetting.SCREEN_TYPE_KEY, idx_key), null);
             String fname = pref.getString(
                 MultiPictureSetting.getKey(
-                    MultiPictureSetting.SCREEN_FILE_KEY, idx), null);
+                    MultiPictureSetting.SCREEN_FILE_KEY, idx_key), null);
 
             ScreenType type =
                 ((type_str == null && fname != null) ? ScreenType.file :
@@ -1531,7 +1652,8 @@ public class MultiPictureRenderer
         // background color
         String bgcolor = pref.getString(
             MultiPictureSetting.getKey(
-                MultiPictureSetting.SCREEN_BGCOLOR_KEY, idx), "use_default");
+                MultiPictureSetting.SCREEN_BGCOLOR_KEY, idx_key),
+            "use_default");
         if("use_default".equals(bgcolor)) {
             info.detect_bgcolor = default_detect_bgcolor;
             info.bgcolor = default_bgcolor;
@@ -1543,7 +1665,7 @@ public class MultiPictureRenderer
             info.detect_bgcolor = false;
             info.bgcolor = pref.getInt(
                 MultiPictureSetting.getKey(
-                    MultiPictureSetting.SCREEN_BGCOLOR_CUSTOM_KEY, idx),
+                    MultiPictureSetting.SCREEN_BGCOLOR_CUSTOM_KEY, idx_key),
                 0xff000000);
         }
         else {
@@ -1554,7 +1676,8 @@ public class MultiPictureRenderer
         // clip ratio
         String clip = pref.getString(
             MultiPictureSetting.getKey(
-                MultiPictureSetting.SCREEN_CLIP_KEY, idx), "use_default");
+                MultiPictureSetting.SCREEN_CLIP_KEY, idx_key),
+            "use_default");
         if("use_default".equals(clip)) {
             info.clip_ratio = default_clip_ratio;
         }
@@ -1565,7 +1688,8 @@ public class MultiPictureRenderer
         // saturation
         String satu = pref.getString(
             MultiPictureSetting.getKey(
-                MultiPictureSetting.SCREEN_SATURATION_KEY, idx), "use_default");
+                MultiPictureSetting.SCREEN_SATURATION_KEY, idx_key),
+            "use_default");
         if("use_default".equals(satu)) {
             info.saturation = default_saturation;
         }
@@ -1576,7 +1700,8 @@ public class MultiPictureRenderer
         // opacity
         String opac = pref.getString(
             MultiPictureSetting.getKey(
-                MultiPictureSetting.SCREEN_OPACITY_KEY, idx), "use_default");
+                MultiPictureSetting.SCREEN_OPACITY_KEY, idx_key),
+            "use_default");
         if("use_default".equals(opac)) {
             info.opacity = default_opacity;
         }
@@ -1594,27 +1719,36 @@ public class MultiPictureRenderer
         }
 
         for(PictureInfo info : pic) {
-            if(visible) {
-                if(info.loading_cnt == 0) {
-                    info.loading_cnt += 1;
-                    info.picker.sendGetNext();
-                }
+            updateScreen(info, fadeout);
+        }
 
-                if(fadeout && info.loading_cnt != 0) {
-                    if(info.status == PictureStatus.NORMAL ||
-                       info.status == PictureStatus.FADEIN) {
-                        info.setStatus(PictureStatus.FADEOUT);
-                    }
-                    else if(info.status == PictureStatus.NOT_AVAILABLE) {
-                        info.setStatus(PictureStatus.BLACKOUT);
-                    }
+        if(use_keyguard_pic && keyguard_pic != null) {
+            updateScreen(keyguard_pic, fadeout);
+        }
+    }
+
+    private void updateScreen(PictureInfo info, boolean fadeout)
+    {
+        if(visible) {
+            if(info.loading_cnt == 0) {
+                info.loading_cnt += 1;
+                info.picker.sendGetNext();
+            }
+
+            if(fadeout && info.loading_cnt != 0) {
+                if(info.status == PictureStatus.NORMAL ||
+                   info.status == PictureStatus.FADEIN) {
+                    info.setStatus(PictureStatus.FADEOUT);
+                }
+                else if(info.status == PictureStatus.NOT_AVAILABLE) {
+                    info.setStatus(PictureStatus.BLACKOUT);
                 }
             }
-            else if(! info.is_update_pending) {
-                if(info.loading_cnt == 0) {
-                    info.loading_cnt += 1;
-                    info.is_update_pending = true;
-                }
+        }
+        else if(! info.is_update_pending) {
+            if(info.loading_cnt == 0) {
+                info.loading_cnt += 1;
+                info.is_update_pending = true;
             }
         }
     }
@@ -1644,8 +1778,10 @@ public class MultiPictureRenderer
             // check target screen
             if(pic == null ||
                pic.length <= idx ||
-               pic[idx] == null ||
-               pic[idx] != pic_info) {
+               (idx >= 0 && (pic[idx] == null ||
+                             pic[idx] != pic_info)) ||
+               (idx < 0 && (keyguard_pic == null ||
+                            keyguard_pic != pic_info))) {
                 return;
             }
 
@@ -1715,8 +1851,10 @@ public class MultiPictureRenderer
                 // check target screen
                 if(pic == null ||
                    pic.length <= idx ||
-                   pic[idx] == null ||
-                   pic[idx] != pic_info) {
+                   (idx >= 0 && (pic[idx] == null ||
+                                 pic[idx] != pic_info)) ||
+                   (idx < 0 && (keyguard_pic == null ||
+                                keyguard_pic != pic_info))) {
                     // already cleared: discard
                     if(bmp_info != null) {
                         bmp_info.bmp.recycle();
@@ -1727,6 +1865,9 @@ public class MultiPictureRenderer
                 if(max_width != this.max_width ||
                    max_height != this.max_height) {
                     // retry to load same content
+                    if(bmp_info != null) {
+                        bmp_info.bmp.recycle();
+                    }
                     sendUpdateScreen(idx, pic_info, content, force_reload);
                     return;
                 }
@@ -2134,6 +2275,9 @@ public class MultiPictureRenderer
                 drawer_handler.obtainMessage(MSG_CHANGE_PACKAGE_AVAIL, pkgnames)
                     .sendToTarget();
             }
+            else if(Intent.ACTION_USER_PRESENT.equals(intent.getAction())) {
+                drawer_handler.sendEmptyMessage(MSG_KEYGUARD_CHANGED);
+            }
         }
     }
 
@@ -2143,8 +2287,8 @@ public class MultiPictureRenderer
         hint.setScreenNumber(idx);
         hint.setScreenColumns(xcnt);
         hint.setScreenRows(ycnt);
-        hint.setTargetColumn(idx % xcnt);
-        hint.setTargetRow(idx / xcnt);
+        hint.setTargetColumn(idx >= 0 ? idx % xcnt : -1);
+        hint.setTargetRow(idx >= 0 ? idx / xcnt : -1);
         hint.setScreenWidth(width);
         hint.setScreenHeight(height);
         hint.setChangeFrequency(change_duration);
