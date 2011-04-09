@@ -294,7 +294,7 @@ public class MultiPictureRenderer
     private boolean show_reflection_bottom;
     private boolean change_tap;
     private int change_duration;
-    private LauncherWorkaroundType launcher_workaround;
+    private LauncherWorkaroundType workaround_launcher;
 
     private int last_duration = 0;
     private boolean is_in_transition = false;
@@ -773,13 +773,18 @@ public class MultiPictureRenderer
         is_in_keyguard = false;
 
         // workaround
-        boolean sense_workaround_val =
+        boolean workaround_sense_val =
             pref.getBoolean("workaround.htcsense", true);
-        String launcher_workaround_str =
-            pref.getString("workaround.launcher",
-                           (sense_workaround_val ? "htc_sense" : "none"));
-        launcher_workaround =
-            LauncherWorkaroundType.valueOf(launcher_workaround_str);
+        String workaround_launcher_str =
+            pref.getString("workaround.launcher", null);
+        if(workaround_launcher_str == null) {
+            workaround_launcher_str =
+                (pref.contains("workaround.htcsense") ?
+                 (workaround_sense_val ? "htc_sense" : "none") :
+                 context.getString(R.string.workaround_default));
+        }
+        workaround_launcher =
+            LauncherWorkaroundType.valueOf(workaround_launcher_str);
     }
 
     private void updateScreenSize(SurfaceInfo info)
@@ -1048,7 +1053,9 @@ public class MultiPictureRenderer
                 this.dx = dx;
                 this.dy = dy;
                 this.da = (for_lock ? 1 : keyguard_dx);
-                this.visible = (visible && idx < pic.length && da > 0);
+                this.visible =
+                    (visible && da > 0 &&
+                     (for_lock || (idx >= 0 && idx < pic.length)));
                 this.for_lock = for_lock;
             }
 
@@ -1500,14 +1507,14 @@ public class MultiPictureRenderer
 
     private void changeOffsets(OffsetInfo info)
     {
-        if(launcher_workaround == LauncherWorkaroundType.htc_sense) {
+        if(workaround_launcher == LauncherWorkaroundType.htc_sense) {
             // workaround for f*cking HTC Sense home app
             if(info.xstep < 0) {
                 info.xstep = 1.0f / 6.0f;
                 info.xoffset = (info.xoffset - 0.125f) * (1.0f / 0.75f);
             }
         }
-        else if(launcher_workaround ==
+        else if(workaround_launcher ==
                 LauncherWorkaroundType.honeycomb_launcher) {
             // workaround for Honeycomb Tablet's launcher
             if(context.getResources().getConfiguration().orientation ==
@@ -1515,14 +1522,14 @@ public class MultiPictureRenderer
                 info.xoffset = (info.xoffset - 0.25f) * 2;
             }
 
-            if(info.yoffset != 0.5) {
+            if(info.yoffset != info.ystep) {
                 info.xoffset = xcur * info.xstep;
             }
 
             info.ystep = 0;
             info.yoffset = 0;
         }
-        else if(launcher_workaround == LauncherWorkaroundType.no_vertical) {
+        else if(workaround_launcher == LauncherWorkaroundType.no_vertical) {
             // disable vertical: such as Honeycomb's tablet launcher
             info.ystep = 0;
             info.yoffset = 0;

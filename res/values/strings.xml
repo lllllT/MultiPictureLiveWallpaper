@@ -122,6 +122,7 @@
   <string name="picsource_not_found">Picture source plugin is not found.</string>
 
   <!-- DO NOT localize below -->
+  <string name="workaround_default">htc_sense</string>
   <string name="plugin_search_uri">market://search?q=MultiPicture-Live-Wallpaper</string>
   <string name="dnt_search_uri">market://search?q=pname:org.tamanegi.wallpaper.multipicture.dnt</string>
 

@@ -184,7 +184,9 @@ public class MultiPictureSetting extends PreferenceActivity
             ListPreference workaround_launcher = (ListPreference)
                 getPreferenceManager().findPreference("workaround.launcher");
             workaround_launcher.setValue(
-                workaround_sense_val ? "htc_sense" : "none");
+                (pref.contains("workaround.htcsense") ?
+                 (workaround_sense_val ? "htc_sense" : "none") :
+                 getString(R.string.workaround_default)));
         }
 
         // for summary
