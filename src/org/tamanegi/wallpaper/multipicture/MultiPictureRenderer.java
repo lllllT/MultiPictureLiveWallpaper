@@ -1259,7 +1259,7 @@ public class MultiPictureRenderer
             camera.translate(
                 FloatMath.cos(ang2) * FloatMath.sin(ang1) * width * 0.5f,
                 FloatMath.sin(ang2) * FloatMath.sin(ang1) * height * 0.5f,
-                (1 - FloatMath.cos(ang1)) * 200);
+                (1 - FloatMath.cos(ang1)) * (width + height) * 0.2f);
             camera.rotateY(dx * 90);
             camera.rotateX(dy * -90);
             camera.getMatrix(matrix);
