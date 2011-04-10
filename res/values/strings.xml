@@ -46,6 +46,12 @@
   <string name="pref_screen_opacity_title">Decrease opacity</string>
   <string name="pref_screen_opacity_summary">Decrease opacity (increase transparency).</string>
 
+  <string name="pref_screen_keyguard_enable_title">Use lock screen settings</string>
+  <string name="pref_screen_keyguard_enable_summary">Show lock screen with another settings.</string>
+
+  <string name="pref_group_screen_keyguard_title">Lock screen settings</string>
+  <string name="pref_group_screen_keyguard_summary">Settings for lock screen.</string>
+
   <string name="pref_cat_draw_title">Drawing Settings</string>
 
   <string name="pref_draw_transition_title">Transition type</string>

@@ -3,7 +3,6 @@
 
   <PreferenceCategory android:title="@string/pref_cat_screen_title"
                       android:key="screen.cat">
-    <!-- insert PreferenceScreen of each screen at runtime -->
     <PreferenceScreen
        android:title="@string/pref_group_screen_default_title"
        android:summary="@string/pref_group_screen_default_summary"
@@ -43,13 +42,61 @@
          android:entryValues="@array/pref_screen_opacity_entryvalues"
          android:defaultValue="1.0" />
     </PreferenceScreen>
+    <!-- insert PreferenceScreen of each screen at runtime -->
     <org.tamanegi.wallpaper.multipicture.ScreenPickerPreference
        android:key="screen.picker"
        android:title="@string/pref_add_screen_title"
        android:summary="@string/pref_add_screen_summary"
        android:dialogTitle="@string/pref_add_screen_dialog_title"
-       android:order="0x7ffffffe"
+       android:order="0x7fffff00"
        />
+    <CheckBoxPreference
+       android:key="screen.keyguard.enable"
+       android:title="@string/pref_screen_keyguard_enable_title"
+       android:summary="@string/pref_screen_keyguard_enable_summary"
+       android:defaultValue="false"
+       android:order="0x7fffff80"
+       />
+    <PreferenceScreen
+       android:title="@string/pref_group_screen_keyguard_title"
+       android:summary="@string/pref_group_screen_keyguard_summary"
+       android:dependency="screen.keyguard.enable"
+       android:order="0x7fffff81"
+       >
+      <org.tamanegi.wallpaper.multipicture.PictureSourcePreference
+         android:key="screen.keyguard.picsource"
+         android:title="@string/pref_screen_type_title"
+         android:summary="@string/pref_screen_type_base_summary"
+         android:defaultValue="" />
+      <ListPreference
+         android:key="screen.keyguard.bgcolor"
+         android:title="@string/pref_screen_bgcolor_title"
+         android:summary="@string/pref_screen_bgcolor_summary"
+         android:entries="@array/pref_screen_bgcolor_entries"
+         android:entryValues="@array/pref_screen_bgcolor_entryvalues"
+         android:defaultValue="use_default" />
+      <ListPreference
+         android:key="screen.keyguard.clipratio"
+         android:title="@string/pref_screen_clipratio_title"
+         android:summary="@string/pref_screen_clipratio_summary"
+         android:entries="@array/pref_screen_clipratio_entries"
+         android:entryValues="@array/pref_screen_clipratio_entryvalues"
+         android:defaultValue="use_default" />
+      <ListPreference
+         android:key="screen.keyguard.saturation"
+         android:title="@string/pref_screen_saturation_title"
+         android:summary="@string/pref_screen_saturation_summary"
+         android:entries="@array/pref_screen_saturation_entries"
+         android:entryValues="@array/pref_screen_saturation_entryvalues"
+         android:defaultValue="use_default" />
+      <ListPreference
+         android:key="screen.keyguard.opacity"
+         android:title="@string/pref_screen_opacity_title"
+         android:summary="@string/pref_screen_opacity_summary"
+         android:entries="@array/pref_screen_opacity_entries"
+         android:entryValues="@array/pref_screen_opacity_entryvalues"
+         android:defaultValue="use_default" />
+    </PreferenceScreen>
   </PreferenceCategory>
 
   <PreferenceCategory android:title="@string/pref_cat_draw_title">

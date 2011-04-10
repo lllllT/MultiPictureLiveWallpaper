@@ -768,8 +768,7 @@ public class MultiPictureRenderer
         use_keyguard_pic = pref.getBoolean(
             MultiPictureSetting.getKey(MultiPictureSetting.SCREEN_ENABLE_KEY,
                                        MultiPictureSetting.SCREEN_KEYGUARD),
-            //false);
-            true);                              // dbg:
+            false);
         is_in_keyguard = false;
 
         // workaround
@@ -944,6 +943,10 @@ public class MultiPictureRenderer
             keyguard_dx = Math.min(keyguard_dx, 1);
             is_keyguard_visible =
                 (visible && (is_in_keyguard || keyguard_dx < 1));
+        }
+        else {
+            keyguard_dx = 1;
+            is_keyguard_visible = false;
         }
 
         // check picture data: pic != null

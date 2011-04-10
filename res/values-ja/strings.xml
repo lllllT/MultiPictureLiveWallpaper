@@ -41,6 +41,12 @@
   <string name="pref_screen_opacity_title">不透明度を下げる</string>
   <string name="pref_screen_opacity_summary">不透明度を下げる (透明度を上げる)。</string>
 
+  <string name="pref_screen_keyguard_enable_title">ロック画面の設定を使用する</string>
+  <string name="pref_screen_keyguard_enable_summary">ロック画面を別の設定で表示する。</string>
+
+  <string name="pref_group_screen_keyguard_title">ロック画面設定</string>
+  <string name="pref_group_screen_keyguard_summary">ロック画面の設定。</string>
+
   <string name="pref_cat_draw_title">描画設定</string>
 
   <string name="pref_draw_transition_title">画面変更時の切替方法</string>

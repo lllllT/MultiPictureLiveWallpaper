@@ -88,11 +88,17 @@ public class MultiPictureSetting extends PreferenceActivity
 
     private PictureSourcePreference cur_item = null;
     private ComponentName cur_comp = null;
-    private int cur_idx = -1;
+    private String cur_key = null;
+    private boolean cur_is_default = false;
+
+    public static String getIndexString(int idx)
+    {
+        return (idx >= 0 ? String.valueOf(idx) : SCREEN_DEFAULT);
+    }
 
     public static String getKey(String base, int idx)
     {
-        return getKey(base, (idx >= 0 ? String.valueOf(idx) : SCREEN_DEFAULT));
+        return getKey(base, getIndexString(idx));
     }
 
     public static String getKey(String base, String key)
@@ -165,6 +171,22 @@ public class MultiPictureSetting extends PreferenceActivity
             new OnColorChangeListener(-1));
         updateColorSummary(def_color, null);
 
+        // setup keyguard screen item
+        PictureSourcePreference keyguard_picsource = (PictureSourcePreference)
+            getPreferenceManager().findPreference(
+                getKey(SCREEN_PICSOURCE_KEY, SCREEN_KEYGUARD));
+        keyguard_picsource.setShowDefault(true);
+        keyguard_picsource.setOnPreferenceChangeListener(
+            new OnPictureSourceChangeListener(SCREEN_KEYGUARD, false));
+        updatePictureSourceSummary(keyguard_picsource, SCREEN_KEYGUARD, false);
+
+        ListPreference keyguard_color = (ListPreference)
+            getPreferenceManager().findPreference(
+                getKey(SCREEN_BGCOLOR_KEY, SCREEN_KEYGUARD));
+        keyguard_color.setOnPreferenceChangeListener(
+            new OnColorChangeListener(SCREEN_KEYGUARD));
+        updateColorSummary(keyguard_color, null);
+
         // backward compatibility
         String duration_min_str = pref.getString("folder.duration", null);
         String duration_sec_str = pref.getString("folder.duration_sec", null);
@@ -195,6 +217,13 @@ public class MultiPictureSetting extends PreferenceActivity
         setupValueSummary(getKey(SCREEN_SATURATION_KEY, -1),
                           R.string.pref_screen_saturation_summary);
         setupValueSummary(getKey(SCREEN_OPACITY_KEY, -1),
+                          R.string.pref_screen_opacity_summary);
+
+        setupValueSummary(getKey(SCREEN_CLIP_KEY, SCREEN_KEYGUARD),
+                          R.string.pref_screen_clipratio_summary);
+        setupValueSummary(getKey(SCREEN_SATURATION_KEY, SCREEN_KEYGUARD),
+                          R.string.pref_screen_saturation_summary);
+        setupValueSummary(getKey(SCREEN_OPACITY_KEY, SCREEN_KEYGUARD),
                           R.string.pref_screen_opacity_summary);
     }
 
@@ -375,12 +404,12 @@ public class MultiPictureSetting extends PreferenceActivity
         String service_val = ((ComponentName)serv).flattenToString();
 
         cur_item.setValue(cur_comp);
-        persistPictureSourceInfo(cur_idx, desc, service_val);
+        persistPictureSourceInfo(cur_key, desc, service_val);
 
-        updatePictureSourceSummary(cur_item, cur_idx);
+        updatePictureSourceSummary(cur_item, cur_key, cur_is_default);
 
         cur_item = null;
-        cur_idx = -1;
+        cur_key = null;
 
         Log.d(TAG, "picture source: apply: " + serv);
     }
@@ -554,8 +583,14 @@ public class MultiPictureSetting extends PreferenceActivity
 
     private void persistPictureSourceInfo(int idx, String desc, String service)
     {
-        String desc_key = getKey(SCREEN_PICSOURCE_DESC_KEY, idx);
-        String service_key = getKey(SCREEN_PICSOURCE_SERVICE_KEY, idx);
+        persistPictureSourceInfo(getIndexString(idx), desc, service);
+    }
+
+    private void persistPictureSourceInfo(String key,
+                                          String desc, String service)
+    {
+        String desc_key = getKey(SCREEN_PICSOURCE_DESC_KEY, key);
+        String service_key = getKey(SCREEN_PICSOURCE_SERVICE_KEY, key);
 
         SharedPreferences.Editor editor = pref.edit();
         editor.putString(desc_key, desc);
@@ -568,13 +603,19 @@ public class MultiPictureSetting extends PreferenceActivity
     private void updatePictureSourceSummary(
         PictureSourcePreference item, int idx)
     {
+        updatePictureSourceSummary(item, getIndexString(idx), (idx < 0));
+    }
+
+    private void updatePictureSourceSummary(
+        PictureSourcePreference item, String key, boolean is_default)
+    {
         ComponentName picsource_val = item.getValue();
 
         StringBuilder summary = new StringBuilder();
         summary.append(getString(R.string.pref_screen_type_base_summary));
 
         if(picsource_val != null) {
-            String desc_key = getKey(SCREEN_PICSOURCE_DESC_KEY, idx);
+            String desc_key = getKey(SCREEN_PICSOURCE_DESC_KEY, key);
             String desc_val = pref.getString(desc_key, "");
             if(desc_val.length() != 0) {
                 summary.append(
@@ -582,7 +623,7 @@ public class MultiPictureSetting extends PreferenceActivity
                               desc_val));
             }
         }
-        else if(idx >= 0) {
+        else if(! is_default) {
             summary.append(
                 getString(R.string.pref_screen_val_summary,
                           getString(R.string.pref_use_default)));
@@ -624,9 +665,9 @@ public class MultiPictureSetting extends PreferenceActivity
         updateValueSummary(item, res_id, null);
     }
 
-    private void startColorPickerDialog(final Preference item, final int idx)
+    private void startColorPickerDialog(final Preference item, final String key)
     {
-        int color = pref.getInt(getKey(SCREEN_BGCOLOR_CUSTOM_KEY, idx),
+        int color = pref.getInt(getKey(SCREEN_BGCOLOR_CUSTOM_KEY, key),
                                 0xff000000);
 
         View view = getLayoutInflater().inflate(R.layout.color_picker, null);
@@ -649,7 +690,7 @@ public class MultiPictureSetting extends PreferenceActivity
                 android.R.string.yes,
                 new DialogInterface.OnClickListener() {
                     public void onClick(DialogInterface dialog, int button) {
-                        applyCustomColor((ListPreference)item, idx,
+                        applyCustomColor((ListPreference)item, key,
                                          picker.getColor());
                     }
                 })
@@ -657,7 +698,7 @@ public class MultiPictureSetting extends PreferenceActivity
             .show();
     }
 
-    private void applyCustomColor(ListPreference item, int idx, int color)
+    private void applyCustomColor(ListPreference item, String key, int color)
     {
         String val = "custom";
 
@@ -665,7 +706,7 @@ public class MultiPictureSetting extends PreferenceActivity
         item.setValue(val);
 
         SharedPreferences.Editor editor = pref.edit();
-        editor.putInt(getKey(SCREEN_BGCOLOR_CUSTOM_KEY, idx), color);
+        editor.putInt(getKey(SCREEN_BGCOLOR_CUSTOM_KEY, key), color);
         editor.commit();
     }
 
@@ -711,11 +752,18 @@ public class MultiPictureSetting extends PreferenceActivity
     private class OnPictureSourceChangeListener
         implements Preference.OnPreferenceChangeListener
     {
-        private int idx;
+        private String key;
+        private boolean is_default;
 
         private OnPictureSourceChangeListener(int idx)
         {
-            this.idx = idx;
+            this(getIndexString(idx), (idx < 0));
+        }
+
+        private OnPictureSourceChangeListener(String key, boolean is_default)
+        {
+            this.key = key;
+            this.is_default = is_default;
         }
 
         @Override
@@ -725,7 +773,6 @@ public class MultiPictureSetting extends PreferenceActivity
                 (PictureSourcePreference)item;
 
             if(val != null) {
-                String key = (idx >= 0 ? String.valueOf(idx) : SCREEN_DEFAULT);
                 cur_comp = (ComponentName)val;
                 Intent intent = picsource.createIntent(cur_comp, key);
 
@@ -733,7 +780,7 @@ public class MultiPictureSetting extends PreferenceActivity
                 try {
                     startActivityForResult(intent, REQUEST_CODE_PICSOURCE);
                     cur_item = picsource;
-                    cur_idx = idx;
+                    cur_key = key;
                 }
                 catch(ActivityNotFoundException e) {
                     e.printStackTrace();
@@ -748,8 +795,9 @@ public class MultiPictureSetting extends PreferenceActivity
             else {
                 handler.post(new Runnable() {
                         public void run() {
-                            persistPictureSourceInfo(idx, "", "");
-                            updatePictureSourceSummary(picsource, idx);
+                            persistPictureSourceInfo(key, "", "");
+                            updatePictureSourceSummary(
+                                picsource, key, is_default);
                         }
                     });
                 return true;
@@ -760,18 +808,23 @@ public class MultiPictureSetting extends PreferenceActivity
     private class OnColorChangeListener
         implements Preference.OnPreferenceChangeListener
     {
-        private int idx;
+        private String key;
 
         private OnColorChangeListener(int idx)
         {
-            this.idx = idx;
+            this(getIndexString(idx));
+        }
+
+        private OnColorChangeListener(String key)
+        {
+            this.key = key;
         }
 
         @Override
         public boolean onPreferenceChange(final Preference item, Object val)
         {
             if("custom".equals(val)) {
-                startColorPickerDialog(item, idx);
+                startColorPickerDialog(item, key);
                 return false;
             }
             else {
