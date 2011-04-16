@@ -1017,7 +1017,12 @@ public class MultiPictureRenderer
         }
         finally {
             if(c != null) {
-                holder.unlockCanvasAndPost(c);
+                try {
+                    holder.unlockCanvasAndPost(c);
+                }
+                catch(Exception e) {
+                    // ignore
+                }
             }
         }
 
