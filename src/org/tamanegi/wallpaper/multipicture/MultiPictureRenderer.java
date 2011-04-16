@@ -139,7 +139,10 @@ public class MultiPictureRenderer
     // louncher workaround type
     private static enum LauncherWorkaroundType
     {
-        none, htc_sense, honeycomb_launcher, no_vertical
+        none,
+            htc_sense, htc_sense_5screen,
+            honeycomb_launcher,
+            no_vertical
     }
 
     // picture status
@@ -1510,11 +1513,16 @@ public class MultiPictureRenderer
 
     private void changeOffsets(OffsetInfo info)
     {
-        if(workaround_launcher == LauncherWorkaroundType.htc_sense) {
+        if(workaround_launcher == LauncherWorkaroundType.htc_sense ||
+           workaround_launcher == LauncherWorkaroundType.htc_sense_5screen) {
             // workaround for f*cking HTC Sense home app
+            int ns = (workaround_launcher == LauncherWorkaroundType.htc_sense ?
+                      5 : 7);
+            float margin = 1f / (ns + 1);
+
             if(info.xstep < 0) {
-                info.xstep = 1.0f / 6.0f;
-                info.xoffset = (info.xoffset - 0.125f) * (1.0f / 0.75f);
+                info.xstep = 1f / (ns - 1);
+                info.xoffset = (info.xoffset - margin) / (1 - margin * 2);
             }
         }
         else if(workaround_launcher ==
@@ -1523,10 +1531,6 @@ public class MultiPictureRenderer
             if(context.getResources().getConfiguration().orientation ==
                Configuration.ORIENTATION_PORTRAIT) {
                 info.xoffset = (info.xoffset - 0.25f) * 2;
-            }
-
-            if(info.yoffset != info.ystep) {
-                info.xoffset = xcur * info.xstep;
             }
 
             info.ystep = 0;
