@@ -1517,7 +1517,7 @@ public class MultiPictureRenderer
            workaround_launcher == LauncherWorkaroundType.htc_sense_5screen) {
             // workaround for f*cking HTC Sense home app
             int ns = (workaround_launcher == LauncherWorkaroundType.htc_sense ?
-                      5 : 7);
+                      7 : 5);
             float margin = 1f / (ns + 1);
 
             if(info.xstep < 0) {
