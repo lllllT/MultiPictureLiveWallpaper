@@ -140,6 +140,7 @@ public class MultiPictureRenderer
     private static enum LauncherWorkaroundType
     {
         none,
+            force_5screen, force_7screen,
             htc_sense, htc_sense_5screen,
             honeycomb_launcher,
             no_vertical
@@ -1521,11 +1522,10 @@ public class MultiPictureRenderer
         if(workaround_launcher == LauncherWorkaroundType.htc_sense ||
            workaround_launcher == LauncherWorkaroundType.htc_sense_5screen) {
             // workaround for f*cking HTC Sense home app
-            int ns = (workaround_launcher == LauncherWorkaroundType.htc_sense ?
-                      7 : 5);
-            float margin = 1f / (ns + 1);
-
             if(info.xstep < 0) {
+                int ns = (workaround_launcher ==
+                          LauncherWorkaroundType.htc_sense ? 7 : 5);
+                float margin = 1f / (ns + 1);
                 info.xstep = 1f / (ns - 1);
                 info.xoffset = (info.xoffset - margin) / (1 - margin * 2);
             }
@@ -1543,6 +1543,16 @@ public class MultiPictureRenderer
         }
         else if(workaround_launcher == LauncherWorkaroundType.no_vertical) {
             // disable vertical: such as Honeycomb's tablet launcher
+            info.ystep = 0;
+            info.yoffset = 0;
+        }
+        else if(workaround_launcher == LauncherWorkaroundType.force_5screen) {
+            info.xstep = 1f / 4f;
+            info.ystep = 0;
+            info.yoffset = 0;
+        }
+        else if(workaround_launcher == LauncherWorkaroundType.force_7screen) {
+            info.xstep = 1f / 6f;
             info.ystep = 0;
             info.yoffset = 0;
         }
