@@ -14,6 +14,7 @@ import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
 import android.content.ContentResolver;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -75,6 +76,9 @@ public class MultiPictureSetting extends PreferenceActivity
 
     private static final int REQUEST_CODE_PICSOURCE = 1;
 
+    private static final int MIN_MEMORY_CLASS = 16;
+    private static final int MAX_MEMORY_CLASS = 24;
+
     private static final String TAG = "MultiPictureSetting";
 
     private SharedPreferences pref;
@@ -115,6 +119,15 @@ public class MultiPictureSetting extends PreferenceActivity
             }
         }
         return String.format(base, key);
+    }
+
+    public static int getAutoMemoryClass(Context context)
+    {
+        int mclass = ((ActivityManager)context.getSystemService(
+                          Context.ACTIVITY_SERVICE)).getMemoryClass();
+        mclass = Math.min(Math.max(mclass, MIN_MEMORY_CLASS),
+                          MAX_MEMORY_CLASS);
+        return mclass;
     }
 
     /** Called when the activity is first created. */
@@ -186,6 +199,10 @@ public class MultiPictureSetting extends PreferenceActivity
         keyguard_color.setOnPreferenceChangeListener(
             new OnColorChangeListener(SCREEN_KEYGUARD));
         updateColorSummary(keyguard_color, null);
+
+        // setup maximum memory usage item
+        getPreferenceManager().findPreference("memory.max").
+            setOnPreferenceChangeListener(new OnMaximumMemoryChangeListener());
 
         // backward compatibility
         String duration_min_str = pref.getString("folder.duration", null);
@@ -710,6 +727,24 @@ public class MultiPictureSetting extends PreferenceActivity
         editor.commit();
     }
 
+    private void startMaxMemoryConfirmDialog(final ListPreference item,
+                                             final String val)
+    {
+        new AlertDialog.Builder(this)
+            .setTitle(R.string.pref_memory_max_title)
+            .setMessage(R.string.pref_memory_max_confirm)
+            .setIcon(android.R.drawable.ic_dialog_alert)
+            .setPositiveButton(
+                android.R.string.ok,
+                new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog, int button) {
+                        item.setValue(val);
+                    }
+                })
+            .setNegativeButton(android.R.string.cancel, null)
+            .show();
+    }
+
     private class ScreenPickerClickListener
         implements Preference.OnPreferenceClickListener
     {
@@ -849,6 +884,32 @@ public class MultiPictureSetting extends PreferenceActivity
         {
             updateValueSummary((ListPreference)item, res_id, (String)val);
             return true;
+        }
+    }
+
+    private class OnMaximumMemoryChangeListener
+        implements Preference.OnPreferenceChangeListener
+    {
+        @Override
+        public boolean onPreferenceChange(Preference item, Object val)
+        {
+            int msize = 0;
+            try {
+                msize = Integer.valueOf(val.toString());
+            }
+            catch(Exception e) {
+                // ignore
+            }
+
+            int mclass = getAutoMemoryClass(MultiPictureSetting.this);
+            if(msize < 0 || msize > mclass) {
+                startMaxMemoryConfirmDialog(
+                    (ListPreference)item, val.toString());
+                return false;
+            }
+            else {
+                return true;
+            }
         }
     }
 

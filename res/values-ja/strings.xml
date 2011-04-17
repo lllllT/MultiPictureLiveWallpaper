@@ -71,6 +71,10 @@
   <string name="pref_workaround_launcher_title">一部環境用の回避策</string>
   <string name="pref_workaround_launcher_summary">一部の環境で利用する際に、画面変更で画像が切替わらない等の回避策。</string>
 
+  <string name="pref_memory_max_title">最大メモリ使用量</string>
+  <string name="pref_memory_max_summary">画質や性能に問題がある場合用。</string>
+  <string name="pref_memory_max_confirm">メモリ使用量を増やすと機種や表示する画像によっては強制終了する場合があります。\nその場合は少ないメモリ使用量を選択して下さい。</string>
+
   <string name="pref_cat_other">その他</string>
   <string name="pref_other_dnt_title">Donation版</string>
   <string name="pref_other_dnt_summary">Donation版をダウンロード。</string>

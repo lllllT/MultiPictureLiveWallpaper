@@ -11,7 +11,6 @@ import org.tamanegi.wallpaper.multipicture.plugin.LazyPickerClient;
 import org.tamanegi.wallpaper.multipicture.plugin.PictureContentInfo;
 import org.tamanegi.wallpaper.multipicture.plugin.ScreenInfo;
 
-import android.app.ActivityManager;
 import android.app.AlarmManager;
 import android.app.KeyguardManager;
 import android.app.PendingIntent;
@@ -87,9 +86,7 @@ public class MultiPictureRenderer
     private static final int PIXELS_PER_MB = 1024 * 1024 / 2; // 512kPixels/MB
     private static final int MAX_DETECT_PIXELS = 8 * 1024; // 8kPixels
 
-    private static final int MIN_MEMORY_CLASS = 16;
-    private static final int MAX_MEMORY_CLASS = 32;
-    private static final int MEMORY_CLASS_OFFSET = 8;
+    private static final int MEMORY_SIZE_OFFSET = 8;
 
     // for broadcast intent
     private static final String ACTION_CHANGE_PICTURE =
@@ -299,6 +296,7 @@ public class MultiPictureRenderer
     private boolean change_tap;
     private int change_duration;
     private LauncherWorkaroundType workaround_launcher;
+    private int max_memory_size;
 
     private int last_duration = 0;
     private boolean is_in_transition = false;
@@ -788,6 +786,18 @@ public class MultiPictureRenderer
         }
         workaround_launcher =
             LauncherWorkaroundType.valueOf(workaround_launcher_str);
+
+        // maximum memory usage
+        String max_memory_str = pref.getString("memory.max", "auto");
+        if("auto".equals(max_memory_str)) {
+            max_memory_size = MultiPictureSetting.getAutoMemoryClass(context);
+        }
+        else {
+            max_memory_size = Integer.valueOf(max_memory_str);
+        }
+        max_memory_size -= (max_memory_size > 0 ? MEMORY_SIZE_OFFSET : 0);
+
+        updateScreenSize(null);
     }
 
     private void updateScreenSize(SurfaceInfo info)
@@ -801,14 +811,11 @@ public class MultiPictureRenderer
         }
 
         // restrict by memory class
-        int mclass = ((ActivityManager)context.getSystemService(
-                          Context.ACTIVITY_SERVICE)).getMemoryClass();
-        mclass = Math.min(Math.max(mclass, MIN_MEMORY_CLASS),
-                          MAX_MEMORY_CLASS) - MEMORY_CLASS_OFFSET;
-        int max_total_pixels = mclass * PIXELS_PER_MB;
+        int max_total_pixels = max_memory_size * PIXELS_PER_MB;
 
         // restrict size
-        if(width * height * (cnt + 3) > max_total_pixels) {
+        if(max_memory_size > 0 &&
+           width * height * (cnt + 3) > max_total_pixels) {
             // mw * mh * (cnt + 3) = max_total_pixels
             // mw / mh = width / height
             //  -> mh = mw * height / width
@@ -822,8 +829,14 @@ public class MultiPictureRenderer
             max_height = height;
         }
 
-        max_screen_pixels = max_total_pixels / (cnt + 3);
-        max_work_pixels = max_screen_pixels * 2;
+        if(max_memory_size > 0) {
+            max_screen_pixels = max_total_pixels / (cnt + 3);
+            max_work_pixels = max_screen_pixels * 2;
+        }
+        else {
+            max_screen_pixels = -1;
+            max_work_pixels = -1;
+        }
     }
 
     private void changePackageAvailable(String[] pkgnames)
@@ -2012,7 +2025,8 @@ public class MultiPictureRenderer
             int yr = opt.outHeight / target_height;
             int ratio = Math.max(Math.min(xr, yr), 1);
 
-            while((opt.outWidth / ratio) *
+            while(max_work_pixels > 0 &&
+                  (opt.outWidth / ratio) *
                   (opt.outHeight / ratio) > max_work_pixels) {
                 ratio += 1;
             }
@@ -2264,7 +2278,8 @@ public class MultiPictureRenderer
     private Bitmap.Config getBitmapFormat(int width, int height,
                                           boolean has_alpha)
     {
-        boolean allow_8888 = (width * height * 2 <= max_screen_pixels);
+        boolean allow_8888 = (max_screen_pixels <= 0 ||
+                              width * height * 2 <= max_screen_pixels);
         return (allow_8888 ? Bitmap.Config.ARGB_8888 :
                 has_alpha ? Bitmap.Config.ARGB_4444 :
                 Bitmap.Config.RGB_565);

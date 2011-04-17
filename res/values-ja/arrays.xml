@@ -166,4 +166,13 @@
     <item>Honeycomb タブレット用</item>
     <item>縦移動を無視</item>
   </string-array>
+
+  <!-- maximum memory usage -->
+  <string-array name="pref_memory_max_entries">
+    <item>自動 (推奨)</item>
+    <item>小</item>
+    <item>中</item>
+    <item>大</item>
+    <item>無制限</item>
+  </string-array>
 </resources>

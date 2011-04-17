@@ -76,6 +76,10 @@
   <string name="pref_workaround_launcher_title">Workaround for some home application</string>
   <string name="pref_workaround_launcher_summary">Workaround for using with some home application, such as pictures are not changed when switching screen, etc.</string>
 
+  <string name="pref_memory_max_title">Maximum memory usage</string>
+  <string name="pref_memory_max_summary">For image quality and performance.</string>
+  <string name="pref_memory_max_confirm">May be force closed for some devices or some pictures.\nIn these cases, choose lower memory usage.</string>
+
   <string name="pref_cat_other">Other</string>
   <string name="pref_other_dnt_title">Donation version</string>
   <string name="pref_other_dnt_summary">Get donation version.</string>

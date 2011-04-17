@@ -142,6 +142,14 @@
        android:entries="@array/pref_workaround_launcher_entries"
        android:entryValues="@array/pref_workaround_launcher_entryvalues"
        /> <!-- default value is set by MultiPictureSetting#onCreate -->
+    <ListPreference
+       android:key="memory.max"
+       android:title="@string/pref_memory_max_title"
+       android:summary="@string/pref_memory_max_summary"
+       android:entries="@array/pref_memory_max_entries"
+       android:entryValues="@array/pref_memory_max_entryvalues"
+       android:defaultValue="auto"
+       />
   </PreferenceCategory>
 
   <PreferenceCategory android:title="@string/pref_cat_other"
