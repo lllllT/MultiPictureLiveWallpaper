@@ -136,6 +136,7 @@
                       pngname="ic_menu_qr.png" />
 
     <svg2png-drawable src="${src.dir}/ika.svg" pngname="spinner.png"
+                      xhdpi="160" hdpi="80" mdpi="80" ldpi="40"
                       args="--export-background-opacity=0" />
     <!--
     <svg2png-drawable src="${src.dir}/spinner.svg" pngname="spinner.png" />
