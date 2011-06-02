@@ -155,11 +155,14 @@ public class MultiPictureRenderer
     // texture id, and aspect ratio
     private static class TextureInfo
     {
-        private Bitmap bmp;
+        private boolean has_content = false;
+        private boolean enable_reflect = true;
+
+        private Bitmap bmp = null;
         private int bwidth;
         private int bheight;
 
-        private int tex_id;
+        private int tex_id = -1;
         private float xratio;
         private float yratio;
         private int bgcolor;
@@ -616,15 +619,28 @@ public class MultiPictureRenderer
         }
 
         // spinner texture
-        spinner = new TextureInfo();
-        spinner.tex_id = -1;
-        spinner.bmp = BitmapFactory.decodeResource(
-            context.getResources(), R.drawable.spinner);
-        spinner.bwidth = spinner.bmp.getWidth();
-        spinner.bheight = spinner.bmp.getHeight();
-        spinner.xratio = (float)spinner.bwidth / width;
-        spinner.yratio = (float)spinner.bheight / height;
-        spinner.bgcolor = 0xff000000;
+        {
+            spinner = new TextureInfo();
+            spinner.has_content = true;
+            spinner.enable_reflect = false;
+
+            Bitmap spinner_bmp = BitmapFactory.decodeResource(
+                context.getResources(), R.drawable.spinner);
+            int bw = spinner_bmp.getWidth();
+            int bh = spinner_bmp.getHeight();
+            int tw = getLeastPowerOf2GE(bw);
+            int th = getLeastPowerOf2GE(bh);
+            spinner.bmp = createBitmap(spinner_bmp,
+                                       (bw - tw) / 2, (bh - th) / 2, tw, th,
+                                       null, tw, th, 1);
+            spinner_bmp.recycle();
+
+            spinner.bwidth = spinner.bmp.getWidth();
+            spinner.bheight = spinner.bmp.getHeight();
+            spinner.xratio = (float)spinner.bwidth / width;
+            spinner.yratio = (float)spinner.bheight / height;
+            spinner.bgcolor = 0xff000000;
+        }
     }
 
     private void destroy()
@@ -673,13 +689,11 @@ public class MultiPictureRenderer
 
         info.picker.sendStop();
 
-        if(info.tex_info != null) {
-            if(info.tex_info.bmp != null) {
-                info.tex_info.bmp.recycle();
-            }
-            else {
-                glcanvas.deleteTexture(info.tex_info.tex_id);
-            }
+        if(info.tex_info.bmp != null) {
+            info.tex_info.bmp.recycle();
+        }
+        else if(info.tex_info.tex_id >= 0) {
+            glcanvas.deleteTexture(info.tex_info.tex_id);
         }
     }
 
@@ -698,21 +712,16 @@ public class MultiPictureRenderer
 
     private void clearPictureBitmap(PictureInfo info)
     {
-        if(info.tex_info == null) {
-            return;
-        }
-        if(info.status == PictureStatus.NOT_AVAILABLE) {
-            return;
-        }
-
         if(info.tex_info.bmp != null) {
             info.tex_info.bmp.recycle();
+            info.tex_info.bmp = null;
         }
         else {
             glcanvas.deleteTexture(info.tex_info.tex_id);
+            info.tex_info.tex_id = -1;
         }
-        info.tex_info = null;
 
+        info.tex_info.has_content = false;
         info.setStatus(PictureStatus.BLACKOUT);
     }
 
@@ -849,27 +858,7 @@ public class MultiPictureRenderer
             wratio = (float)width / height;
         }
 
-        // textures
-        if(pic != null) {
-            for(PictureInfo pinfo : pic) {
-                if(pinfo.status == PictureStatus.NOT_AVAILABLE) {
-                    pinfo.tex_info.xratio =
-                        (float)pinfo.tex_info.bwidth / width;
-                    pinfo.tex_info.yratio =
-                        (float)pinfo.tex_info.bheight / height;
-                }
-            }
-        }
-
-        if(keyguard_pic != null) {
-            if(keyguard_pic.status == PictureStatus.NOT_AVAILABLE) {
-                keyguard_pic.tex_info.xratio =
-                    (float)keyguard_pic.tex_info.bwidth / width;
-                keyguard_pic.tex_info.yratio =
-                    (float)keyguard_pic.tex_info.bheight / height;
-            }
-        }
-
+        // spinner texture
         if(spinner != null) {
             if(spinner.tex_id >= 0) {
                 glcanvas.deleteTexture(spinner.tex_id);
@@ -1060,7 +1049,7 @@ public class MultiPictureRenderer
             PictureInfo info = pic[i];
             if(info.loading_cnt == 0 &&
                info.cur_content != null &&
-               info.tex_info == null) {
+               ! info.tex_info.has_content) {
                 info.loading_cnt += 1;
                 sendUpdateScreen(i, info, null, true);
             }
@@ -1069,7 +1058,7 @@ public class MultiPictureRenderer
         if(use_keyguard_pic) {
             if(keyguard_pic.loading_cnt == 0 &&
                keyguard_pic.cur_content != null &&
-               keyguard_pic.tex_info == null) {
+               ! keyguard_pic.tex_info.has_content) {
                 keyguard_pic.loading_cnt += 1;
                 sendUpdateScreen(-1, keyguard_pic, null, true);
             }
@@ -1078,7 +1067,7 @@ public class MultiPictureRenderer
         // check bitmap to texture
         for(int i = 0; i < pic.length; i++) {
             PictureInfo info = pic[i];
-            if(info.tex_info != null &&
+            if(info.tex_info.has_content &&
                info.tex_info.bmp != null) {
                 info.tex_info.tex_id =
                     glcanvas.genTexture(info.tex_info.bmp);
@@ -1088,7 +1077,7 @@ public class MultiPictureRenderer
         }
 
         if(use_keyguard_pic) {
-            if(keyguard_pic.tex_info != null &&
+            if(keyguard_pic.tex_info.has_content &&
                keyguard_pic.tex_info.bmp != null) {
                 keyguard_pic.tex_info.tex_id =
                     glcanvas.genTexture(keyguard_pic.tex_info.bmp);
@@ -1254,23 +1243,29 @@ public class MultiPictureRenderer
              new GLColor(getBackgroundColorNoAlpha(idx)).setAlpha(1) : null);
         int fade_step =
             ((status == PictureStatus.NORMAL ||
-              status == PictureStatus.SPINNER) ? 0 :
-             status == PictureStatus.FADEOUT ? pic_info.progress :
-             status == PictureStatus.FADEIN ?
+              status == PictureStatus.SPINNER ||
+              status == PictureStatus.NOT_AVAILABLE) ? FADE_TOTAL_DURATION :
+             status == PictureStatus.FADEIN ? pic_info.progress :
+             status == PictureStatus.FADEOUT ?
              FADE_TOTAL_DURATION - pic_info.progress :
-             FADE_TOTAL_DURATION);
-        fade_step = (fade_step < 0 ? 0 :
-                     fade_step > FADE_TOTAL_DURATION ? FADE_TOTAL_DURATION :
-                     fade_step);
-        float fade_ratio =
-            (float)(FADE_TOTAL_DURATION - fade_step) / FADE_TOTAL_DURATION;
+             0);
+        float fade_ratio = (float)fade_step / FADE_TOTAL_DURATION;
+        fade_ratio = Math.max(0, Math.min(1, fade_ratio));
+        float border_ratio =
+            (status == PictureStatus.SPINNER ||
+             status == PictureStatus.NOT_AVAILABLE ? 1 :
+             1 - fade_ratio);
+        float opacity =
+            (status != PictureStatus.SPINNER &&
+             status != PictureStatus.NOT_AVAILABLE ? 1 :
+             pic_info.opacity);
 
-        if(effect.need_border && fade_ratio > 0) {
+        if(effect.need_border && border_ratio > 0) {
             // border and/or background
             glcanvas.drawRect(
                 effect.matrix, bgcolor,
                 new GLColor(BORDER_COLOR).setAlpha(
-                    effect.alpha * (1 - fade_ratio)));
+                    effect.alpha * border_ratio));
         }
         else if(effect.fill_background) {
             // background
@@ -1297,10 +1292,10 @@ public class MultiPictureRenderer
             // draw content picture
             glcanvas.drawTexture(
                 mcenter, tex_info.tex_id,
-                effect.alpha * pic_info.opacity, fade_ratio);
+                effect.alpha * opacity, fade_ratio);
 
             // mirrored picture: top
-            if(show_reflection_top && status != PictureStatus.SPINNER) {
+            if(tex_info.enable_reflect && show_reflection_top) {
                 GLMatrix mtop = new GLMatrix(mcenter)
                     .translate(0, 2, 0)
                     .scale(1, -1, 1);
@@ -1311,11 +1306,11 @@ public class MultiPictureRenderer
 
                 glcanvas.drawTexture(
                     mtop, tex_info.tex_id,
-                    effect.alpha * pic_info.opacity / 4, fade_ratio);
+                    effect.alpha * opacity / 4, fade_ratio);
             }
 
             // mirrored picture: bottom
-            if(show_reflection_bottom && status != PictureStatus.SPINNER) {
+            if(tex_info.enable_reflect && show_reflection_bottom) {
                 GLMatrix mbtm = new GLMatrix(mcenter)
                     .translate(0, -2, 0)
                     .scale(1, -1, 1);
@@ -1326,7 +1321,7 @@ public class MultiPictureRenderer
 
                 glcanvas.drawTexture(
                     mbtm, tex_info.tex_id,
-                    effect.alpha * pic_info.opacity / 4, fade_ratio);
+                    effect.alpha * opacity / 4, fade_ratio);
             }
         }
 
@@ -1778,10 +1773,13 @@ public class MultiPictureRenderer
         text_paint.getTextBounds(str2, 0, str2.length(), rect2);
 
         int bw = getLeastPowerOf2GE(Math.max(rect1.width(), rect2.width()));
-        int bh = getLeastPowerOf2GE(Math.max(rect1.height(), rect2.height()));
+        int bh = getLeastPowerOf2GE(rect1.height() + rect2.height());
 
+        info.tex_info.has_content = true;
+        info.tex_info.enable_reflect = false;
         info.tex_info.bmp =
             Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_4444);
+        info.tex_info.bgcolor = 0xff000000;
         info.tex_info.bwidth = bw;
         info.tex_info.bheight = bh;
         info.tex_info.xratio = (float)bw / width;
@@ -1869,13 +1867,13 @@ public class MultiPictureRenderer
             // not retrieved, or just reload
             if(content == null || content.getUri() == null) {
                 if(pic_info.cur_content == null &&
-                   pic_info.tex_info == null) {
+                   ! pic_info.tex_info.has_content) {
                     setNotAvailableStatus(pic_info, idx);
                     pic_info.loading_cnt -= 1;
                     return;
                 }
                 else if(force_reload ||
-                        pic_info.tex_info == null) {
+                        ! pic_info.tex_info.has_content) {
                     content = pic_info.cur_content;
                     pic_info.cur_content = null;
                 }
@@ -1892,7 +1890,7 @@ public class MultiPictureRenderer
 
             // set status and progress
             if(pic_info.status == PictureStatus.NOT_AVAILABLE ||
-               pic_info.tex_info == null) {
+               ! pic_info.tex_info.has_content) {
                 if(pic_info.status != PictureStatus.SPINNER) {
                     pic_info.setStatus(PictureStatus.BLACKOUT);
                 }
@@ -1968,7 +1966,7 @@ public class MultiPictureRenderer
             }
 
             if(tex_info != null) {
-                if(pic_info.tex_info != null) {
+                if(pic_info.tex_info.has_content) {
                     // discard prev data
                     if(pic_info.tex_info.bmp != null) {
                         pic_info.tex_info.bmp.recycle();
@@ -1985,7 +1983,7 @@ public class MultiPictureRenderer
                 pic_info.tex_info = tex_info;
             }
 
-            if(pic_info.tex_info != null) {
+            if(pic_info.tex_info.has_content) {
                 // set status
                 pic_info.setStatus(PictureStatus.FADEIN);
             }
@@ -2130,6 +2128,7 @@ public class MultiPictureRenderer
                 mat, tex_width, tex_height, saturation);
             bmp.recycle();
 
+            tex_info.has_content = true;
             return tex_info;
         }
         catch(Exception e) {
