@@ -1559,8 +1559,8 @@ public class MultiPictureRenderer
         }
 
         // num of screens
-        int xn = (info.xstep <= 0 ? 1 : (int)(1 / info.xstep) + 1);
-        int yn = (info.ystep <= 0 ? 1 : (int)(1 / info.ystep) + 1);
+        int xn = (info.xstep <= 0 ? 1 : Math.round(1 / info.xstep) + 1);
+        int yn = (info.ystep <= 0 ? 1 : Math.round(1 / info.ystep) + 1);
         if(xn != xcnt || yn != ycnt) {
             synchronized(pic_whole_lock) {
                 xcnt = xn;

@@ -113,65 +113,65 @@ public class AlbumSource extends PreferenceActivity
         {
             try {
                 dlg.dismiss();
-            }
-            catch(Exception e) {
-                // ignore
-            }
 
-            buckets = result;
-            if(buckets == null) {
-                new AlertDialog.Builder(AlbumSource.this)
-                    .setTitle(R.string.pref_album_title)
-                    .setMessage(R.string.pref_no_bucket_exist_msg)
-                    .setPositiveButton(
-                        android.R.string.ok,
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog,
-                                                int button) {
-                                finish();
-                            }
-                        })
-                    .setOnCancelListener(
-                        new DialogInterface.OnCancelListener() {
-                            public void onCancel(DialogInterface dialog) {
-                                finish();
-                            }
-                        })
-                    .show();
-                return;
-            }
+                buckets = result;
+                if(buckets == null) {
+                    new AlertDialog.Builder(AlbumSource.this)
+                        .setTitle(R.string.pref_album_title)
+                        .setMessage(R.string.pref_no_bucket_exist_msg)
+                        .setPositiveButton(
+                            android.R.string.ok,
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog,
+                                                    int button) {
+                                    finish();
+                                }
+                            })
+                        .setOnCancelListener(
+                            new DialogInterface.OnCancelListener() {
+                                public void onCancel(DialogInterface dialog) {
+                                    finish();
+                                }
+                            })
+                        .show();
+                    return;
+                }
 
-            checked = new boolean[buckets.length];
-            String bucket_key = MultiPictureSetting.getKey(
-                MultiPictureSetting.SCREEN_BUCKET_KEY, key);
-            String bucket_val =
-                (need_clear ? null : pref.getString(bucket_key, null));
-            if(! need_clear && bucket_val != null) {
-                String[] val_ids = bucket_val.split(" ");
-                for(int i = 0; i < buckets.length; i++) {
-                    for(String val : val_ids) {
-                        if(val.equals(buckets[i].getId())) {
-                            checked[i] = true;
-                            break;
+                checked = new boolean[buckets.length];
+                String bucket_key = MultiPictureSetting.getKey(
+                    MultiPictureSetting.SCREEN_BUCKET_KEY, key);
+                String bucket_val =
+                    (need_clear ? null : pref.getString(bucket_key, null));
+                if(! need_clear && bucket_val != null) {
+                    String[] val_ids = bucket_val.split(" ");
+                    for(int i = 0; i < buckets.length; i++) {
+                        for(String val : val_ids) {
+                            if(val.equals(buckets[i].getId())) {
+                                checked[i] = true;
+                                break;
+                            }
                         }
                     }
                 }
-            }
-            else {
-                Arrays.fill(checked, true);
-            }
+                else {
+                    Arrays.fill(checked, true);
+                }
 
-            // add album list
-            album_group = (PreferenceGroup)
-                getPreferenceManager().findPreference("album_cat");
+                // add album list
+                album_group = (PreferenceGroup)
+                    getPreferenceManager().findPreference("album_cat");
 
-            for(int i = 0; i < buckets.length; i++) {
-                CheckBoxPreference check =
-                    new CheckBoxPreference(AlbumSource.this);
-                check.setPersistent(false);
-                check.setTitle(buckets[i].getName());
-                check.setChecked(checked[i]);
-                album_group.addPreference(check);
+                for(int i = 0; i < buckets.length; i++) {
+                    CheckBoxPreference check =
+                        new CheckBoxPreference(AlbumSource.this);
+                    check.setPersistent(false);
+                    check.setTitle(buckets[i].getName());
+                    check.setChecked(checked[i]);
+                    album_group.addPreference(check);
+                }
+            }
+            catch(Exception e) {
+                // ignore
             }
         }
     }
@@ -199,20 +199,20 @@ public class AlbumSource extends PreferenceActivity
         {
             try {
                 dlg.dismiss();
+
+                if(result) {
+                    finish();
+                }
+                else {
+                    new AlertDialog.Builder(AlbumSource.this)
+                        .setTitle(R.string.pref_album_title)
+                        .setMessage(R.string.pref_no_bucket_select_msg)
+                        .setPositiveButton(android.R.string.ok, null)
+                        .show();
+                }
             }
             catch(Exception e) {
                 // ignore
-            }
-
-            if(result) {
-                finish();
-            }
-            else {
-                new AlertDialog.Builder(AlbumSource.this)
-                    .setTitle(R.string.pref_album_title)
-                    .setMessage(R.string.pref_no_bucket_select_msg)
-                    .setPositiveButton(android.R.string.ok, null)
-                    .show();
             }
         }
     }
