@@ -7,10 +7,12 @@ import org.tamanegi.wallpaper.multipicture.R;
 import org.tamanegi.wallpaper.multipicture.plugin.PictureSourceContract;
 
 import android.app.AlertDialog;
+import android.app.ProgressDialog;
 import android.content.ComponentName;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.ListPreference;
@@ -47,43 +49,8 @@ public class AlbumSource extends PreferenceActivity
         addPreferencesFromResource(R.xml.album_pref);
         pref = PreferenceManager.getDefaultSharedPreferences(this);
 
-        // prepare
-        buckets = PictureUtils.getAvailBuckets(getContentResolver());
-        if(buckets == null) {
-            return;
-        }
-
-        checked = new boolean[buckets.length];
-        String bucket_key = MultiPictureSetting.getKey(
-            MultiPictureSetting.SCREEN_BUCKET_KEY, key);
-        String bucket_val =
-            (need_clear ? null : pref.getString(bucket_key, null));
-        if(! need_clear && bucket_val != null) {
-            String[] val_ids = bucket_val.split(" ");
-            for(int i = 0; i < buckets.length; i++) {
-                for(String val : val_ids) {
-                    if(val.equals(buckets[i].getId())) {
-                        checked[i] = true;
-                        break;
-                    }
-                }
-            }
-        }
-        else {
-            Arrays.fill(checked, true);
-        }
-
-        // add album list
-        album_group = (PreferenceGroup)
-            getPreferenceManager().findPreference("album_cat");
-
-        for(int i = 0; i < buckets.length; i++) {
-            CheckBoxPreference check = new CheckBoxPreference(this);
-            check.setPersistent(false);
-            check.setTitle(buckets[i].getName());
-            check.setChecked(checked[i]);
-            album_group.addPreference(check);
-        }
+        // prepare album list
+        new AsyncPrepareList().execute();
 
         // order
         String order_key = MultiPictureSetting.getKey(
@@ -111,44 +78,143 @@ public class AlbumSource extends PreferenceActivity
         rescan.setChecked(rescan_val);
     }
 
-    @Override
-    protected void onResume()
-    {
-        super.onResume();
-
-        if(buckets == null) {
-            new AlertDialog.Builder(this)
-                .setTitle(R.string.pref_album_title)
-                .setMessage(R.string.pref_no_bucket_exist_msg)
-                .setPositiveButton(
-                    android.R.string.ok,
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog,
-                                            int button) {
-                            finish();
-                        }
-                    })
-                .setOnCancelListener(
-                    new DialogInterface.OnCancelListener() {
-                        public void onCancel(DialogInterface dialog) {
-                            finish();
-                        }
-                    })
-                .show();
-        }
-    }
-
     public void onButtonOk(View v)
     {
-        if(applyBucketValue()) {
-            finish();
-        }
+        new AsyncApplyBucketValue().execute();
     }
 
     public void onButtonCancel(View v)
     {
         setResult(RESULT_CANCELED);
         finish();
+    }
+
+    private class AsyncPrepareList
+        extends AsyncTask<Void, Void, PictureUtils.BucketItem[]>
+    {
+        private ProgressDialog dlg;
+
+        @Override
+        protected void onPreExecute()
+        {
+            dlg = ProgressDialog.show(
+                AlbumSource.this, null, getString(R.string.album_loading),
+                true, false);
+        }
+
+        @Override
+        protected PictureUtils.BucketItem[] doInBackground(Void... params)
+        {
+            return PictureUtils.getAvailBuckets(getContentResolver());
+        }
+
+        @Override
+        protected void onPostExecute(PictureUtils.BucketItem[] result)
+        {
+            try {
+                dlg.dismiss();
+            }
+            catch(Exception e) {
+                // ignore
+            }
+
+            buckets = result;
+            if(buckets == null) {
+                new AlertDialog.Builder(AlbumSource.this)
+                    .setTitle(R.string.pref_album_title)
+                    .setMessage(R.string.pref_no_bucket_exist_msg)
+                    .setPositiveButton(
+                        android.R.string.ok,
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog,
+                                                int button) {
+                                finish();
+                            }
+                        })
+                    .setOnCancelListener(
+                        new DialogInterface.OnCancelListener() {
+                            public void onCancel(DialogInterface dialog) {
+                                finish();
+                            }
+                        })
+                    .show();
+                return;
+            }
+
+            checked = new boolean[buckets.length];
+            String bucket_key = MultiPictureSetting.getKey(
+                MultiPictureSetting.SCREEN_BUCKET_KEY, key);
+            String bucket_val =
+                (need_clear ? null : pref.getString(bucket_key, null));
+            if(! need_clear && bucket_val != null) {
+                String[] val_ids = bucket_val.split(" ");
+                for(int i = 0; i < buckets.length; i++) {
+                    for(String val : val_ids) {
+                        if(val.equals(buckets[i].getId())) {
+                            checked[i] = true;
+                            break;
+                        }
+                    }
+                }
+            }
+            else {
+                Arrays.fill(checked, true);
+            }
+
+            // add album list
+            album_group = (PreferenceGroup)
+                getPreferenceManager().findPreference("album_cat");
+
+            for(int i = 0; i < buckets.length; i++) {
+                CheckBoxPreference check =
+                    new CheckBoxPreference(AlbumSource.this);
+                check.setPersistent(false);
+                check.setTitle(buckets[i].getName());
+                check.setChecked(checked[i]);
+                album_group.addPreference(check);
+            }
+        }
+    }
+
+    private class AsyncApplyBucketValue extends AsyncTask<Void, Void, Boolean>
+    {
+        private ProgressDialog dlg;
+
+        @Override
+        protected void onPreExecute()
+        {
+            dlg = ProgressDialog.show(
+                AlbumSource.this, null, getString(R.string.album_saving),
+                true, false);
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... params)
+        {
+            return applyBucketValue();
+        }
+
+        @Override
+        protected void onPostExecute(Boolean result)
+        {
+            try {
+                dlg.dismiss();
+            }
+            catch(Exception e) {
+                // ignore
+            }
+
+            if(result) {
+                finish();
+            }
+            else {
+                new AlertDialog.Builder(AlbumSource.this)
+                    .setTitle(R.string.pref_album_title)
+                    .setMessage(R.string.pref_no_bucket_select_msg)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .show();
+            }
+        }
     }
 
     private boolean applyBucketValue()
@@ -161,11 +227,6 @@ public class AlbumSource extends PreferenceActivity
             c = (c || checked[i]);
         }
         if(! c) {
-            new AlertDialog.Builder(this)
-                .setTitle(R.string.pref_album_title)
-                .setMessage(R.string.pref_no_bucket_select_msg)
-                .setPositiveButton(android.R.string.ok, null)
-                .show();
             return false;
         }
 

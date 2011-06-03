@@ -114,6 +114,9 @@
   <string name="menu_qr">QR Code</string>
   <string name="menu_report">Report/Request</string>
 
+  <string name="album_loading">Loading...</string>
+  <string name="album_saving">Saving...</string>
+
   <string name="folder_picker_title">Select Folder</string>
   <string name="folder_up">../ (Up folder)</string>
   <string name="folder_loading">Loading...</string>
