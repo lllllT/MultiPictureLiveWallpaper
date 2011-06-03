@@ -716,7 +716,7 @@ public class MultiPictureRenderer
             info.tex_info.bmp.recycle();
             info.tex_info.bmp = null;
         }
-        else {
+        else if(info.tex_info.tex_id >= 0) {
             glcanvas.deleteTexture(info.tex_info.tex_id);
             info.tex_info.tex_id = -1;
         }
@@ -1394,14 +1394,15 @@ public class MultiPictureRenderer
             effect.fill_background = true;
         }
         else if(transition == TransitionType.slide_3d) {
-            if(dx > 0.6 || dy > 0.6) {
+            if(dx > 1 || dy > 1) {
                 return null;
             }
 
+            float tx = (float)-Math.log(1 - dx);
+            float ty = (float)-Math.log(1 - dy);
             float ratio = 3f;
-            float tx = (dx < 0 ? dx : dx + dx * dx) * wratio;
-            float ty = (dy < 0 ? dy : dy + dy * dy);
-            effect.matrix.translate(tx * ratio, -ty * ratio,
+            effect.matrix.translate((tx + ty * 0.25f) * ratio * wratio,
+                                    (tx * 0.25f + ty) * -ratio,
                                     (dx + dy) * 8f);
             effect.alpha *= Math.min(Math.min(dx, dy) + 1, 1);
         }
@@ -1971,10 +1972,10 @@ public class MultiPictureRenderer
                     if(pic_info.tex_info.bmp != null) {
                         pic_info.tex_info.bmp.recycle();
                     }
-                    else {
+                    else if(pic_info.tex_info.tex_id >= 0) {
                         drawer_handler.obtainMessage(
                             MSG_DELETE_TEXTURE,
-                            pic_info.tex_info.tex_id, 0);
+                            pic_info.tex_info.tex_id, 0).sendToTarget();
                     }
                 }
 
@@ -2239,6 +2240,8 @@ public class MultiPictureRenderer
                 cnt[cd] += 10 + rx + ry;
             }
         }
+
+        bmp.recycle();
 
         // search max
         int detail_color = 0;
