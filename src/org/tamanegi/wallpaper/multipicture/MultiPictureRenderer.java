@@ -319,7 +319,6 @@ public class MultiPictureRenderer
     private boolean is_in_transition = false;
     private long transition_prev_time = 0;
     private TransitionType cur_transition;
-    private int cur_color;
 
     private boolean use_keyguard_pic;
     private boolean is_in_keyguard;
@@ -1123,20 +1122,21 @@ public class MultiPictureRenderer
             int idx;
             float dx;
             float dy;
-            float da;
+            float fade;
             boolean visible;
             boolean for_lock;
 
-            ScreenDelta(int xn, int yn, float dx, float dy,
-                        boolean visible, boolean for_lock)
+            ScreenDelta(int xn, int yn, float dx, float dy, boolean for_lock)
             {
                 this.idx = xcnt * yn + xn;
                 this.dx = dx;
                 this.dy = dy;
-                this.da = (for_lock ? 1 : keyguard_dx);
-                this.visible =
-                    (visible && da > 0 &&
-                     (for_lock || (idx >= 0 && idx < pic.length)));
+                this.fade = Math.max(
+                    0, Math.min(1, (for_lock ? 1 - keyguard_dx * 2 :
+                                    keyguard_dx * 2 - 1)));
+                this.visible = (fade > 0 &&
+                                ((for_lock && is_keyguard_visible) ||
+                                 (idx >= 0 && idx < pic.length)));
                 this.for_lock = for_lock;
             }
 
@@ -1157,12 +1157,11 @@ public class MultiPictureRenderer
         }
 
         ScreenDelta[] ds = {
-            new ScreenDelta(xn,     yn,     dx,     dy,     true, false),
-            new ScreenDelta(xn + 1, yn,     dx + 1, dy,     (dx != 0), false),
-            new ScreenDelta(xn,     yn + 1, dx,     dy + 1, (dy != 0), false),
-            new ScreenDelta(xn + 1, yn + 1, dx + 1, dy + 1,
-                            (dx != 0 && dy != 0), false),
-            new ScreenDelta(-1, 0, keyguard_dx, 0, is_keyguard_visible, true),
+            new ScreenDelta(xn,     yn,     dx,     dy,     false),
+            new ScreenDelta(xn + 1, yn,     dx + 1, dy,     false),
+            new ScreenDelta(xn,     yn + 1, dx,     dy + 1, false),
+            new ScreenDelta(xn + 1, yn + 1, dx + 1, dy + 1, false),
+            new ScreenDelta(-1,     0,      0,      0,      true),
         };
 
         // for random transition
@@ -1189,16 +1188,15 @@ public class MultiPictureRenderer
         }
 
         // background color
-        int color = 0;                          // todo: use GLColor
+        GLColor color = new GLColor(0);
         for(ScreenDelta s : ds) {
             if(s.visible) {
-                int cc = getBackgroundColor(s.idx, s.dx, s.dy, s.da);
+                GLColor cc = getBackgroundColor(s.idx, s.dx, s.dy, s.fade);
                 color = mergeColor(color, cc);
             }
         }
 
-        cur_color = ((color & 0x00ffffff) | 0xff000000);
-        glcanvas.drawColor(new GLColor(cur_color));
+        glcanvas.drawColor(color.setAlpha(1));
 
         // draw each screen
         if(cur_transition == TransitionType.swap ||
@@ -1207,20 +1205,18 @@ public class MultiPictureRenderer
         }
         for(ScreenDelta s : ds) {
             if(s.visible) {
-                drawPicture(s.idx, s.dx, s.dy);
+                drawPicture(s.idx, s.dx, s.dy, s.fade);
             }
         }
     }
 
-    private void drawPicture(int idx, float dx, float dy)
+    private void drawPicture(int idx, float dx, float dy, float fade)
     {
         PictureInfo pic_info = (idx >= 0 ? pic[idx] : keyguard_pic);
         PictureStatus status = pic_info.status;
 
         // transition effect
-        TransitionType transition =
-            (idx >= 0 ? cur_transition : TransitionType.fade_inout);
-        EffectInfo effect = getTransitionEffect(transition, dx, dy);
+        EffectInfo effect = getTransitionEffect(cur_transition, dx, dy);
         if(effect == null) {
             return;
         }
@@ -1240,7 +1236,7 @@ public class MultiPictureRenderer
              null);
         GLColor bgcolor =
             (effect.fill_background ?
-             new GLColor(getBackgroundColorNoAlpha(idx)).setAlpha(1) : null);
+             getBackgroundColorNoAlpha(idx, fade).setAlpha(1) : null);
         int fade_step =
             ((status == PictureStatus.NORMAL ||
               status == PictureStatus.SPINNER ||
@@ -1250,7 +1246,7 @@ public class MultiPictureRenderer
              FADE_TOTAL_DURATION - pic_info.progress :
              0);
         float fade_ratio = (float)fade_step / FADE_TOTAL_DURATION;
-        fade_ratio = Math.max(0, Math.min(1, fade_ratio));
+        fade_ratio = Math.max(0, Math.min(1, fade_ratio)) * fade;
         float border_ratio =
             (status == PictureStatus.SPINNER ||
              status == PictureStatus.NOT_AVAILABLE ? 1 :
@@ -1463,7 +1459,7 @@ public class MultiPictureRenderer
         return effect;
     }
 
-    private int getBackgroundColorNoAlpha(int idx)
+    private GLColor getBackgroundColorNoAlpha(int idx, float fade)
     {
         PictureInfo pic_info = (idx >= 0 ? pic[idx] : keyguard_pic);
         PictureStatus status = pic_info.status;
@@ -1471,51 +1467,38 @@ public class MultiPictureRenderer
         if(status == PictureStatus.BLACKOUT ||
            status == PictureStatus.SPINNER ||
            status == PictureStatus.NOT_AVAILABLE) {
-            return 0xff000000;
+            return new GLColor();
         }
 
-        int color = pic_info.tex_info.bgcolor;
-        if(status == PictureStatus.FADEIN ||
-           status == PictureStatus.FADEOUT) {
-            int p = (pic_info.status == PictureStatus.FADEIN ?
-                     pic_info.progress :
-                     FADE_TOTAL_DURATION - pic_info.progress);
-            p = (p < 0 ? 0 :
-                 p > FADE_TOTAL_DURATION ? FADE_TOTAL_DURATION :
-                 p);
+        GLColor color = new GLColor(pic_info.tex_info.bgcolor).setAlpha(1);
+        int p = (pic_info.status == PictureStatus.FADEIN ? pic_info.progress :
+                 pic_info.status == PictureStatus.FADEOUT ?
+                 (FADE_TOTAL_DURATION - pic_info.progress) :
+                 FADE_TOTAL_DURATION);
+        p = (p < 0 ? 0 :
+             p > FADE_TOTAL_DURATION ? FADE_TOTAL_DURATION :
+             p);
+        float fratio = ((float)p / FADE_TOTAL_DURATION) * fade;
 
-            color = mergeColor(
-                (color & 0x00ffffff) | (0xff * p / FADE_TOTAL_DURATION) << 24,
-                (0xff * (FADE_TOTAL_DURATION - p) / FADE_TOTAL_DURATION) << 24);
-        }
+        color.red *= fratio;
+        color.green *= fratio;
+        color.blue *= fratio;
 
         return color;
     }
 
-    private int getBackgroundColor(int idx, float dx, float dy, float da)
+    private GLColor getBackgroundColor(int idx, float dx, float dy, float fade)
     {
-        int color = getBackgroundColorNoAlpha(idx);
-        float a = (1 - Math.abs(dx)) * (1 - Math.abs(dy)) * da;
-        return ((color & 0x00ffffff) |
-                ((int)(0xff * a) << 24));
+        float a = Math.max(0, (1 - Math.abs(dx)) * (1 - Math.abs(dy)));
+        return getBackgroundColorNoAlpha(idx, fade).setAlpha(a);
     }
 
-    private int mergeColor(int c1, int c2)
+    private GLColor mergeColor(GLColor c1, GLColor c2)
     {
-        float a1 = ((c1 >> 24) & 0xff) / (float)0xff;
-        int r1 = (c1 >> 16) & 0xff;
-        int g1 = (c1 >>  8) & 0xff;
-        int b1 = (c1 >>  0) & 0xff;
-
-        float a2 = ((c2 >> 24) & 0xff) / (float)0xff;
-        int r2 = (c2 >> 16) & 0xff;
-        int g2 = (c2 >>  8) & 0xff;
-        int b2 = (c2 >>  0) & 0xff;
-
-        return ((0xff << 24) |
-                ((int)(r1 * a1 + r2 * a2) << 16) |
-                ((int)(g1 * a1 + g2 * a2) <<  8) |
-                ((int)(b1 * a1 + b2 * a2) <<  0));
+        return new GLColor(c1.red   * c1.alpha + c2.red   * c2.alpha,
+                           c1.green * c1.alpha + c2.green * c2.alpha,
+                           c1.blue  * c1.alpha + c2.blue  * c2.alpha,
+                           1);
     }
 
     private void changeOffsets(OffsetInfo info)
