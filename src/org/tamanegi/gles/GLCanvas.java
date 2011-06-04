@@ -378,21 +378,10 @@ public class GLCanvas
     {
         // todo:
         if(! egl.eglSwapBuffers(egl_display, egl_surface)) {
-            switch(egl.eglGetError()) {
-              case EGL11.EGL_CONTEXT_LOST:
-                  System.out.println("dbg: eglSwapBuffers: EGL_CONTEXT_LOST");
-                  destroyGLContext();
-                  initGLContext();
-                  return false;
-
-              case EGL10.EGL_BAD_NATIVE_WINDOW:
-                  System.out.println("dbg: eglSwapBuffers: EGL_BAD_NATIVE_WINDOW");
-                  break;
-
-              default:
-                  System.out.println("dbg: eglSwapBuffers: " + egl.eglGetError());
-                  //checkGlError(null, "eglSwapBuffers");
-                  break;
+            if(egl.eglGetError() == EGL11.EGL_CONTEXT_LOST) {
+                destroyGLContext();
+                initGLContext();
+                return false;
             }
         }
 
