@@ -243,7 +243,6 @@ public class GLCanvas
                      GL10.GL_REPLACE);
 
         GLUtils.texImage2D(GL10.GL_TEXTURE_2D, 0, bmp, 0);
-        // todo: check error
 
         gl.glDisable(GL10.GL_TEXTURE_2D);
 
