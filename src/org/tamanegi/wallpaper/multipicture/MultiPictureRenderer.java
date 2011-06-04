@@ -109,7 +109,8 @@ public class MultiPictureRenderer
     private static enum TransitionType
     {
         none, random,
-            slide, crossfade, fade_inout, zoom_inout,
+            slide, crossfade, fade_inout,
+            zoom_inout, zoom_slide,
             wipe, card,
             slide_3d, rotation_3d, swing, swap, cube
     }
@@ -119,6 +120,7 @@ public class MultiPictureRenderer
         TransitionType.crossfade,
         TransitionType.fade_inout,
         TransitionType.zoom_inout,
+        TransitionType.zoom_slide,
         TransitionType.wipe,
         TransitionType.card,
         TransitionType.slide_3d,
@@ -212,7 +214,7 @@ public class MultiPictureRenderer
         private GLMatrix matrix = new GLMatrix();
         private RectF clip_rect = null;
         private float alpha = 1;
-        private boolean fill_background = false;
+        private float fill_background = 0;
         private boolean need_border = false;
     }
 
@@ -920,8 +922,9 @@ public class MultiPictureRenderer
                 int xn = i % xcnt;
                 int yn = i / xcnt;
                 is_visible = (visible &&
-                              Math.abs(xn - xcur) < 1 &&
-                              Math.abs(yn - ycur) < 1);
+                              (cur_transition == TransitionType.zoom_slide ||
+                               (Math.abs(xn - xcur) < 1 &&
+                                Math.abs(yn - ycur) < 1)));
                 info = pic[i];
             }
             else {
@@ -1086,6 +1089,7 @@ public class MultiPictureRenderer
         }
 
         // draw
+        long t1 = SystemClock.uptimeMillis();
         try {
             drawPicture();
         }
@@ -1094,6 +1098,7 @@ public class MultiPictureRenderer
                 // todo: reload bitmap
             }
         }
+        long t2 = SystemClock.uptimeMillis();
 
         // prepare next draw step
         if(cur_duration > 0) {
@@ -1119,25 +1124,36 @@ public class MultiPictureRenderer
         // delta for each screen
         class ScreenDelta implements Comparable<ScreenDelta>
         {
-            int idx;
+            PictureInfo pic_info;
             float dx;
             float dy;
             float fade;
             boolean visible;
             boolean for_lock;
 
-            ScreenDelta(int xn, int yn, float dx, float dy, boolean for_lock)
+            ScreenDelta(PictureInfo pic_info, float dx, float dy,
+                        boolean for_lock)
             {
-                this.idx = xcnt * yn + xn;
+                this.pic_info = pic_info;
                 this.dx = dx;
                 this.dy = dy;
-                this.fade = Math.max(
-                    0, Math.min(1, (for_lock ? 1 - keyguard_dx * 2 :
-                                    keyguard_dx * 2 - 1)));
-                this.visible = (fade > 0 &&
-                                ((for_lock && is_keyguard_visible) ||
-                                 (idx >= 0 && idx < pic.length)));
                 this.for_lock = for_lock;
+
+                float fade_r =
+                    ((pic_info.status == PictureStatus.NOT_AVAILABLE ||
+                      pic_info.status == PictureStatus.SPINNER ||
+                      pic_info.status == PictureStatus.NORMAL) ?
+                     FADE_TOTAL_DURATION :
+                     pic_info.status == PictureStatus.FADEIN ?
+                     pic_info.progress :
+                     pic_info.status == PictureStatus.FADEOUT ?
+                     FADE_TOTAL_DURATION - pic_info.progress :
+                     0) / (float)FADE_TOTAL_DURATION;
+                float fade_k =
+                    (for_lock ? 1 - keyguard_dx * 2 : keyguard_dx * 2 - 1);
+
+                fade = ratioRange(fade_r) * ratioRange(fade_k);
+                visible = (fade > 0 && (for_lock ? is_keyguard_visible : true));
             }
 
             @Override
@@ -1148,21 +1164,23 @@ public class MultiPictureRenderer
                 }
 
                 // reverse order
-                float d1 = Math.max(Math.abs(this.dx), Math.abs(this.dy));
-                float d2 = Math.max(Math.abs(o2.dx), Math.abs(o2.dy));
+                float d1 = Math.abs(this.dx) + Math.abs(this.dy);
+                float d2 = Math.abs(o2.dx) + Math.abs(o2.dy);
                 return (d1 < d2 ? +1 :
                         d1 > d2 ? -1 :
                         0);
             }
         }
 
-        ScreenDelta[] ds = {
-            new ScreenDelta(xn,     yn,     dx,     dy,     false),
-            new ScreenDelta(xn + 1, yn,     dx + 1, dy,     false),
-            new ScreenDelta(xn,     yn + 1, dx,     dy + 1, false),
-            new ScreenDelta(xn + 1, yn + 1, dx + 1, dy + 1, false),
-            new ScreenDelta(-1,     0,      0,      0,      true),
-        };
+        ScreenDelta[] ds = new ScreenDelta[pic.length + 1];
+
+        for(int i = 0; i < pic.length; i++) {
+            int xx = i % xcnt;
+            int yy = i / xcnt;
+            ds[i] = new ScreenDelta(pic[i], xx - xcur, yy - ycur, false);
+        }
+
+        ds[pic.length] = new ScreenDelta(keyguard_pic, 0, 0, true);
 
         // for random transition
         if(((! is_in_transition) &&
@@ -1190,36 +1208,40 @@ public class MultiPictureRenderer
         // background color
         GLColor color = new GLColor(0);
         for(ScreenDelta s : ds) {
-            if(s.visible) {
-                GLColor cc = getBackgroundColor(s.idx, s.dx, s.dy, s.fade);
-                color = mergeColor(color, cc);
-            }
+            GLColor cc = getBackgroundColor(s.pic_info, s.dx, s.dy, s.fade);
+            color.red   += cc.red * cc.alpha;
+            color.green += cc.green * cc.alpha;
+            color.blue  += cc.blue * cc.alpha;
+            color.alpha += cc.alpha;
         }
 
-        glcanvas.drawColor(color.setAlpha(1));
+        color.red   /= color.alpha;
+        color.green /= color.alpha;
+        color.blue  /= color.alpha;
+        color.alpha = 1;
+
+        glcanvas.drawColor(color);
 
         // draw each screen
-        if(cur_transition == TransitionType.swap ||
+        if(cur_transition == TransitionType.zoom_slide ||
+           cur_transition == TransitionType.swap ||
            cur_transition == TransitionType.cube) {
             Arrays.sort(ds);
         }
         for(ScreenDelta s : ds) {
-            if(s.visible) {
-                drawPicture(s.idx, s.dx, s.dy, s.fade);
+            EffectInfo effect =
+                (s.visible ? getTransitionEffect(cur_transition, s.dx, s.dy) :
+                 null);
+            if(effect != null && effect.alpha > 0) {
+                drawPicture(s.pic_info, effect, s.fade);
             }
         }
     }
 
-    private void drawPicture(int idx, float dx, float dy, float fade)
+    private void drawPicture(PictureInfo pic_info,
+                             EffectInfo effect, float fade)
     {
-        PictureInfo pic_info = (idx >= 0 ? pic[idx] : keyguard_pic);
         PictureStatus status = pic_info.status;
-
-        // transition effect
-        EffectInfo effect = getTransitionEffect(cur_transition, dx, dy);
-        if(effect == null) {
-            return;
-        }
 
         // clip region
         if(effect.clip_rect != null) {
@@ -1235,22 +1257,14 @@ public class MultiPictureRenderer
              status == PictureStatus.SPINNER ? spinner :
              null);
         GLColor bgcolor =
-            (effect.fill_background ?
-             getBackgroundColorNoAlpha(idx, fade).setAlpha(1) : null);
-        int fade_step =
-            ((status == PictureStatus.NORMAL ||
-              status == PictureStatus.SPINNER ||
-              status == PictureStatus.NOT_AVAILABLE) ? FADE_TOTAL_DURATION :
-             status == PictureStatus.FADEIN ? pic_info.progress :
-             status == PictureStatus.FADEOUT ?
-             FADE_TOTAL_DURATION - pic_info.progress :
-             0);
-        float fade_ratio = (float)fade_step / FADE_TOTAL_DURATION;
-        fade_ratio = Math.max(0, Math.min(1, fade_ratio)) * fade;
+            (effect.fill_background > 0 ?
+             getBackgroundColorNoAlpha(pic_info, fade).setAlpha(
+                 effect.fill_background *
+                 (status != PictureStatus.SPINNER ? fade : 0)) : null);
         float border_ratio =
             (status == PictureStatus.SPINNER ||
              status == PictureStatus.NOT_AVAILABLE ? 1 :
-             1 - fade_ratio);
+             1 - fade);
         float opacity =
             (status != PictureStatus.SPINNER &&
              status != PictureStatus.NOT_AVAILABLE ? 1 :
@@ -1263,7 +1277,7 @@ public class MultiPictureRenderer
                 new GLColor(BORDER_COLOR).setAlpha(
                     effect.alpha * border_ratio));
         }
-        else if(effect.fill_background) {
+        else if(bgcolor != null) {
             // background
             glcanvas.drawRect(effect.matrix, bgcolor, null);
         }
@@ -1279,7 +1293,7 @@ public class MultiPictureRenderer
 
         if(tex_info != null) {
             // alpha with fade
-            effect.alpha *= fade_ratio;
+            effect.alpha *= fade;
 
             // matrix for main texture
             GLMatrix mcenter = new GLMatrix(effect.matrix)
@@ -1288,7 +1302,7 @@ public class MultiPictureRenderer
             // draw content picture
             glcanvas.drawTexture(
                 mcenter, tex_info.tex_id,
-                effect.alpha * opacity, fade_ratio);
+                effect.alpha * opacity, fade);
 
             // mirrored picture: top
             if(tex_info.enable_reflect && show_reflection_top) {
@@ -1296,13 +1310,13 @@ public class MultiPictureRenderer
                     .translate(0, 2, 0)
                     .scale(1, -1, 1);
 
-                if(effect.fill_background) {
+                if(bgcolor != null) {
                     glcanvas.drawRect(mtop, bgcolor, null);
                 }
 
                 glcanvas.drawTexture(
                     mtop, tex_info.tex_id,
-                    effect.alpha * opacity / 4, fade_ratio);
+                    effect.alpha * opacity / 4, fade);
             }
 
             // mirrored picture: bottom
@@ -1311,13 +1325,13 @@ public class MultiPictureRenderer
                     .translate(0, -2, 0)
                     .scale(1, -1, 1);
 
-                if(effect.fill_background) {
+                if(bgcolor != null) {
                     glcanvas.drawRect(mbtm, bgcolor, null);
                 }
 
                 glcanvas.drawTexture(
                     mbtm, tex_info.tex_id,
-                    effect.alpha * opacity / 4, fade_ratio);
+                    effect.alpha * opacity / 4, fade);
             }
         }
 
@@ -1337,60 +1351,72 @@ public class MultiPictureRenderer
                dy <= -0.5 || dy > 0.5) {
                 return null;
             }
-            effect.fill_background = true;
+
+            effect.fill_background = 1;
         }
         else if(transition == TransitionType.crossfade) {
             if(dx <= -1 || dx >= 1 ||
                dy <= -1 || dy >= 1) {
                 return null;
             }
+
             effect.alpha *= ((1 - Math.abs(dx)) * (1 - Math.abs(dy)));
         }
         else if(transition == TransitionType.fade_inout) {
-            if(dx <= -0.5 || dx > 0.5 ||
-               dy <= -0.5 || dy > 0.5) {
+            if(dx <= -0.5 || dx >= 0.5 ||
+               dy <= -0.5 || dy >= 0.5) {
                 return null;
             }
+
             effect.alpha *= (1 - Math.max(Math.abs(dx), Math.abs(dy)) * 2);
         }
         else if(transition == TransitionType.slide) {
             effect.matrix.translate(dx * 2 * wratio, -dy * 2, 0);
-            effect.fill_background = true;
+            effect.fill_background = 1;
         }
         else if(transition == TransitionType.zoom_inout) {
-            if(dx <= -1 || dx >= 1 ||
-               dy <= -1 || dy >= 1) {
+            float fact = 1 - Math.max(Math.abs(dx), Math.abs(dy));
+            if(fact <= 0) {
                 return null;
             }
-            float fact = Math.min(1 - Math.abs(dx), 1 - Math.abs(dy));
+
             effect.matrix
                 .translate(dx * wratio, -dy, 0)
                 .scale(fact, fact, 1);
+        }
+        else if(transition == TransitionType.zoom_slide) {
+            float fact =
+                Math.min(1, Math.max(Math.abs(dx), Math.abs(dy)) * 1.25f);
+            fact = 1 - fact;
+            fact = 1 - fact * fact;
+            effect.matrix.translate(dx * 2 * wratio, -dy * 2, fact * -8);
+            effect.fill_background = 1 - fact;
         }
         else if(transition == TransitionType.wipe) {
             if(dx <= -1 || dx >= 1 ||
                dy <= -1 || dy >= 1) {
                 return null;
             }
+
             effect.clip_rect =
                 new RectF(((dx <= 0 ? 0 : +dx) * 2f - 1f) * wratio,
                           ((dy <= 0 ? 0 : -dy) * 2f + 1f),
                           ((dx <= 0 ? +dx : 0) * 2f + 1f) * wratio,
                           ((dy <= 0 ? -dy : 0) * 2f - 1f));
-            effect.fill_background = true;
+            effect.fill_background = 1;
         }
         else if(transition == TransitionType.card) {
-            if(dx < -1 || dy < -1) {
+            if(dx <= -1 || dy <= -1) {
                 return null;
             }
 
             float tx = Math.max(dx, 0) * wratio;
             float ty = Math.max(dy, 0);
             effect.matrix.translate(tx * 2, -ty * 2, 0);
-            effect.fill_background = true;
+            effect.fill_background = 1;
         }
         else if(transition == TransitionType.slide_3d) {
-            if(dx > 1 || dy > 1) {
+            if(dx >= 1 || dy >= 1) {
                 return null;
             }
 
@@ -1417,6 +1443,11 @@ public class MultiPictureRenderer
             effect.need_border = true;
         }
         else if(transition == TransitionType.swing) {
+            if(dx <= -1 || dx >= 1 ||
+               dy <= -1 || dy >= 1) {
+                return null;
+            }
+
             float tx = (dx <= 0 ? +1 : -1) * wratio;
             float ty = (dy <= 0 ? -1 : +1);
             effect.matrix
@@ -1429,6 +1460,10 @@ public class MultiPictureRenderer
         }
         else if(transition == TransitionType.swap) {
             float fact = Math.max(Math.abs(dx), Math.abs(dy));
+            if(fact >= 1) {
+                return null;
+            }
+
             float ang1 = (float)(fact * Math.PI);
             float ang2 = (float)Math.atan2(-dy, dx);
 
@@ -1441,6 +1476,10 @@ public class MultiPictureRenderer
         }
         else if(transition == TransitionType.cube) {
             float fact = Math.max(Math.abs(dx), Math.abs(dy));
+            if(fact >= 1) {
+                return null;
+            }
+
             float ang1 = (float)(fact * Math.PI / 2);
             float ang2 = (float)Math.atan2(-dy, dx);
 
@@ -1459,9 +1498,8 @@ public class MultiPictureRenderer
         return effect;
     }
 
-    private GLColor getBackgroundColorNoAlpha(int idx, float fade)
+    private GLColor getBackgroundColorNoAlpha(PictureInfo pic_info, float fade)
     {
-        PictureInfo pic_info = (idx >= 0 ? pic[idx] : keyguard_pic);
         PictureStatus status = pic_info.status;
 
         if(status == PictureStatus.BLACKOUT ||
@@ -1470,35 +1508,23 @@ public class MultiPictureRenderer
             return new GLColor();
         }
 
-        GLColor color = new GLColor(pic_info.tex_info.bgcolor).setAlpha(1);
-        int p = (pic_info.status == PictureStatus.FADEIN ? pic_info.progress :
-                 pic_info.status == PictureStatus.FADEOUT ?
-                 (FADE_TOTAL_DURATION - pic_info.progress) :
-                 FADE_TOTAL_DURATION);
-        p = (p < 0 ? 0 :
-             p > FADE_TOTAL_DURATION ? FADE_TOTAL_DURATION :
-             p);
-        float fratio = ((float)p / FADE_TOTAL_DURATION) * fade;
-
-        color.red *= fratio;
-        color.green *= fratio;
-        color.blue *= fratio;
+        GLColor color = new GLColor(pic_info.tex_info.bgcolor);
+        color.red   *= fade;
+        color.green *= fade;
+        color.blue  *= fade;
+        color.alpha = 1;
 
         return color;
     }
 
-    private GLColor getBackgroundColor(int idx, float dx, float dy, float fade)
+    private GLColor getBackgroundColor(PictureInfo pic_info,
+                                       float dx, float dy, float fade)
     {
-        float a = Math.max(0, (1 - Math.abs(dx)) * (1 - Math.abs(dy)));
-        return getBackgroundColorNoAlpha(idx, fade).setAlpha(a);
-    }
-
-    private GLColor mergeColor(GLColor c1, GLColor c2)
-    {
-        return new GLColor(c1.red   * c1.alpha + c2.red   * c2.alpha,
-                           c1.green * c1.alpha + c2.green * c2.alpha,
-                           c1.blue  * c1.alpha + c2.blue  * c2.alpha,
-                           1);
+        float a =
+            Math.max(0, (1 - Math.abs(dx))) *
+            Math.max(0, (1 - Math.abs(dy))) *
+            (pic_info.status != PictureStatus.SPINNER ? fade : 0);
+        return getBackgroundColorNoAlpha(pic_info, fade).setAlpha(a);
     }
 
     private void changeOffsets(OffsetInfo info)
@@ -2129,6 +2155,11 @@ public class MultiPictureRenderer
         }
 
         return x;
+    }
+
+    private static float ratioRange(float v)
+    {
+        return Math.min(1, Math.max(0, v));
     }
 
     private int detectBackgroundColor(Bitmap bmp, float xratio, float yratio)
