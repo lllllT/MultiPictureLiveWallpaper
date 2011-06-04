@@ -186,6 +186,7 @@
     <item>CrossFade</item>
     <item>Fade In/Out</item>
     <item>Zoom In/Out</item>
+    <item>Zoom and Slide</item>
     <item>Wipe</item>
     <item>Card</item>
     <item>3D Slide</item>
@@ -202,6 +203,7 @@
     <item>crossfade</item>
     <item>fade_inout</item>
     <item>zoom_inout</item>
+    <item>zoom_slide</item>
     <item>wipe</item>
     <item>card</item>
     <item>slide_3d</item>

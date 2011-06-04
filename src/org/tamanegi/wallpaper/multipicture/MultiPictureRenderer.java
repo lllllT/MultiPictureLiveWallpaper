@@ -1089,7 +1089,6 @@ public class MultiPictureRenderer
         }
 
         // draw
-        long t1 = SystemClock.uptimeMillis();
         try {
             drawPicture();
         }
@@ -1098,7 +1097,6 @@ public class MultiPictureRenderer
                 // todo: reload bitmap
             }
         }
-        long t2 = SystemClock.uptimeMillis();
 
         // prepare next draw step
         if(cur_duration > 0) {
