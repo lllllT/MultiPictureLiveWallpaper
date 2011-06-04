@@ -131,7 +131,8 @@
     <item>3D回転</item>
     <item>スウィング</item>
     <item>スワップ</item>
-    <item>キューブ</item>
+    <item>キューブ外</item>
+    <item>キューブ内</item>
     <item>ランダム</item>
   </string-array>
 

@@ -193,7 +193,8 @@
     <item>3D Rotation</item>
     <item>Swing</item>
     <item>Swap</item>
-    <item>Cube</item>
+    <item>Outside Cube</item>
+    <item>Inside Cube</item>
     <item>Random</item>
   </string-array>
 
@@ -211,6 +212,7 @@
     <item>swing</item>
     <item>swap</item>
     <item>cube</item>
+    <item>cube_inside</item>
     <item>random</item>
   </string-array>
 

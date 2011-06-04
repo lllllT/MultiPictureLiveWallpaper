@@ -112,7 +112,8 @@ public class MultiPictureRenderer
             slide, crossfade, fade_inout,
             zoom_inout, zoom_slide,
             wipe, card,
-            slide_3d, rotation_3d, swing, swap, cube
+            slide_3d, rotation_3d, swing, swap,
+            cube, cube_inside
     }
 
     private static TransitionType[] random_transition = {
@@ -1493,6 +1494,26 @@ public class MultiPictureRenderer
                     (FloatMath.cos(ang1) - 1) * (wratio + 1) * 0.5f)
                 .rotateY(dx * 90)
                 .rotateX(dy * -90);
+
+            effect.alpha *= Math.min(FloatMath.cos(ang1), 1);
+            effect.need_border = true;
+        }
+        else if(transition == TransitionType.cube_inside) {
+            float fact = Math.max(Math.abs(dx), Math.abs(dy));
+            if(fact >= 1) {
+                return null;
+            }
+
+            float ang1 = (float)(fact * Math.PI / 2);
+            float ang2 = (float)Math.atan2(-dy, dx);
+
+            effect.matrix
+                .translate(
+                    FloatMath.cos(ang2) * FloatMath.sin(ang1) * wratio,
+                    FloatMath.sin(ang2) * FloatMath.sin(ang1),
+                    (FloatMath.cos(ang1) - 1) * (wratio + 1) * -0.5f)
+                .rotateY(dx * -90)
+                .rotateX(dy * 90);
 
             effect.alpha *= Math.min(FloatMath.cos(ang1), 1);
             effect.need_border = true;
