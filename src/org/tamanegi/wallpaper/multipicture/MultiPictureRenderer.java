@@ -77,7 +77,7 @@ public class MultiPictureRenderer
     private static final int BORDER_COLOR = 0x3f3f3f;
 
     // transition params
-    private static final int TRANSITION_RANDOM_TIMEOUT = 500; // msec
+    private static final int TRANSITION_RANDOM_TIMEOUT = 100; // msec
 
     // keyguard params
     private static final int KEYGUARD_FRAME_DURATION = 70;  // msec
@@ -199,10 +199,10 @@ public class MultiPictureRenderer
                 this.status == PictureStatus.FADEIN) ||
                (status == PictureStatus.FADEIN &&
                 this.status == PictureStatus.FADEOUT)) {
-                progress = Math.max(FADE_TOTAL_DURATION - progress, 0);
+                progress = Math.max(FADE_TOTAL_DURATION - progress, 1);
             }
             else {
-                progress = 0;
+                progress = 1;
             }
             this.status = status;
         }
@@ -1113,18 +1113,13 @@ public class MultiPictureRenderer
 
     private void drawPicture()
     {
-        // delta
-        int xn = (int)Math.floor(xcur);
-        int yn = (int)Math.floor(ycur);
-        float dx = xn - xcur;
-        float dy = yn - ycur;
-
         // delta for each screen
         class ScreenDelta implements Comparable<ScreenDelta>
         {
             PictureInfo pic_info;
             float dx;
             float dy;
+            float dz;
             float fade;
             boolean visible;
             boolean for_lock;
@@ -1148,10 +1143,12 @@ public class MultiPictureRenderer
                      FADE_TOTAL_DURATION - pic_info.progress :
                      0) / (float)FADE_TOTAL_DURATION;
                 float fade_k =
-                    (for_lock ? 1 - keyguard_dx * 2 : keyguard_dx * 2 - 1);
+                    ratioRange(for_lock ? 1 - keyguard_dx * 2 :
+                               keyguard_dx * 2 - 1);
 
-                fade = ratioRange(fade_r) * ratioRange(fade_k);
-                visible = (fade > 0 && (for_lock ? is_keyguard_visible : true));
+                dz = fade_k;
+                fade = ratioRange(fade_r) * fade_k;
+                visible = (for_lock ? is_keyguard_visible : true);
             }
 
             @Override
@@ -1180,10 +1177,16 @@ public class MultiPictureRenderer
 
         ds[pic.length] = new ScreenDelta(keyguard_pic, 0, 0, true);
 
+        // delta
+        int xn = (int)Math.floor(xcur);
+        int yn = (int)Math.floor(ycur);
+        float dxpx = Math.abs(xn - xcur) * width;
+        float dypx = Math.abs(yn - ycur) * height;
+
         // for random transition
         if(((! is_in_transition) &&
             (screen_transition == TransitionType.random) &&
-            (dx != 0 || dy != 0) &&
+            (dxpx < 1 && dypx < 1) &&
             (transition_prev_time + TRANSITION_RANDOM_TIMEOUT <
              SystemClock.elapsedRealtime())) ||
            (cur_transition == TransitionType.random)) {
@@ -1195,7 +1198,7 @@ public class MultiPictureRenderer
             cur_transition = next_transition;
         }
 
-        if(dx != 0 || dy != 0) {
+        if(dxpx >= 1 || dypx >= 1) {
             is_in_transition = true;
         }
         else {
@@ -1206,11 +1209,14 @@ public class MultiPictureRenderer
         // background color
         GLColor color = new GLColor(0);
         for(ScreenDelta s : ds) {
-            GLColor cc = getBackgroundColor(s.pic_info, s.dx, s.dy, s.fade);
-            color.red   += cc.red * cc.alpha;
-            color.green += cc.green * cc.alpha;
-            color.blue  += cc.blue * cc.alpha;
-            color.alpha += cc.alpha;
+            if(s.visible) {
+                GLColor cc =
+                    getBackgroundColor(s.pic_info, s.dx, s.dy, s.dz, s.fade);
+                color.red   += cc.red * cc.alpha;
+                color.green += cc.green * cc.alpha;
+                color.blue  += cc.blue * cc.alpha;
+                color.alpha += cc.alpha;
+            }
         }
 
         color.red   /= color.alpha;
@@ -1231,13 +1237,13 @@ public class MultiPictureRenderer
                 (s.visible ? getTransitionEffect(cur_transition, s.dx, s.dy) :
                  null);
             if(effect != null && effect.alpha > 0) {
-                drawPicture(s.pic_info, effect, s.fade);
+                drawPicture(s.pic_info, effect, s.dz, s.fade);
             }
         }
     }
 
     private void drawPicture(PictureInfo pic_info,
-                             EffectInfo effect, float fade)
+                             EffectInfo effect, float dz, float fade)
     {
         PictureStatus status = pic_info.status;
 
@@ -1257,12 +1263,11 @@ public class MultiPictureRenderer
         GLColor bgcolor =
             (effect.fill_background > 0 ?
              getBackgroundColorNoAlpha(pic_info, fade).setAlpha(
-                 effect.fill_background *
-                 (status != PictureStatus.SPINNER ? fade : 0)) : null);
+                 effect.fill_background) : null);
         float border_ratio =
             (status == PictureStatus.SPINNER ||
              status == PictureStatus.NOT_AVAILABLE ? 1 :
-             1 - fade);
+             1 - fade) * dz;
         float opacity =
             (status != PictureStatus.SPINNER &&
              status != PictureStatus.NOT_AVAILABLE ? 1 :
@@ -1516,12 +1521,11 @@ public class MultiPictureRenderer
     }
 
     private GLColor getBackgroundColor(PictureInfo pic_info,
-                                       float dx, float dy, float fade)
+                                       float dx, float dy, float dz, float fade)
     {
         float a =
             Math.max(0, (1 - Math.abs(dx))) *
-            Math.max(0, (1 - Math.abs(dy))) *
-            (pic_info.status != PictureStatus.SPINNER ? fade : 0);
+            Math.max(0, (1 - Math.abs(dy))) * dz;
         return getBackgroundColorNoAlpha(pic_info, fade).setAlpha(a);
     }
 

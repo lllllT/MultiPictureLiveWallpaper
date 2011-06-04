@@ -36,6 +36,8 @@ public class GLCanvas
 
     private SurfaceHolder holder;
     private float wratio = 1;
+    private float rect_width = 1;
+    private float rect_height = 1;
 
     private EGL10 egl = null;
     private EGLDisplay egl_display = null;
@@ -65,7 +67,10 @@ public class GLCanvas
     public void setSurface(SurfaceHolder holder, int width, int height)
     {
         this.holder = holder;
-        this.wratio = (float)width / height;
+
+        wratio = (float)width / height;
+        rect_width = (width + 1f) / width;
+        rect_height = (height + 1f) / height;
 
         if(egl != null) {
             destroyGLContext();
@@ -312,6 +317,7 @@ public class GLCanvas
         gl.glMatrixMode(GL10.GL_MODELVIEW);
         gl.glPushMatrix();
         gl.glMultMatrixf(mat.get(), 0);
+        gl.glScalef(rect_width, rect_height, 0);
 
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
         gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vertex_list);
