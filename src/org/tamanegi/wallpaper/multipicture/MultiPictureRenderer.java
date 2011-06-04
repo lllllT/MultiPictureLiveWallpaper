@@ -129,6 +129,7 @@ public class MultiPictureRenderer
         TransitionType.swing,
         TransitionType.swap,
         TransitionType.cube,
+        TransitionType.cube_inside,
     };
 
     // screen types: for backward compatible
@@ -1095,7 +1096,9 @@ public class MultiPictureRenderer
         }
         finally {
             if(! glcanvas.swap()) {
-                // todo: reload bitmap
+                // reload and retry
+                clearPictureBitmap();
+                drawer_handler.sendEmptyMessage(MSG_DRAW);
             }
         }
 
@@ -1187,16 +1190,11 @@ public class MultiPictureRenderer
         // for random transition
         if(((! is_in_transition) &&
             (screen_transition == TransitionType.random) &&
-            (dxpx < 1 && dypx < 1) &&
             (transition_prev_time + TRANSITION_RANDOM_TIMEOUT <
              SystemClock.elapsedRealtime())) ||
            (cur_transition == TransitionType.random)) {
-            TransitionType next_transition;
-            do {
-                next_transition = random_transition[
-                    random.nextInt(random_transition.length)];
-            } while(next_transition == cur_transition);
-            cur_transition = next_transition;
+            cur_transition = random_transition[
+                random.nextInt(random_transition.length)];
         }
 
         if(dxpx >= 1 || dypx >= 1) {

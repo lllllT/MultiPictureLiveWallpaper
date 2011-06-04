@@ -87,13 +87,6 @@ public class GLCanvas
     private void initGL()
     {
         egl = (EGL10)EGLContext.getEGL();
-        egl = (EGL10)android.opengl.GLDebugHelper.wrap( // dbg:
-            egl,
-            android.opengl.GLDebugHelper.CONFIG_CHECK_GL_ERROR |
-            android.opengl.GLDebugHelper.CONFIG_CHECK_THREAD |
-            android.opengl.GLDebugHelper.CONFIG_LOG_ARGUMENT_NAMES,
-            //new java.io.OutputStreamWriter(System.out));
-            null);
 
         egl_display = egl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
         if(egl_display == EGL10.EGL_NO_DISPLAY) {
@@ -138,13 +131,6 @@ public class GLCanvas
         }
 
         gl = (GL10)egl_context.getGL();
-        gl = (GL10)android.opengl.GLDebugHelper.wrap( // dbg:
-            gl,
-            android.opengl.GLDebugHelper.CONFIG_CHECK_GL_ERROR |
-            android.opengl.GLDebugHelper.CONFIG_CHECK_THREAD |
-            android.opengl.GLDebugHelper.CONFIG_LOG_ARGUMENT_NAMES,
-            //new java.io.OutputStreamWriter(System.out));
-            null);
     }
 
     private void initState()
@@ -376,7 +362,6 @@ public class GLCanvas
 
     public boolean swap()
     {
-        // todo:
         if(! egl.eglSwapBuffers(egl_display, egl_surface)) {
             if(egl.eglGetError() == EGL11.EGL_CONTEXT_LOST) {
                 destroyGLContext();
