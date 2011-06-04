@@ -1389,10 +1389,10 @@ public class MultiPictureRenderer
         else if(transition == TransitionType.zoom_slide) {
             float fact =
                 Math.min(1, Math.max(Math.abs(dx), Math.abs(dy)) * 1.25f);
-            fact = 1 - fact;
-            fact = 1 - fact * fact;
-            effect.matrix.translate(dx * 2 * wratio, -dy * 2, fact * -8);
-            effect.fill_background = 1 - fact;
+            float fact2 = 1 - fact;
+            fact2 = 1 - fact2 * fact2;
+            effect.matrix.translate(dx * 2 * wratio, -dy * 2, fact2 * -8);
+            effect.fill_background = 1 - Math.min(1, fact * 16);
         }
         else if(transition == TransitionType.wipe) {
             if(dx <= -1 || dx >= 1 ||
