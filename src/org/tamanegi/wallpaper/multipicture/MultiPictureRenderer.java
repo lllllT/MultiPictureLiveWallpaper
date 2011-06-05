@@ -924,7 +924,7 @@ public class MultiPictureRenderer
                 int xn = i % xcnt;
                 int yn = i / xcnt;
                 is_visible = (visible &&
-                              (cur_transition == TransitionType.zoom_slide ||
+                              (is_in_transition ||
                                (Math.abs(xn - xcur) < 1 &&
                                 Math.abs(yn - ycur) < 1)));
                 info = pic[i];
