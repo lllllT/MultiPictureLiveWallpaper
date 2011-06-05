@@ -1262,7 +1262,7 @@ public class MultiPictureRenderer
         GLColor bgcolor =
             (effect.fill_background > 0 ?
              getBackgroundColorNoAlpha(pic_info, fade).setAlpha(
-                 effect.fill_background) : null);
+                 effect.fill_background * dz) : null);
         float border_ratio =
             (status == PictureStatus.SPINNER ||
              status == PictureStatus.NOT_AVAILABLE ? 1 :
