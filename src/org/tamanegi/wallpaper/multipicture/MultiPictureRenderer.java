@@ -1189,12 +1189,17 @@ public class MultiPictureRenderer
 
         // for random transition
         if(((! is_in_transition) &&
+            (dxpx >= 1 || dypx >= 1) &&
             (screen_transition == TransitionType.random) &&
             (transition_prev_time + TRANSITION_RANDOM_TIMEOUT <
              SystemClock.elapsedRealtime())) ||
            (cur_transition == TransitionType.random)) {
-            cur_transition = random_transition[
-                random.nextInt(random_transition.length)];
+            TransitionType next_transition;
+            do {
+                next_transition = random_transition[
+                    random.nextInt(random_transition.length)];
+            } while(next_transition == cur_transition);
+            cur_transition = next_transition;
         }
 
         if(dxpx >= 1 || dypx >= 1) {
