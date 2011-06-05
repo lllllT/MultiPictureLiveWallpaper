@@ -42,6 +42,10 @@ public abstract class AbstractMediaPickService
                 e.printStackTrace();
                 next_content = null;
             }
+
+            if(next_content != null) {
+                addLastUri(next_content.getUri());
+            }
         }
 
         @Override
@@ -89,6 +93,7 @@ public abstract class AbstractMediaPickService
                 // get next
                 int retry_saved_idx = -1;
                 FileInfo retry_saved_file = null;
+                int retry_match = -1;
 
                 int cnt = idx_list.length;
                 for(int i = 0; i < cnt; i++) {
@@ -100,12 +105,17 @@ public abstract class AbstractMediaPickService
                     cur.moveToPosition(idx_list[next_idx]);
                     FileInfo next_file = getFileInfo(cur);
 
-                    if(isRandomOrder() && matchLastUri(next_file.getUri())) {
-                        if(i == 0) {
-                            retry_saved_file = next_file;
-                            retry_saved_idx = next_idx;
+                    if(isRandomOrder()) {
+                        int match = matchLastUri(next_file.getUri());
+                        if(match >= 0) {
+                            if(match > retry_match) {
+                                retry_saved_idx = next_idx;
+                                retry_saved_file = next_file;
+                                retry_match = match;
+                            }
+
+                            continue;
                         }
-                        continue;
                     }
 
                     cur_file_idx = next_idx;

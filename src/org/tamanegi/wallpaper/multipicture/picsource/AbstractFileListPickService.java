@@ -160,9 +160,6 @@ public abstract class AbstractFileListPickService extends LazyPickService
 
                 info = getNextContent();
             }
-            if(info != null) {
-                addLastUri(info.getUri());
-            }
 
             return info;
         }
@@ -221,22 +218,23 @@ public abstract class AbstractFileListPickService extends LazyPickService
     protected void addLastUri(Uri uri)
     {
         synchronized(picker_list) {
-            last_uris.addLast(uri);
+            last_uris.remove(uri);
+            last_uris.addFirst(uri);
             adjustLastUri();
         }
     }
 
-    protected boolean matchLastUri(Uri uri)
+    protected int matchLastUri(Uri uri)
     {
         synchronized(picker_list) {
-            return last_uris.contains(uri);
+            return last_uris.indexOf(uri);
         }
     }
 
     private void adjustLastUri()
     {
         while(last_uris.size() > picker_list.size() * LAST_URI_CNT_FACTOR) {
-            last_uris.removeFirst();
+            last_uris.removeLast();
         }
     }
 }

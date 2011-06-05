@@ -118,11 +118,22 @@ public class FolderDirectPickService extends AbstractFileListPickService
         @Override
         protected PictureContentInfo getNextContent()
         {
+            PictureContentInfo info = _getNextContent();
+            if(info != null) {
+                addLastUri(info.getUri());
+            }
+
+            return info;
+        }
+
+        private PictureContentInfo _getNextContent()
+        {
             if(file_list == null) {
                 return null;
             }
 
             int retry_saved_idx = -1;
+            int retry_match = -1;
 
             int cnt = file_list.size();
             for(int i = 0; i < cnt; i++) {
@@ -132,12 +143,16 @@ public class FolderDirectPickService extends AbstractFileListPickService
                 }
 
                 FileInfo next_file = file_list.get(next_idx);
-                if(change_order == OrderType.random &&
-                   matchLastUri(next_file.getUri())) {
-                    if(i == 0) {
-                        retry_saved_idx = next_idx;
+                if(change_order == OrderType.random) {
+                    int match = matchLastUri(next_file.getUri());
+                    if(match >= 0) {
+                        if(match > retry_match) {
+                            retry_saved_idx = next_idx;
+                            retry_match = match;
+                        }
+
+                        continue;
                     }
-                    continue;
                 }
 
                 cur_file_idx = next_idx;
