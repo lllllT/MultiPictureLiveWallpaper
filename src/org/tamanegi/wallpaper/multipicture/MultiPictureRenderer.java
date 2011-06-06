@@ -1034,6 +1034,30 @@ public class MultiPictureRenderer
             cur_duration = updatePictureStatus(last_duration);
         }
 
+        // check bitmap to texture
+        if(pic != null) {
+            for(int i = 0; i < pic.length; i++) {
+                PictureInfo info = pic[i];
+                if(info.tex_info.has_content &&
+                   info.tex_info.bmp != null) {
+                    info.tex_info.tex_id =
+                        glcanvas.genTexture(info.tex_info.bmp);
+                    info.tex_info.bmp.recycle();
+                    info.tex_info.bmp = null;
+                }
+            }
+        }
+
+        if(use_keyguard_pic && keyguard_pic != null) {
+            if(keyguard_pic.tex_info.has_content &&
+               keyguard_pic.tex_info.bmp != null) {
+                keyguard_pic.tex_info.tex_id =
+                    glcanvas.genTexture(keyguard_pic.tex_info.bmp);
+                keyguard_pic.tex_info.bmp.recycle();
+                keyguard_pic.tex_info.bmp = null;
+            }
+        }
+
         // check visible
         if(! visible) {
             if(is_step || cur_duration > 0) {
@@ -1065,28 +1089,6 @@ public class MultiPictureRenderer
                ! keyguard_pic.tex_info.has_content) {
                 keyguard_pic.loading_cnt += 1;
                 sendUpdateScreen(-1, keyguard_pic, null, true);
-            }
-        }
-
-        // check bitmap to texture
-        for(int i = 0; i < pic.length; i++) {
-            PictureInfo info = pic[i];
-            if(info.tex_info.has_content &&
-               info.tex_info.bmp != null) {
-                info.tex_info.tex_id =
-                    glcanvas.genTexture(info.tex_info.bmp);
-                info.tex_info.bmp.recycle();
-                info.tex_info.bmp = null;
-            }
-        }
-
-        if(use_keyguard_pic) {
-            if(keyguard_pic.tex_info.has_content &&
-               keyguard_pic.tex_info.bmp != null) {
-                keyguard_pic.tex_info.tex_id =
-                    glcanvas.genTexture(keyguard_pic.tex_info.bmp);
-                keyguard_pic.tex_info.bmp.recycle();
-                keyguard_pic.tex_info.bmp = null;
             }
         }
 
@@ -1171,7 +1173,8 @@ public class MultiPictureRenderer
             }
         }
 
-        ScreenDelta[] ds = new ScreenDelta[pic.length + 1];
+        ScreenDelta[] ds = new ScreenDelta[
+            pic.length + (use_keyguard_pic ? 1 : 0)];
 
         for(int i = 0; i < pic.length; i++) {
             int xx = i % xcnt;
@@ -1179,7 +1182,9 @@ public class MultiPictureRenderer
             ds[i] = new ScreenDelta(pic[i], xx - xcur, yy - ycur, false);
         }
 
-        ds[pic.length] = new ScreenDelta(keyguard_pic, 0, 0, true);
+        if(use_keyguard_pic) {
+            ds[pic.length] = new ScreenDelta(keyguard_pic, 0, 0, true);
+        }
 
         // delta
         int xn = (int)Math.floor(xcur);
