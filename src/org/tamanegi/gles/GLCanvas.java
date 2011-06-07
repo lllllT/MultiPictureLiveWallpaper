@@ -69,8 +69,8 @@ public class GLCanvas
         this.holder = holder;
 
         wratio = (float)width / height;
-        rect_width = (width + 1f) / width;
-        rect_height = (height + 1f) / height;
+        rect_width = (width - 1f) / width;
+        rect_height = (height - 1f) / height;
 
         if(egl != null) {
             destroyGLContext();
@@ -165,7 +165,6 @@ public class GLCanvas
                       0, 0, 4,
                       0, 0, 0,
                       0, 1, 0);
-        //gl.glScalef(wratio, 1, 1);
 
         float[] vertex_coords = {
             //    x,   y, z,
@@ -302,7 +301,6 @@ public class GLCanvas
         gl.glMatrixMode(GL10.GL_MODELVIEW);
         gl.glPushMatrix();
         gl.glMultMatrixf(mat.get(), 0);
-        gl.glScalef(rect_width, rect_height, 0);
 
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
         gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vertex_list);
@@ -318,6 +316,7 @@ public class GLCanvas
 
         // border
         if(border_color != null) {
+            gl.glScalef(rect_width, rect_height, 0);
             gl.glColor4f(
                 border_color.red, border_color.green, border_color.blue,
                 border_color.alpha);
