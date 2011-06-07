@@ -31,6 +31,7 @@ public class AlbumSource extends PreferenceActivity
 
     private PictureUtils.BucketItem[] buckets;
     private boolean[] checked;
+    private boolean processing = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -48,9 +49,6 @@ public class AlbumSource extends PreferenceActivity
 
         addPreferencesFromResource(R.xml.album_pref);
         pref = PreferenceManager.getDefaultSharedPreferences(this);
-
-        // prepare album list
-        new AsyncPrepareList().execute();
 
         // order
         String order_key = MultiPictureSetting.getKey(
@@ -78,9 +76,27 @@ public class AlbumSource extends PreferenceActivity
         rescan.setChecked(rescan_val);
     }
 
+    protected void onResume()
+    {
+        super.onResume();
+
+        if(buckets == null && (! processing)) {
+            new AsyncPrepareList().execute();
+        }
+    }
+
     public void onButtonOk(View v)
     {
-        new AsyncApplyBucketValue().execute();
+        if(applyBucketValue()) {
+            finish();
+        }
+        else {
+            new AlertDialog.Builder(AlbumSource.this)
+                .setTitle(R.string.pref_album_title)
+                .setMessage(R.string.pref_no_bucket_select_msg)
+                .setPositiveButton(android.R.string.ok, null)
+                .show();
+        }
     }
 
     public void onButtonCancel(View v)
@@ -91,15 +107,18 @@ public class AlbumSource extends PreferenceActivity
 
     private class AsyncPrepareList
         extends AsyncTask<Void, Void, PictureUtils.BucketItem[]>
+        implements DialogInterface.OnCancelListener
     {
         private ProgressDialog dlg;
 
         @Override
         protected void onPreExecute()
         {
+            processing = true;
+
             dlg = ProgressDialog.show(
                 AlbumSource.this, null, getString(R.string.album_loading),
-                true, false);
+                true, true, this);
         }
 
         @Override
@@ -173,47 +192,15 @@ public class AlbumSource extends PreferenceActivity
             catch(Exception e) {
                 // ignore
             }
-        }
-    }
 
-    private class AsyncApplyBucketValue extends AsyncTask<Void, Void, Boolean>
-    {
-        private ProgressDialog dlg;
-
-        @Override
-        protected void onPreExecute()
-        {
-            dlg = ProgressDialog.show(
-                AlbumSource.this, null, getString(R.string.album_saving),
-                true, false);
+            processing = false;
         }
 
         @Override
-        protected Boolean doInBackground(Void... params)
+        public void onCancel(DialogInterface dialog)
         {
-            return applyBucketValue();
-        }
-
-        @Override
-        protected void onPostExecute(Boolean result)
-        {
-            try {
-                dlg.dismiss();
-
-                if(result) {
-                    finish();
-                }
-                else {
-                    new AlertDialog.Builder(AlbumSource.this)
-                        .setTitle(R.string.pref_album_title)
-                        .setMessage(R.string.pref_no_bucket_select_msg)
-                        .setPositiveButton(android.R.string.ok, null)
-                        .show();
-                }
-            }
-            catch(Exception e) {
-                // ignore
-            }
+            cancel(true);
+            finish();
         }
     }
 
@@ -231,12 +218,15 @@ public class AlbumSource extends PreferenceActivity
         }
 
         StringBuilder bucket_val = new StringBuilder();
+        StringBuilder names_val = new StringBuilder();
         for(int i = 0; i < buckets.length; i++) {
             if(checked[i]) {
                 bucket_val.append(buckets[i].getId()).append(" ");
+                names_val.append(buckets[i].getName()).append(", ");
             }
         }
         String bucket_val_str = bucket_val.toString().trim();
+        String names_val_str = names_val.toString().replaceAll(", $", "");
 
         ListPreference order = (ListPreference)
             getPreferenceManager().findPreference("order");
@@ -264,8 +254,7 @@ public class AlbumSource extends PreferenceActivity
         Intent result = new Intent();
         result.putExtra(PictureSourceContract.EXTRA_DESCRIPTION,
                         getString(R.string.pref_screen_type_bucket_desc,
-                                  PictureUtils.getBucketNames(
-                                      getContentResolver(), bucket_val_str)));
+                                  names_val_str));
         result.putExtra(PictureSourceContract.EXTRA_SERVICE_NAME,
                         new ComponentName(this, AlbumPickService.class));
 
