@@ -156,7 +156,7 @@ public class GLCanvas
         gl.glLoadIdentity();
         gl.glFrustumf(-wratio / 4, wratio / 4,
                       -1f / 4, 1f / 4,
-                      1, 32);
+                      1, 128);
 
         // model-view matrix
         gl.glMatrixMode(GL10.GL_MODELVIEW);

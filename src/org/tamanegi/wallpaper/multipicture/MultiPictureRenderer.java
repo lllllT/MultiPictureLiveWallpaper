@@ -1435,13 +1435,15 @@ public class MultiPictureRenderer
                 return null;
             }
 
-            float tx = (float)-Math.log(1 - dx);
-            float ty = (float)-Math.log(1 - dy);
-            float ratio = 3f;
-            effect.matrix.translate((tx + ty * 0.25f) * ratio * wratio,
-                                    (tx * 0.25f + ty) * -ratio,
+            float dxy = Math.abs(dx) + Math.abs(dy);
+            float dr =
+                Math.abs(dx - Math.round(dx)) + Math.abs(dy - Math.round(dy));
+            float tx = (float)Math.log(1 - dx);
+            float ty = (float)Math.log(1 - dy);
+            effect.matrix.translate((tx * 3f + dy * dy * 0.75f) * -wratio,
+                                    (dx * dx * 0.75f + ty * 3f),
                                     (dx + dy) * 8f);
-            effect.alpha *= Math.min(Math.min(dx, dy) + 1, 1);
+            effect.alpha *= (dxy < 0.5f ? 1 : Math.min(1, dr * 8 / dxy));
         }
         else if(transition == TransitionType.rotation_3d) {
             if(dx <= -0.5 || dx > 0.5 ||
