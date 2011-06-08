@@ -1278,8 +1278,8 @@ public class MultiPictureRenderer
              status == PictureStatus.NOT_AVAILABLE ? 1 :
              1 - fade) * dz;
         float opacity =
-            (status != PictureStatus.SPINNER &&
-             status != PictureStatus.NOT_AVAILABLE ? 1 :
+            (status == PictureStatus.SPINNER ||
+             status == PictureStatus.NOT_AVAILABLE ? 1 :
              pic_info.opacity);
 
         if(effect.need_border && border_ratio > 0) {
