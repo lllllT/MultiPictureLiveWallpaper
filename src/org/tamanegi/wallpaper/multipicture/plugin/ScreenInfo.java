@@ -2,6 +2,9 @@ package org.tamanegi.wallpaper.multipicture.plugin;
 
 import android.os.Bundle;
 
+/**
+ * To identify picture appears which screen.
+ */
 public class ScreenInfo
 {
     private static final String DATA_SCREEN_NUMBER = "screenNumber";
@@ -13,7 +16,7 @@ public class ScreenInfo
     private static final String DATA_SCREEN_HEIGHT = "screenHeight";
     private static final String DATA_CHANGE_FREQUENCY = "changeFrequency";
 
-    private int screenNumber;                   // 0...
+    private int screenNumber;                   // 0..., or -1
     private int screenColumns;                  // 1...
     private int screenRows;                     // 1...
     private int targetColumn;                   // [0, screenColumns - 1]
@@ -22,6 +25,13 @@ public class ScreenInfo
     private int screenHeight;                   // px
     private int changeFrequency;                // sec
 
+    /**
+     * The screen number.
+     * <br>
+     * If value greater or equal to 0, it is normal screen.
+     * The top left screen is 0, and grows left to right, top to bottom.<br>
+     * If value less than 0, it is lock screen.
+     */
     public int getScreenNumber()
     {
         return screenNumber;
@@ -32,6 +42,7 @@ public class ScreenInfo
         this.screenNumber = screenNumber;
     }
 
+    /** Number of screen columns. */
     public int getScreenColumns()
     {
         return screenColumns;
@@ -42,6 +53,7 @@ public class ScreenInfo
         this.screenColumns = screenColumns;
     }
 
+    /** Number of screen rows. */
     public int getScreenRows()
     {
         return screenRows;
@@ -52,6 +64,7 @@ public class ScreenInfo
         this.screenRows = screenRows;
     }
 
+    /** Screen column position. */
     public int getTargetColumn()
     {
         return targetColumn;
@@ -62,6 +75,7 @@ public class ScreenInfo
         this.targetColumn = targetColumn;
     }
 
+    /** Screen row position. */
     public int getTargetRow()
     {
         return targetRow;
@@ -72,6 +86,10 @@ public class ScreenInfo
         this.targetRow = targetRow;
     }
 
+    /**
+     * Width of screen.
+     * The width and height may swap if display orientation changed.
+     */
     public int getScreenWidth()
     {
         return screenWidth;
@@ -82,6 +100,10 @@ public class ScreenInfo
         this.screenWidth = screenWidth;
     }
 
+    /**
+     * Height of screen.
+     * The width and height may swap if display orientation changed.
+     */
     public int getScreenHeight()
     {
         return screenHeight;
@@ -92,6 +114,11 @@ public class ScreenInfo
         this.screenHeight = screenHeight;
     }
 
+    /**
+     * The time interval to change pictures automatically.
+     * If value greater than 0, interval in second.
+     * If value is 0, picture will not change automatically.
+     */
     public int getChangeFrequency()
     {
         return changeFrequency;

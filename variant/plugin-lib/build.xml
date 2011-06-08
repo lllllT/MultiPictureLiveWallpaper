@@ -43,7 +43,10 @@
              sourcepath="${src.path}"
              bootclasspath="${android.classpath}"
              packagenames="${javadoc.pkgs}"
-             locale="en">
+             locale="en"
+             windowtitle="MultiPicture Live Wallpaper Plugin API"
+             doctitle="MultiPicture Live Wallpaper Plugin API"
+             >
       <link href="${android.docs.url}"
             offline="true"
             packagelistLoc="${android.docs.reference}" />

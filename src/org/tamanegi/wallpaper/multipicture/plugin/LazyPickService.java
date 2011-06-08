@@ -10,9 +10,20 @@ import android.os.Message;
 import android.os.Messenger;
 import android.os.RemoteException;
 
+/**
+ * The base class of plugin service.
+ * <br>
+ * Plugin should extend this class and implements {@link #onCreateLazyPicker()}.
+ */
 public abstract class LazyPickService extends Service
 {
     // for lazy picker
+    /**
+     * Plugin service should handle {@link Intent} which has this action.
+     * <br>
+     * <br>
+     * Value: {@value}
+     */
     public static final String SERVICE_INTERFACE =
         "org.tamanegi.wallpaper.multipicture.plugin.LazyPickService";
 
@@ -63,17 +74,87 @@ public abstract class LazyPickService extends Service
         return null;
     }
 
+    /**
+     * Should be implemented to return a new instance of the plugin's lazy picker.
+     * <br>
+     * Returned instance correspond to each screen one by one.
+     * So, if user configures to use same plugin for multiple screens,
+     * multiple instance may be active at the same time.
+     *
+     * @return The LazyPicker object for each screen
+     */
     public abstract LazyPicker onCreateLazyPicker();
 
+    /**
+     * The main implementation of plugin.
+     *
+     * <h3>LazyPicker Lifecycle</h3>
+     * <p>
+     * Following methods will be called from same thread,
+     * and the thread is separated for each LazyPicker instance.
+     * </p>
+     * <ul>
+     * <li>{@link #onStart(String,ScreenInfo)} will be called at first and only once.</li>
+     * <li>
+     * {@link #getNext()} will be called when next picture content required.
+     * This may be called multiple times if needed, such as
+     * user double taps to reload pictures or time interval of reload.
+     * </li>
+     * <li>{@link #onStop()} will be called when plugin no longer used.</li>
+     * </ul>
+     */
     public static abstract class LazyPicker
     {
         private LazyPickManager manager;
 
+        /**
+         * Should be implemented to return a picture content to show as wallpaper.
+         * <br>
+         * The URI of content should be one of following schemes:
+         * <ul>
+         * <li>content</li>
+         * <li>file</li>
+         * <li>android.resource</li>
+         * </ul>
+         *
+         * @return The picture content for wallpaper.<br>
+         * If returns not {@code null}, content's URI will be used.<br>
+         * If returns {@code null}, previously returned content will be used.
+         *
+         * @see android.content.ContentResolver#openInputStream(Uri)
+         */
         public abstract PictureContentInfo getNext();
 
+        /**
+         * Called when lazy picker is starting.
+         * <br>
+         * The plugin can initialize in this method.
+         * {@code key} parameter is unique for each settings,
+         * and its value is same as {@link PictureSourceContract#EXTRA_KEY} extra value when setting activity called.
+         * The plugin can use this {@code key} for {@link android.content.SharedPreferences}'s key.
+         *
+         * @param key The configuration specific key.
+         * @param hint The screen specific hint.
+         */
         protected void onStart(String key, ScreenInfo hint) {}
+
+        /**
+         * Called when lazy picker is stopping.
+         * <br>
+         * The plugin should release all resources related to picker.
+         */
         protected void onStop() {}
 
+        /**
+         * Notify to live wallpaper about picture content is changed.
+         * {@link #getNext()} will be called later
+         * if plugin calls {@code notifyChanged()}.<br>
+         * NOTE: {@code notifyChanged()} and {@code getNext()} may or may not paired.
+         * For example, when calling {@code notifyChanged()} twice, {@code getNext()} will be called once, twice or more.
+         * Because {@code getNext()} is only called when reloading,
+         * and reloading is caused only when wallpaper is visible.
+         * The reloading is also caused by user operation.
+         */
         public final void notifyChanged()
         {
             if(manager != null) {
@@ -81,6 +162,10 @@ public abstract class LazyPickService extends Service
             }
         }
 
+        /**
+         * Notify to live wallpaper that the lazy picker is no longer need to work.
+         * {@link #onStop()} will be called later.
+         */
         public final void finish()
         {
             if(manager != null) {
