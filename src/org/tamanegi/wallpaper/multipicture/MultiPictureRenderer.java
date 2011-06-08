@@ -1588,7 +1588,7 @@ public class MultiPictureRenderer
             info.yoffset = 0;
         }
         else if(workaround_launcher == LauncherWorkaroundType.no_vertical) {
-            // disable vertical: such as Honeycomb's tablet launcher
+            // disable vertical
             info.ystep = 0;
             info.yoffset = 0;
         }
