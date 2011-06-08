@@ -6,11 +6,14 @@
 
   <property name="src.path" location="../../src" />
   <property name="bin.path" location="bin" />
-  <property name="jar.path" location="mplwp-plugin-${plugin.version}.jar" />
+  <property name="jar.path" location="mplwp-plugin.jar" />
+  <property name="zip.path" location="mplwp-plugin-${plugin.version}.zip" />
 
   <property name="javadoc.path" location="javadoc" />
   <property name="javadoc.pkg"
             value="org.tamanegi.wallpaper.multipicture.plugin" />
+
+  <property name="sample.path" location="sample" />
 
   <property name="android.classpath"
             location="${sdk.dir}/platforms/android-2.1/android.jar" />
@@ -20,7 +23,7 @@
   <property name="android.docs.reference"
             location="${sdk.dir}/docs/reference/" />
 
-  <target name="all" depends="jar" />
+  <target name="all" depends="zip" />
 
   <target name="compile">
     <mkdir dir="${bin.path}" />
@@ -54,9 +57,20 @@
     </javadoc>
   </target>
 
+  <target name="zip" depends="jar, javadoc">
+    <zip destfile="${zip.path}">
+      <fileset file="${jar.path}" />
+      <zipfileset dir="${javadoc.path}" prefix="javadoc" />
+      <zipfileset dir="${sample.path}"
+                  excludes="bin/**, gen/**, libs/*.jar"
+                  prefix="sample" />
+    </zip>
+  </target>
+
   <target name="clean">
     <delete dir="${bin.path}" />
     <delete file="${jar.path}" />
+    <delete file="${zip.path}" />
   </target>
 
 </project>
