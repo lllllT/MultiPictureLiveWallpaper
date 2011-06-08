@@ -1455,7 +1455,7 @@ public class MultiPictureRenderer
             effect.matrix
                 .translate(0, 0, fact * -(1 + wratio))
                 .rotateY(dx * 180)
-                .rotateX(dy * -180);
+                .rotateX(dy * 180);
 
             effect.need_border = true;
         }
@@ -1470,7 +1470,7 @@ public class MultiPictureRenderer
             effect.matrix
                 .translate(-tx, -ty, 0)
                 .rotateY(dx * -120)
-                .rotateX(dy * 120)
+                .rotateX(dy * -120)
                 .translate(tx, ty, 0);
 
             effect.need_border = true;
@@ -1486,7 +1486,7 @@ public class MultiPictureRenderer
 
             effect.matrix.translate(
                 FloatMath.cos(ang2) * FloatMath.sin(ang1) * 1.01f * wratio,
-                FloatMath.sin(ang2) * FloatMath.sin(ang1) * -1.01f,
+                FloatMath.sin(ang2) * FloatMath.sin(ang1) * 1.01f,
                 (FloatMath.cos(ang1) - 1) * 2);
 
             effect.alpha *= Math.min((FloatMath.cos(ang1) + 1) * 2, 1);
@@ -1506,7 +1506,7 @@ public class MultiPictureRenderer
                     FloatMath.sin(ang2) * FloatMath.sin(ang1),
                     (FloatMath.cos(ang1) - 1) * (wratio + 1) * 0.5f)
                 .rotateY(dx * 90)
-                .rotateX(dy * -90);
+                .rotateX(dy * 90);
 
             effect.alpha *= Math.min(FloatMath.cos(ang1), 1);
             effect.need_border = true;
@@ -1526,7 +1526,7 @@ public class MultiPictureRenderer
                     FloatMath.sin(ang2) * FloatMath.sin(ang1),
                     (FloatMath.cos(ang1) - 1) * (wratio + 1) * -0.5f)
                 .rotateY(dx * -90)
-                .rotateX(dy * 90);
+                .rotateX(dy * -90);
 
             effect.alpha *= Math.min(FloatMath.cos(ang1), 1);
             effect.need_border = true;
