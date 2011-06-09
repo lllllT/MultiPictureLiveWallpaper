@@ -1129,15 +1129,17 @@ public class MultiPictureRenderer
             float dy;
             float dz;
             float fade;
+            float xpos;
             boolean visible;
             boolean for_lock;
 
-            ScreenDelta(PictureInfo pic_info, float dx, float dy,
+            ScreenDelta(PictureInfo pic_info, float dx, float dy, float xpos,
                         boolean for_lock)
             {
                 this.pic_info = pic_info;
                 this.dx = dx;
                 this.dy = dy;
+                this.xpos = xpos;
                 this.for_lock = for_lock;
 
                 float fade_r =
@@ -1181,11 +1183,12 @@ public class MultiPictureRenderer
         for(int i = 0; i < pic.length; i++) {
             int xx = i % xcnt;
             int yy = i / xcnt;
-            ds[i] = new ScreenDelta(pic[i], xx - xcur, yy - ycur, false);
+            float xpos = (xcnt > 0 ? (float)xx / (xcnt - 1) : 0);
+            ds[i] = new ScreenDelta(pic[i], xx - xcur, yy - ycur, xpos, false);
         }
 
         if(use_keyguard_pic) {
-            ds[pic.length] = new ScreenDelta(keyguard_pic, 0, 0, true);
+            ds[pic.length] = new ScreenDelta(keyguard_pic, 0, 0, 0, true);
         }
 
         // delta
@@ -1238,8 +1241,7 @@ public class MultiPictureRenderer
         glcanvas.drawColor(color);
 
         // draw each screen
-        float hc_ratio = Math.min(1, (ycur_honeycomb < 1 ?
-                                      ycur_honeycomb : 2 - ycur_honeycomb));
+        float hc_ratio = 1 - Math.min(1, Math.abs(ycur_honeycomb - 1));
 
         if(cur_transition == TransitionType.zoom_slide ||
            cur_transition == TransitionType.swap ||
@@ -1255,7 +1257,8 @@ public class MultiPictureRenderer
                 (s.visible ? getTransitionEffect(cur_transition, dx, dy) :
                  null);
             if(effect != null && hc_ratio < 1 && ! s.for_lock) {
-                EffectInfo hc_effect = getHoneycombEffect(s.dx, ycur_honeycomb);
+                EffectInfo hc_effect = getHoneycombEffect(
+                    s.xpos, ycur_honeycomb);
                 effect = mergeEffect(effect, hc_effect, hc_ratio);
             }
 
@@ -1549,17 +1552,18 @@ public class MultiPictureRenderer
         return effect;
     }
 
-    private EffectInfo getHoneycombEffect(float dx, float dy)
+    private EffectInfo getHoneycombEffect(float xpos, float dy)
     {
+        float dx = xpos - 0.5f;
         EffectInfo effect = new EffectInfo();
 
         float wr = wratio * (wratio < 1 ? 1 : 0.8f);
         effect.matrix
             .translate(0, 0, 4)
             .rotateX((dy < 1 ? -0.79f : +0.6f) * 14)
-            .translate(dx * wr * 2.15f, 0, -28 + Math.abs(dx) * 0.5f)
+            .translate(dx * wr * 8.6f, 0, -28 + Math.abs(dx) * 2)
             .scale(0.8f, 0.8f, 2)
-            .rotateY(dx * -8);
+            .rotateY(dx * -32);
 
         return effect;
     }
