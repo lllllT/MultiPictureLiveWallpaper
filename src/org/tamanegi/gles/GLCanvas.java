@@ -254,13 +254,15 @@ public class GLCanvas
         gl.glDeleteTextures(1, textures, 0);
     }
 
-    public void setClipRect(RectF clip_rect)
+    public void setClipRect(GLMatrix mat, RectF clip_rect)
     {
         gl.glMatrixMode(GL10.GL_MODELVIEW);
         gl.glPushMatrix();
         gl.glTranslatef(clip_rect.centerX(), clip_rect.centerY(), 0);
         gl.glScalef(Math.abs(clip_rect.width()) / (2 * wratio),
                     Math.abs(clip_rect.height()) / 2, 1);
+        gl.glMultMatrixf(mat.get(), 0);
+        gl.glTranslatef(0, 0, 0.01f);
 
         gl.glEnable(GL10.GL_DEPTH_TEST);
 
@@ -280,7 +282,7 @@ public class GLCanvas
 
         gl.glColorMask(true, true, true, true);
         gl.glDepthMask(false);
-        gl.glDepthFunc(GL10.GL_EQUAL);
+        gl.glDepthFunc(GL10.GL_GEQUAL);
 
         gl.glPopMatrix();
     }

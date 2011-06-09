@@ -190,6 +190,7 @@ public class MultiPictureRenderer
         private TextureInfo tex_info;
 
         private boolean detect_bgcolor;
+        private int bgcolor;
 
         private float clip_ratio;
         private float saturation;
@@ -298,6 +299,7 @@ public class MultiPictureRenderer
     private int ycnt = 1;
     private float xcur = 0f;
     private float ycur = 0f;
+    private float ycur_honeycomb = 1f;
 
     private int max_screen_pixels;
     private int max_work_pixels;
@@ -1236,15 +1238,27 @@ public class MultiPictureRenderer
         glcanvas.drawColor(color);
 
         // draw each screen
+        float hc_ratio = Math.min(1, (ycur_honeycomb < 1 ?
+                                      ycur_honeycomb : 2 - ycur_honeycomb));
+
         if(cur_transition == TransitionType.zoom_slide ||
            cur_transition == TransitionType.swap ||
            cur_transition == TransitionType.cube) {
             Arrays.sort(ds);
         }
+
         for(ScreenDelta s : ds) {
+            float dx = s.dx * hc_ratio;
+            float dy = s.dy * hc_ratio;
+
             EffectInfo effect =
-                (s.visible ? getTransitionEffect(cur_transition, s.dx, s.dy) :
+                (s.visible ? getTransitionEffect(cur_transition, dx, dy) :
                  null);
+            if(effect != null && hc_ratio < 1 && ! s.for_lock) {
+                EffectInfo hc_effect = getHoneycombEffect(s.dx, ycur_honeycomb);
+                effect = mergeEffect(effect, hc_effect, hc_ratio);
+            }
+
             if(effect != null && effect.alpha > 0) {
                 drawPicture(s.pic_info, effect, s.dz, s.fade);
             }
@@ -1258,7 +1272,7 @@ public class MultiPictureRenderer
 
         // clip region
         if(effect.clip_rect != null) {
-            glcanvas.setClipRect(effect.clip_rect);
+            glcanvas.setClipRect(effect.matrix, effect.clip_rect);
         }
 
         // draw params
@@ -1535,6 +1549,76 @@ public class MultiPictureRenderer
         return effect;
     }
 
+    private EffectInfo getHoneycombEffect(float dx, float dy)
+    {
+        EffectInfo effect = new EffectInfo();
+
+        float wr = wratio * (wratio < 1 ? 1 : 0.8f);
+        effect.matrix
+            .translate(0, 0, 4)
+            .rotateX((dy < 1 ? -0.79f : +0.6f) * 14)
+            .translate(dx * wr * 2.15f, 0, -28 + Math.abs(dx) * 0.5f)
+            .scale(0.8f, 0.8f, 2)
+            .rotateY(dx * -8);
+
+        return effect;
+    }
+
+    private EffectInfo mergeEffect(EffectInfo effect1, EffectInfo effect2,
+                                   float ratio1)
+    {
+        float ratio2 = 1 - ratio1;
+
+        EffectInfo effect = new EffectInfo();
+
+        float md[] = effect.matrix.get();
+        float m1[] = effect1.matrix.get();
+        float m2[] = effect2.matrix.get();
+        for(int i = 0; i < md.length; i++) {
+            md[i] = m1[i] * ratio1 + m2[i] * ratio2;
+        }
+
+        if(effect1.clip_rect != null || effect2.clip_rect != null) {
+            effect.clip_rect = new RectF(0, 0, 0, 0);
+
+            if(effect1.clip_rect != null) {
+                effect.clip_rect.left += effect1.clip_rect.left * ratio1;
+                effect.clip_rect.top += effect1.clip_rect.top * ratio1;
+                effect.clip_rect.right += effect1.clip_rect.right * ratio1;
+                effect.clip_rect.bottom += effect1.clip_rect.bottom * ratio1;
+            }
+            else {
+                effect.clip_rect.left += -wratio * ratio1;
+                effect.clip_rect.top += ratio1;
+                effect.clip_rect.right += wratio * ratio1;
+                effect.clip_rect.bottom += -ratio1;
+            }
+
+            if(effect2.clip_rect != null) {
+                effect.clip_rect.left += effect2.clip_rect.left * ratio2;
+                effect.clip_rect.top += effect2.clip_rect.top * ratio2;
+                effect.clip_rect.right += effect2.clip_rect.right * ratio2;
+                effect.clip_rect.bottom += effect2.clip_rect.bottom * ratio2;
+            }
+            else {
+                effect.clip_rect.left += -wratio * ratio2;
+                effect.clip_rect.top += ratio2;
+                effect.clip_rect.right += wratio * ratio2;
+                effect.clip_rect.bottom += -ratio2;
+            }
+        }
+
+        effect.alpha =
+            effect1.alpha * ratio1 +
+            effect2.alpha * ratio2;
+        effect.fill_background =
+            effect1.fill_background * ratio1 +
+            effect2.fill_background * ratio2;
+        effect.need_border = (effect1.need_border || effect2.need_border);
+
+        return effect;
+    }
+
     private GLColor getBackgroundColorNoAlpha(PictureInfo pic_info, float fade)
     {
         PictureStatus status = pic_info.status;
@@ -1565,6 +1649,8 @@ public class MultiPictureRenderer
 
     private void changeOffsets(OffsetInfo info)
     {
+        ycur_honeycomb = 1f;
+
         if(workaround_launcher == LauncherWorkaroundType.htc_sense ||
            workaround_launcher == LauncherWorkaroundType.htc_sense_5screen) {
             // workaround for f*cking HTC Sense home app
@@ -1583,6 +1669,11 @@ public class MultiPictureRenderer
                Configuration.ORIENTATION_PORTRAIT) {
                 info.xoffset = (info.xoffset - 0.25f) * 2;
             }
+            else {
+                info.yoffset = (info.yoffset - 3f / 16f) * (16f / 10f);
+            }
+
+            ycur_honeycomb = (info.ystep <= 0 ? 0 : info.yoffset / info.ystep);
 
             info.ystep = 0;
             info.yoffset = 0;
@@ -1746,21 +1837,21 @@ public class MultiPictureRenderer
             "use_default");
         if("use_default".equals(bgcolor)) {
             info.detect_bgcolor = default_detect_bgcolor;
-            info.tex_info.bgcolor = default_bgcolor;
+            info.bgcolor = default_bgcolor;
         }
         else if("auto_detect".equals(bgcolor)) {
             info.detect_bgcolor = true;
         }
         else if("custom".equals(bgcolor)) {
             info.detect_bgcolor = false;
-            info.tex_info.bgcolor = pref.getInt(
+            info.bgcolor = pref.getInt(
                 MultiPictureSetting.getKey(
                     MultiPictureSetting.SCREEN_BGCOLOR_CUSTOM_KEY, idx_key),
                 0xff000000);
         }
         else {
             info.detect_bgcolor = false;
-            info.tex_info.bgcolor = Color.parseColor(bgcolor);
+            info.bgcolor = Color.parseColor(bgcolor);
         }
 
         // clip ratio
@@ -1964,10 +2055,11 @@ public class MultiPictureRenderer
 
         if(tex_info != null) {
             // background color
-            if(pic_info.detect_bgcolor) {
-                tex_info.bgcolor = detectBackgroundColor(
-                    tex_info.bmp, tex_info.xratio, tex_info.yratio);
-            }
+            tex_info.bgcolor =
+                (pic_info.detect_bgcolor ?
+                 detectBackgroundColor(
+                     tex_info.bmp, tex_info.xratio, tex_info.yratio) :
+                 pic_info.bgcolor);
         }
 
         synchronized(pic_whole_lock) {
