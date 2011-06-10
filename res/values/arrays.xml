@@ -195,6 +195,7 @@
     <item>Swap</item>
     <item>Outside Cube</item>
     <item>Inside Cube</item>
+    <item>Bookshelf</item>
     <item>Random</item>
   </string-array>
 
@@ -213,6 +214,7 @@
     <item>swap</item>
     <item>cube</item>
     <item>cube_inside</item>
+    <item>bookshelf</item>
     <item>random</item>
   </string-array>
 

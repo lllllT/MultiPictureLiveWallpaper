@@ -2,6 +2,7 @@ package org.tamanegi.wallpaper.multipicture;
 
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Random;
 
 import org.tamanegi.gles.GLCanvas;
@@ -113,7 +114,8 @@ public class MultiPictureRenderer
             zoom_inout, zoom_slide,
             wipe, card,
             slide_3d, rotation_3d, swing, swap,
-            cube, cube_inside
+            cube, cube_inside,
+            bookshelf
     }
 
     private static TransitionType[] random_transition = {
@@ -130,7 +132,17 @@ public class MultiPictureRenderer
         TransitionType.swap,
         TransitionType.cube,
         TransitionType.cube_inside,
+        TransitionType.bookshelf,
     };
+
+    private static List<TransitionType> need_sort_transition = Arrays.asList(
+        new TransitionType[] {
+            TransitionType.zoom_slide,
+            TransitionType.swap,
+            TransitionType.cube,
+            TransitionType.cube_inside,
+            TransitionType.bookshelf,
+        });
 
     // screen types: for backward compatible
     private static enum ScreenType
@@ -1243,9 +1255,7 @@ public class MultiPictureRenderer
         // draw each screen
         float hc_ratio = 1 - Math.min(1, Math.abs(ycur_honeycomb - 1));
 
-        if(cur_transition == TransitionType.zoom_slide ||
-           cur_transition == TransitionType.swap ||
-           cur_transition == TransitionType.cube) {
+        if(need_sort_transition.contains(cur_transition)) {
             Arrays.sort(ds);
         }
 
@@ -1546,6 +1556,51 @@ public class MultiPictureRenderer
                 .rotateX(dy * -90);
 
             effect.alpha *= Math.min(FloatMath.cos(ang1), 1);
+            effect.need_border = true;
+        }
+        else if(transition == TransitionType.bookshelf) {
+            float thr = 1.75f;
+            float tdx = dx * thr;
+            float tdy = dy * thr;
+
+            float rx = (dx < 0 ? 1 : -1) * 80 + dx * 10;
+            float ry = (dy < 0 ? 1 : -1) * 80 + dy * 10;
+            float tx = (tdx < -1 ? tdx + 1 :
+                        tdx > +1 ? tdx - 1 : 0) * 0.125f * wratio;
+            float ty = (tdy < -1 ? tdy + 1 :
+                        tdy > +1 ? tdy - 1 : 0) * -0.125f;
+            float tz = Math.max(1, wratio) * -3;
+
+            float adx = Math.abs(tdx);
+            float ady = Math.abs(tdy);
+            if(adx < 1) {
+                float radx = 1 - adx;
+                rx *= 1 - radx * radx;
+            }
+            if(ady < 1) {
+                float rady = 1 - ady;
+                ry *= 1 - rady * rady;
+            }
+            if(adx < 1 && ady < 1) {
+                float ratio = Math.max(adx, ady);
+                tx += FloatMath.sin(tdx * (float)Math.PI) * 0.25f * wratio;
+                ty += FloatMath.sin(tdy * (float)Math.PI) * -0.25f;
+                tz *= ratio;
+            }
+
+            effect.matrix
+                .translate(tx, ty, tz)
+                .rotateY(rx)
+                .rotateX(ry)
+                .translate(
+                    (dx < 0 ? Math.max(-1, tdx) : Math.min(1, tdx)) * wratio,
+                    (dy < 0 ? Math.max(-1, tdy) : Math.min(1, tdy)) * -1,
+                    0);
+
+            float dxy = adx + ady;
+            float dr =
+                Math.abs(dx - Math.round(dx)) + Math.abs(dy - Math.round(dy));
+            effect.alpha *= (dxy < 0.5f ? 1 : Math.min(1, dr * 8 / dxy));
             effect.need_border = true;
         }
 
