@@ -72,8 +72,8 @@ public class MultiPictureRenderer
     private static final int FADE_FRAME_DURATION = 70;      // msec
     private static final int FADE_TOTAL_DURATION = 500;     // msec
     private static final int BLACKOUT_TOTAL_DURATION = 500; // msec
-    private static final int SPINNER_FRAME_DURATION = 100;  // msec
-    private static final int SPINNER_TOTAL_FRAMES = 15;     // count
+    private static final int SPINNER_FRAME_DURATION = 120;  // msec
+    private static final int SPINNER_TOTAL_FRAMES = 8;      // count
     private static final int BORDER_COLOR = 0x3f3f3f;
 
     // transition params
@@ -1215,7 +1215,7 @@ public class MultiPictureRenderer
         if(dxpx >= 1 || dypx >= 1) {
             is_in_transition = true;
         }
-        else {
+        else if(is_in_transition) {
             is_in_transition = false;
             transition_prev_time = SystemClock.elapsedRealtime();
         }

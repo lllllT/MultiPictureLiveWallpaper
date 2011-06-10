@@ -264,6 +264,7 @@ public class GLCanvas
         gl.glMultMatrixf(mat.get(), 0);
         gl.glTranslatef(0, 0, 0.01f);
 
+        // using depth instead of stencil: some devices has no stencil??
         gl.glEnable(GL10.GL_DEPTH_TEST);
 
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);

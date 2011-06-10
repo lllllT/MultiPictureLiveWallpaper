@@ -135,9 +135,10 @@
     <svg2png-drawable src="${src.dir}/ic_menu_qr.svg"
                       pngname="ic_menu_qr.png" />
 
-    <svg2png-drawable src="${src.dir}/ika.svg" pngname="spinner.png"
+    <svg2png-drawable src="${src.dir}/aperture.svg" pngname="spinner.png"
                       args="--export-background-opacity=0" />
     <!--
+    <svg2png-drawable src="${src.dir}/ika.svg" pngname="spinner.png" />
     <svg2png-drawable src="${src.dir}/spinner.svg" pngname="spinner.png" />
     -->
   </target>
