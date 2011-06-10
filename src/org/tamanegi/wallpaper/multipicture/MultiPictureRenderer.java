@@ -2,6 +2,7 @@ package org.tamanegi.wallpaper.multipicture;
 
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 
@@ -118,22 +119,23 @@ public class MultiPictureRenderer
             bookshelf
     }
 
-    private static TransitionType[] random_transition = {
-        TransitionType.slide,
-        TransitionType.crossfade,
-        TransitionType.fade_inout,
-        TransitionType.zoom_inout,
-        TransitionType.zoom_slide,
-        TransitionType.wipe,
-        TransitionType.card,
-        TransitionType.slide_3d,
-        TransitionType.rotation_3d,
-        TransitionType.swing,
-        TransitionType.swap,
-        TransitionType.cube,
-        TransitionType.cube_inside,
-        TransitionType.bookshelf,
-    };
+    private static List<TransitionType> random_transition = Arrays.asList(
+        new TransitionType[] {
+            TransitionType.slide,
+            TransitionType.crossfade,
+            TransitionType.fade_inout,
+            TransitionType.zoom_inout,
+            TransitionType.zoom_slide,
+            TransitionType.wipe,
+            TransitionType.card,
+            TransitionType.slide_3d,
+            TransitionType.rotation_3d,
+            TransitionType.swing,
+            TransitionType.swap,
+            TransitionType.cube,
+            TransitionType.cube_inside,
+            TransitionType.bookshelf,
+        });
 
     private static List<TransitionType> need_sort_transition = Arrays.asList(
         new TransitionType[] {
@@ -337,6 +339,7 @@ public class MultiPictureRenderer
     private boolean is_in_transition = false;
     private long transition_prev_time = 0;
     private TransitionType cur_transition;
+    private int cur_transition_idx = -1;
 
     private boolean use_keyguard_pic;
     private boolean is_in_keyguard;
@@ -1216,12 +1219,12 @@ public class MultiPictureRenderer
             (transition_prev_time + TRANSITION_RANDOM_TIMEOUT <
              SystemClock.elapsedRealtime())) ||
            (cur_transition == TransitionType.random)) {
-            TransitionType next_transition;
-            do {
-                next_transition = random_transition[
-                    random.nextInt(random_transition.length)];
-            } while(next_transition == cur_transition);
-            cur_transition = next_transition;
+            cur_transition_idx =
+                (cur_transition_idx + 1) % random_transition.size();
+            if(cur_transition_idx == 0) {
+                Collections.shuffle(random_transition, random);
+            }
+            cur_transition = random_transition.get(cur_transition_idx);
         }
 
         if(dxpx >= 1 || dypx >= 1) {
