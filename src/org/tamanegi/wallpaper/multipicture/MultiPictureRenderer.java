@@ -1958,9 +1958,10 @@ public class MultiPictureRenderer
         Rect rect2 = new Rect();
         text_paint.getTextBounds(str1, 0, str1.length(), rect1);
         text_paint.getTextBounds(str2, 0, str2.length(), rect2);
+        int th = (rect1.height() + rect2.height()) / 2;
 
         int bw = getLeastPowerOf2GE(Math.max(rect1.width(), rect2.width()));
-        int bh = getLeastPowerOf2GE(rect1.height() + rect2.height());
+        int bh = getLeastPowerOf2GE(th * 4);
 
         info.tex_info.has_content = true;
         info.tex_info.enable_reflect = false;
@@ -1974,8 +1975,8 @@ public class MultiPictureRenderer
 
         Canvas c = new Canvas(info.tex_info.bmp);
         c.drawColor(0, PorterDuff.Mode.SRC);
-        c.drawText(str1, bw / 2, bh / 2 - rect1.height(), text_paint);
-        c.drawText(str2, bw / 2, bh / 2 + rect2.height(), text_paint);
+        c.drawText(str1, bw / 2, bh / 2 - th / 2, text_paint);
+        c.drawText(str2, bw / 2, bh / 2 + th * 3 / 2, text_paint);
     }
 
     private void updateAllScreen(boolean fadeout)
