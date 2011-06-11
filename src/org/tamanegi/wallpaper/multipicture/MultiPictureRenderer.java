@@ -1564,43 +1564,31 @@ public class MultiPictureRenderer
         else if(transition == TransitionType.bookshelf) {
             float thr = 1.75f;
             float tdx = dx * thr;
-            float tdy = dy * thr;
+            float radx = 1 - Math.min(1, Math.abs(dx));
+            float atdx = Math.min(1, Math.abs(tdx));
+            float ratdx = 1 - atdx;
+            float sy = Math.min(1, Math.abs(dy));
+            float rsy = 1 - sy;
 
-            float rx = (dx < 0 ? 1 : -1) * 80 + dx * 10;
-            float ry = (dy < 0 ? 1 : -1) * 80 + dy * 10;
-            float tx = (tdx < -1 ? tdx + 1 :
-                        tdx > +1 ? tdx - 1 : 0) * 0.125f * wratio;
-            float ty = (tdy < -1 ? tdy + 1 :
-                        tdy > +1 ? tdy - 1 : 0) * -0.125f;
-            float tz = Math.max(1, wratio) * -3;
+            float rx = (dx < 0 ? 1 : -1) * (80 + radx * 10) + dx * 10;
+            float tx = dx * 0.125f * wratio;
+            float tz =
+                Math.max(1, wratio) * -3 +
+                wratio * Math.max(0, 1 - atdx);
 
-            float adx = Math.abs(tdx);
-            float ady = Math.abs(tdy);
-            if(adx < 1) {
-                float radx = 1 - adx;
-                rx *= 1 - radx * radx;
-            }
-            if(ady < 1) {
-                float rady = 1 - ady;
-                ry *= 1 - rady * rady;
-            }
-            if(adx < 1 && ady < 1) {
-                float ratio = Math.max(adx, ady);
-                tx += FloatMath.sin(tdx * (float)Math.PI) * 0.25f * wratio;
-                ty += FloatMath.sin(tdy * (float)Math.PI) * -0.25f;
-                tz *= ratio;
-            }
+            rx = rx * sy + rx * (1 - ratdx * ratdx) * rsy;
+            tx += FloatMath.sin(Math.min(1, Math.max(-1, tdx)) *
+                                (float)Math.PI) * 0.25f * wratio * rsy;
+            tz = tz * sy + tz * Math.min(1, Math.abs(tdx)) * rsy;
 
             effect.matrix
-                .translate(tx, ty, tz)
+                .translate(tx, dy * -2.1f, tz)
                 .rotateY(rx)
-                .rotateX(ry)
                 .translate(
                     (dx < 0 ? Math.max(-1, tdx) : Math.min(1, tdx)) * wratio,
-                    (dy < 0 ? Math.max(-1, tdy) : Math.min(1, tdy)) * -1,
-                    0);
+                    0, 0);
 
-            float dxy = adx + ady;
+            float dxy = Math.abs(dx) + Math.abs(dy);
             float dr =
                 Math.abs(dx - Math.round(dx)) + Math.abs(dy - Math.round(dy));
             effect.alpha *= (dxy < 0.5f ? 1 : Math.min(1, dr * 8 / dxy));
