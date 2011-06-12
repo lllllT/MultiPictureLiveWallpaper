@@ -69,6 +69,7 @@
 
   <target name="clean">
     <delete dir="${bin.path}" />
+    <delete dir="${javadoc.path}" />
     <delete file="${jar.path}" />
     <delete file="${zip.path}" />
   </target>
