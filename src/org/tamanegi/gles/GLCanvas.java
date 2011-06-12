@@ -405,7 +405,7 @@ public class GLCanvas
 
     public boolean swap()
     {
-        if(egl == null) {
+        if(egl == null || egl_display == null || egl_surface == null) {
             return true;
         }
 
