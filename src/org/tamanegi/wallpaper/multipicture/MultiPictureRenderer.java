@@ -1723,7 +1723,7 @@ public class MultiPictureRenderer
                 info.yoffset = (info.yoffset - 3f / 16f) * (16f / 10f);
             }
 
-            ycur_honeycomb = (info.ystep <= 0 ? 0 : info.yoffset / info.ystep);
+            ycur_honeycomb = (info.ystep <= 0 ? 1 : info.yoffset / info.ystep);
 
             info.ystep = 0;
             info.yoffset = 0;
