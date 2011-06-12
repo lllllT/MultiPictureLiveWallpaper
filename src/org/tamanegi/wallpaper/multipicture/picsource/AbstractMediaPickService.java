@@ -16,6 +16,7 @@ public abstract class AbstractMediaPickService
     extends AbstractFileListPickService
 {
     private static final int NEXT_LOADING_DELAY = 2000; // msec
+    private static final int DELAY_FLUCTION = 128;      // msec
 
     private Observer observer;
     private Receiver receiver;
@@ -27,6 +28,8 @@ public abstract class AbstractMediaPickService
         private int[] idx_list = null;
         private FileInfo last_file = null;
         private PictureContentInfo next_content = null;
+
+        private Random random = new Random();
 
         abstract protected boolean isRandomOrder();
         abstract protected Cursor queryImages(FileInfo last_file);
@@ -51,7 +54,8 @@ public abstract class AbstractMediaPickService
         @Override
         protected PictureContentInfo getNextContent()
         {
-            startLoading(NEXT_LOADING_DELAY);
+            startLoading(NEXT_LOADING_DELAY +
+                         random.nextInt(DELAY_FLUCTION) - DELAY_FLUCTION / 2);
             return next_content;
         }
 
@@ -141,8 +145,6 @@ public abstract class AbstractMediaPickService
 
         private void shuffleIndexes()
         {
-            Random random = new Random();
-
             for(int i = 0; i < idx_list.length; i++) {
                 int idx = i + random.nextInt(idx_list.length - i);
                 int v = idx_list[i];
