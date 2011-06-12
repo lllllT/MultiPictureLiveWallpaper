@@ -35,6 +35,7 @@ import android.graphics.ColorMatrix;
 import android.graphics.ColorMatrixColorFilter;
 import android.graphics.Matrix;
 import android.graphics.Paint;
+import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.RectF;
@@ -430,6 +431,9 @@ public class MultiPictureRenderer
         if(this.width == width && this.height == height) {
             return;
         }
+
+        sh.setFormat(PixelFormat.OPAQUE);
+        sh.setType(SurfaceHolder.SURFACE_TYPE_GPU);
 
         SurfaceInfo info = new SurfaceInfo(sh, format, width, height);
         drawer_handler.obtainMessage(MSG_SURFACE_CHANGED, info).sendToTarget();
