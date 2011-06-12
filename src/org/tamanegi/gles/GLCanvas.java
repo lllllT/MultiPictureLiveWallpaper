@@ -80,8 +80,10 @@ public class GLCanvas
             initGL();
         }
 
-        initState();
-        gl.glViewport(0, 0, width, height);
+        if(gl != null) {
+            initState();
+            gl.glViewport(0, 0, width, height);
+        }
     }
 
     private void initGL()
@@ -118,8 +120,14 @@ public class GLCanvas
             return;
         }
 
-        egl_surface = egl.eglCreateWindowSurface(
-            egl_display, egl_config, holder, null);
+        try {
+            egl_surface = egl.eglCreateWindowSurface(
+                egl_display, egl_config, holder, null);
+        }
+        catch(Exception e) {
+            // ignore
+            egl_surface = EGL10.EGL_NO_SURFACE;
+        }
         if(egl_surface == EGL10.EGL_NO_SURFACE) {
             egl_surface = null;
             return;
@@ -135,6 +143,10 @@ public class GLCanvas
 
     private void initState()
     {
+        if(gl == null) {
+            return;
+        }
+
         gl.glDisable(GL10.GL_TEXTURE_2D);
         gl.glDisable(GL10.GL_CULL_FACE);
 
@@ -215,10 +227,16 @@ public class GLCanvas
             egl.eglDestroyContext(egl_display, egl_context);
             egl_context = null;
         }
+
+        gl = null;
     }
 
     public int genTexture(Bitmap bmp)
     {
+        if(gl == null) {
+            return 0;
+        }
+
         gl.glEnable(GL10.GL_TEXTURE_2D);
 
         int[] textures = new int[1];
@@ -250,12 +268,20 @@ public class GLCanvas
 
     public void deleteTexture(int tex_id)
     {
+        if(gl == null) {
+            return;
+        }
+
         int[] textures = { tex_id };
         gl.glDeleteTextures(1, textures, 0);
     }
 
     public void setClipRect(GLMatrix mat, RectF clip_rect)
     {
+        if(gl == null) {
+            return;
+        }
+
         gl.glMatrixMode(GL10.GL_MODELVIEW);
         gl.glPushMatrix();
         gl.glTranslatef(clip_rect.centerX(), clip_rect.centerY(), 0);
@@ -290,17 +316,29 @@ public class GLCanvas
 
     public void clearClipRect()
     {
+        if(gl == null) {
+            return;
+        }
+
         gl.glDisable(GL10.GL_DEPTH_TEST);
     }
 
     public void drawColor(GLColor color)
     {
+        if(gl == null) {
+            return;
+        }
+
         gl.glClearColor(color.red, color.green, color.blue, color.alpha);
         gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
     }
 
     public void drawRect(GLMatrix mat, GLColor fill_color, GLColor border_color)
     {
+        if(gl == null) {
+            return;
+        }
+
         gl.glMatrixMode(GL10.GL_MODELVIEW);
         gl.glPushMatrix();
         gl.glMultMatrixf(mat.get(), 0);
@@ -333,6 +371,10 @@ public class GLCanvas
 
     public void drawTexture(GLMatrix mat, int tex_id, float alpha, float fade)
     {
+        if(gl == null) {
+            return;
+        }
+
         gl.glMatrixMode(GL10.GL_MODELVIEW);
         gl.glPushMatrix();
         gl.glMultMatrixf(mat.get(), 0);
@@ -363,6 +405,10 @@ public class GLCanvas
 
     public boolean swap()
     {
+        if(egl == null) {
+            return true;
+        }
+
         if(! egl.eglSwapBuffers(egl_display, egl_surface)) {
             if(egl.eglGetError() == EGL11.EGL_CONTEXT_LOST) {
                 destroyGLContext();
