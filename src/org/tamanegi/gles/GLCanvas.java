@@ -127,9 +127,9 @@ public class GLCanvas
             int g = getConfigAttrib(config, EGL10.EGL_GREEN_SIZE, 0);
             int b = getConfigAttrib(config, EGL10.EGL_BLUE_SIZE, 0);
             int d = getConfigAttrib(config, EGL10.EGL_DEPTH_SIZE, 0);
-            if(r == EGL_CONFIG_RED &&
-               g == EGL_CONFIG_GREEN &&
-               b == EGL_CONFIG_BLUE &&
+            if(r >= EGL_CONFIG_RED &&
+               g >= EGL_CONFIG_GREEN &&
+               b >= EGL_CONFIG_BLUE &&
                d >= EGL_CONFIG_DEPTH) {
                 egl_config = config;
                 break;

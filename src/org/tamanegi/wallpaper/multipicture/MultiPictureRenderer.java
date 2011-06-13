@@ -397,6 +397,9 @@ public class MultiPictureRenderer
 
     public void onCreate(SurfaceHolder holder, boolean is_preview)
     {
+        holder.setFormat(PixelFormat.OPAQUE);
+        holder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
+
         int priority = (is_preview ?
                         Process.THREAD_PRIORITY_DEFAULT :
                         Process.THREAD_PRIORITY_DISPLAY);
@@ -431,9 +434,6 @@ public class MultiPictureRenderer
         if(this.width == width && this.height == height) {
             return;
         }
-
-        sh.setFormat(PixelFormat.OPAQUE);
-        sh.setType(SurfaceHolder.SURFACE_TYPE_GPU);
 
         SurfaceInfo info = new SurfaceInfo(sh, format, width, height);
         drawer_handler.obtainMessage(MSG_SURFACE_CHANGED, info).sendToTarget();
