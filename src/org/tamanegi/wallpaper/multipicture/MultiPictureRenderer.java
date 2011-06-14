@@ -2284,21 +2284,11 @@ public class MultiPictureRenderer
             int src_w = bw - src_x * 2;
             int src_h = bh - src_y * 2;
 
-            TextureInfo tex_info = new TextureInfo();
             float xratio = (cw < 0 ? bw * bscale / target_width : 1);
             float yratio = (ch < 0 ? bh * bscale / target_height : 1);
-            if(orientation != 90 && orientation != 270) {
-                tex_info.xratio = xratio;
-                tex_info.yratio = yratio;
-            }
-            else {
-                tex_info.xratio = yratio;
-                tex_info.yratio = xratio;
-            }
 
-            // scale to power of 2
-            int tex_width = getLeastPowerOf2GE((int)(src_w * bscale));
-            int tex_height = getLeastPowerOf2GE((int)(src_h * bscale));
+            int tex_width = getLeastPowerOf2GE(src_w);
+            int tex_height = getLeastPowerOf2GE(src_h);
             while(max_screen_pixels > 0 &&
                   tex_width * tex_height > max_screen_pixels) {
                 if((double)tex_width / target_width >=
@@ -2309,9 +2299,22 @@ public class MultiPictureRenderer
                     tex_height /= 2;
                 }
             }
+            float txscale = (float)tex_width / src_w;
+            float tyscale = (float)tex_height / src_h;
 
+            TextureInfo tex_info = new TextureInfo();
             Matrix mat = new Matrix();
-            mat.setScale((float)tex_width / src_w, (float)tex_height / src_h);
+            if(orientation != 90 && orientation != 270) {
+                tex_info.xratio = xratio;
+                tex_info.yratio = yratio;
+                mat.setScale(txscale, tyscale);
+            }
+            else {
+                tex_info.xratio = yratio;
+                tex_info.yratio = xratio;
+                mat.setScale(tyscale, txscale);
+            }
+
             if(orientation != 0) {
                 mat.preRotate(orientation, bw / 2f, bh / 2f);
             }
