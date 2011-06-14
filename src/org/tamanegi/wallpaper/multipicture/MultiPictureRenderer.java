@@ -2063,8 +2063,17 @@ public class MultiPictureRenderer
 
             // not retrieved, or just reload
             if(content == null || content.getUri() == null) {
-                if(pic_info.cur_content == null &&
-                   ! pic_info.tex_info.has_content) {
+                if(pic_info.cur_content == null) {
+                    if(pic_info.tex_info.has_content) {
+                        if(pic_info.tex_info.bmp != null) {
+                            pic_info.tex_info.bmp.recycle();
+                        }
+                        else if(pic_info.tex_info.tex_id >= 0) {
+                            drawer_handler.obtainMessage(
+                                MSG_DELETE_TEXTURE,
+                                pic_info.tex_info.tex_id, 0).sendToTarget();
+                        }
+                    }
                     setNotAvailableStatus(pic_info, idx);
                     pic_info.loading_cnt -= 1;
                     return;
