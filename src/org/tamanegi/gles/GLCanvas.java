@@ -219,6 +219,11 @@ public class GLCanvas
                       0, 0, 0,
                       0, 1, 0);
 
+        // texture matrix
+        gl.glMatrixMode(GL10.GL_TEXTURE);
+        gl.glLoadIdentity();
+
+        // array of vertex, coord, index
         float[] vertex_coords = {
             //    x,   y, z,
             -wratio, +1f, 0,
@@ -410,11 +415,16 @@ public class GLCanvas
         gl.glPopMatrix();
     }
 
-    public void drawTexture(GLMatrix mat, int tex_id, float alpha, float fade)
+    public void drawTexture(GLMatrix mat, int tex_id,
+                            float sratio, float tratio, float alpha, float fade)
     {
         if(gl == null) {
             return;
         }
+
+        gl.glMatrixMode(GL10.GL_TEXTURE);
+        gl.glPushMatrix();
+        gl.glScalef(sratio, tratio, 1);
 
         gl.glMatrixMode(GL10.GL_MODELVIEW);
         gl.glPushMatrix();
@@ -441,6 +451,10 @@ public class GLCanvas
         gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
         gl.glDisableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
 
+        gl.glMatrixMode(GL10.GL_MODELVIEW);
+        gl.glPopMatrix();
+
+        gl.glMatrixMode(GL10.GL_TEXTURE);
         gl.glPopMatrix();
     }
 

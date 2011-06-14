@@ -182,6 +182,8 @@ public class MultiPictureRenderer
         private int bheight;
 
         private int tex_id = -1;
+        private float sratio;
+        private float tratio;
         private float xratio;
         private float yratio;
         private int bgcolor;
@@ -654,13 +656,14 @@ public class MultiPictureRenderer
             int bh = spinner_bmp.getHeight();
             int tw = getLeastPowerOf2GE(bw);
             int th = getLeastPowerOf2GE(bh);
-            spinner.bmp = createBitmap(spinner_bmp,
-                                       (bw - tw) / 2, (bh - th) / 2, tw, th,
+            spinner.bmp = createBitmap(spinner_bmp, 0, 0, bw, bh,
                                        null, tw, th, 1);
             spinner_bmp.recycle();
 
-            spinner.bwidth = spinner.bmp.getWidth();
-            spinner.bheight = spinner.bmp.getHeight();
+            spinner.bwidth = bw;
+            spinner.bheight = bh;
+            spinner.sratio = (float)bw / tw;
+            spinner.tratio = (float)bh / th;
             spinner.xratio = (float)spinner.bwidth / width;
             spinner.yratio = (float)spinner.bheight / height;
             spinner.bgcolor = 0xff000000;
@@ -888,8 +891,8 @@ public class MultiPictureRenderer
                 glcanvas.deleteTexture(spinner.tex_id);
             }
             spinner.tex_id = glcanvas.genTexture(spinner.bmp);
-            spinner.xratio = (float)spinner.bmp.getWidth() / width;
-            spinner.yratio = (float)spinner.bmp.getHeight() / height;
+            spinner.xratio = (float)spinner.bwidth / width;
+            spinner.yratio = (float)spinner.bheight / height;
         }
 
         // restrict size
@@ -1347,7 +1350,7 @@ public class MultiPictureRenderer
 
             // draw content picture
             glcanvas.drawTexture(
-                mcenter, tex_info.tex_id,
+                mcenter, tex_info.tex_id, tex_info.sratio, tex_info.tratio,
                 effect.alpha * opacity, fade);
 
             // mirrored picture: top
@@ -1361,7 +1364,7 @@ public class MultiPictureRenderer
                 }
 
                 glcanvas.drawTexture(
-                    mtop, tex_info.tex_id,
+                    mtop, tex_info.tex_id, tex_info.sratio, tex_info.tratio,
                     effect.alpha * opacity / 4, fade);
             }
 
@@ -1376,7 +1379,7 @@ public class MultiPictureRenderer
                 }
 
                 glcanvas.drawTexture(
-                    mbtm, tex_info.tex_id,
+                    mbtm, tex_info.tex_id, tex_info.sratio, tex_info.tratio,
                     effect.alpha * opacity / 4, fade);
             }
         }
@@ -1972,8 +1975,8 @@ public class MultiPictureRenderer
         info.tex_info.bmp =
             Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_4444);
         info.tex_info.bgcolor = 0xff000000;
-        info.tex_info.bwidth = bw;
-        info.tex_info.bheight = bh;
+        info.tex_info.sratio = 1;
+        info.tex_info.tratio = 1;
         info.tex_info.xratio = (float)bw / width;
         info.tex_info.yratio = (float)bh / height;
 
@@ -2113,7 +2116,8 @@ public class MultiPictureRenderer
             tex_info.bgcolor =
                 (pic_info.detect_bgcolor ?
                  detectBackgroundColor(
-                     tex_info.bmp, tex_info.xratio, tex_info.yratio) :
+                     tex_info.bmp, tex_info.sratio, tex_info.tratio,
+                     tex_info.xratio, tex_info.yratio) :
                  pic_info.bgcolor);
         }
 
@@ -2299,24 +2303,33 @@ public class MultiPictureRenderer
                     tex_height /= 2;
                 }
             }
+
             float txscale = (float)tex_width / src_w;
             float tyscale = (float)tex_height / src_h;
+            float sscale = Math.min(1, txscale);
+            float tscale = Math.min(1, tyscale);
+            float sratio = Math.min(1, 1 / txscale);
+            float tratio = Math.min(1, 1 / tyscale);
 
             TextureInfo tex_info = new TextureInfo();
             Matrix mat = new Matrix();
             if(orientation != 90 && orientation != 270) {
+                tex_info.sratio = sratio;
+                tex_info.tratio = tratio;
                 tex_info.xratio = xratio;
                 tex_info.yratio = yratio;
-                mat.setScale(txscale, tyscale);
+                mat.setScale(sscale, tscale);
             }
             else {
+                tex_info.sratio = tratio;
+                tex_info.tratio = sratio;
                 tex_info.xratio = yratio;
                 tex_info.yratio = xratio;
-                mat.setScale(tyscale, txscale);
+                mat.setScale(tscale, sscale);
             }
 
             if(orientation != 0) {
-                mat.preRotate(orientation, bw / 2f, bh / 2f);
+                mat.preRotate(orientation);
             }
 
             tex_info.bmp = createBitmap(
@@ -2348,19 +2361,23 @@ public class MultiPictureRenderer
         return Math.min(1, Math.max(0, v));
     }
 
-    private int detectBackgroundColor(Bitmap bmp, float xratio, float yratio)
+    private int detectBackgroundColor(Bitmap bmp, float sratio, float tratio,
+                                      float xratio, float yratio)
     {
-        int w = bmp.getWidth();
-        int h = bmp.getHeight();
+        int w = (int)(bmp.getWidth() * sratio);
+        int h = (int)(bmp.getHeight() * tratio);
 
         // resize if larger than MAX_DETECT_PIXELS
         int ratio = 1;
         while(w * h / (ratio * ratio) > MAX_DETECT_PIXELS) {
             ratio += 1;
         }
-        w = w / ratio;
-        h = h / ratio;
-        bmp = Bitmap.createScaledBitmap(bmp, w, h, true);
+
+        Matrix m = new Matrix();
+        m.setScale(1f / ratio, 1f / ratio);
+        bmp = Bitmap.createBitmap(bmp, 0, 0, w, h, m, true);
+        w = bmp.getWidth();
+        h = bmp.getHeight();
 
         final int rex = (xratio < 1 ? 200 : 100);
         final int rey = (yratio < 1 ? 200 : 100);
