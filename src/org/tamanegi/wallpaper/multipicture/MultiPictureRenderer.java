@@ -2326,12 +2326,15 @@ public class MultiPictureRenderer
 
             TextureInfo tex_info = new TextureInfo();
             Matrix mat = new Matrix();
+            int tw, th;
             if(orientation != 90 && orientation != 270) {
                 tex_info.sratio = sratio;
                 tex_info.tratio = tratio;
                 tex_info.xratio = xratio;
                 tex_info.yratio = yratio;
                 mat.setScale(sscale, tscale);
+                tw = tex_width;
+                th = tex_height;
             }
             else {
                 tex_info.sratio = tratio;
@@ -2339,6 +2342,8 @@ public class MultiPictureRenderer
                 tex_info.xratio = yratio;
                 tex_info.yratio = xratio;
                 mat.setScale(tscale, sscale);
+                tw = tex_height;
+                th = tex_width;
             }
 
             if(orientation != 0) {
@@ -2347,7 +2352,7 @@ public class MultiPictureRenderer
 
             tex_info.bmp = createBitmap(
                 bmp, src_x, src_y, src_w, src_h,
-                mat, tex_width, tex_height, saturation);
+                mat, tw, th, saturation);
             bmp.recycle();
 
             tex_info.has_content = true;
