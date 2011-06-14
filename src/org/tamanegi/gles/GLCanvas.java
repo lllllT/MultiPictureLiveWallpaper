@@ -474,4 +474,16 @@ public class GLCanvas
 
         return true;
     }
+
+    public int getMaxTextureSize()
+    {
+        if(gl == null) {
+            return 2;
+        }
+
+        int val[] = new int[1];
+        val[0] = 2;
+        gl.glGetIntegerv(GL10.GL_MAX_TEXTURE_SIZE, val, 0);
+        return val[0];
+    }
 }

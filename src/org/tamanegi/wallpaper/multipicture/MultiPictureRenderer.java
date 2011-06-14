@@ -320,6 +320,7 @@ public class MultiPictureRenderer
 
     private int max_screen_pixels;
     private int max_work_pixels;
+    private int max_texture_size = 2;
 
     private PictureInfo pic[];
     private Object pic_whole_lock;
@@ -525,6 +526,7 @@ public class MultiPictureRenderer
               SurfaceInfo info = (SurfaceInfo)msg.obj;
               synchronized(pic_whole_lock) {
                   glcanvas.setSurface(info.holder, info.width, info.height);
+                  max_texture_size = glcanvas.getMaxTextureSize();
                   updateScreenSize(info);
                   clearPictureBitmap();
                   drawer_handler.sendEmptyMessage(MSG_DRAW);
@@ -2291,8 +2293,10 @@ public class MultiPictureRenderer
             float xratio = (cw < 0 ? bw * bscale / target_width : 1);
             float yratio = (ch < 0 ? bh * bscale / target_height : 1);
 
-            int tex_width = getLeastPowerOf2GE(src_w);
-            int tex_height = getLeastPowerOf2GE(src_h);
+            int tex_width = Math.min(getLeastPowerOf2GE(src_w),
+                                     max_texture_size);
+            int tex_height = Math.min(getLeastPowerOf2GE(src_h),
+                                      max_texture_size);
             while(max_screen_pixels > 0 &&
                   tex_width * tex_height > max_screen_pixels) {
                 if((double)tex_width / target_width >=
