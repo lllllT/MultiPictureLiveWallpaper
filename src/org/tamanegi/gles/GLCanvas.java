@@ -22,6 +22,7 @@ import android.view.SurfaceHolder;
 public class GLCanvas
 {
     private static final int EGL_CONFIG_ATTRS[] = {
+        EGL10.EGL_DEPTH_SIZE, 16,               // depth: at least 16bits
         EGL10.EGL_NONE,                         // end of list
     };
 
@@ -111,37 +112,9 @@ public class GLCanvas
             return;
         }
 
-        // search 8880/8/0
-        egl_config = chooseConfig(configs, 8, 8, 8, 0, 8, 0);
-        if(egl_config == null) {
-            // search 5650/8/0
-            egl_config = chooseConfig(configs, 5, 6, 5, 0, 8, 0);
-        }
-        if(egl_config == null) {
-            return;
-        }
+        egl_config = configs[0];
 
         initGLContext();
-    }
-
-    private EGLConfig chooseConfig(EGLConfig configs[],
-                                   int red, int green, int blue, int alpha,
-                                   int depth, int stencil)
-    {
-        for(EGLConfig config : configs) {
-            int r = getConfigAttrib(config, EGL10.EGL_RED_SIZE, 0);
-            int g = getConfigAttrib(config, EGL10.EGL_GREEN_SIZE, 0);
-            int b = getConfigAttrib(config, EGL10.EGL_BLUE_SIZE, 0);
-            int a = getConfigAttrib(config, EGL10.EGL_ALPHA_SIZE, 0);
-            int d = getConfigAttrib(config, EGL10.EGL_DEPTH_SIZE, 0);
-            int s = getConfigAttrib(config, EGL10.EGL_STENCIL_SIZE, 0);
-            if(r >= red && g >= green && b >= blue && a >= alpha &&
-               d >= depth && s >= stencil) {
-                return config;
-            }
-        }
-
-        return null;
     }
 
     private int getConfigAttrib(EGLConfig config, int attr, int defval)
