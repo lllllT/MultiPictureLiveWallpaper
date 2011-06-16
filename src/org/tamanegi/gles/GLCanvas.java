@@ -186,7 +186,8 @@ public class GLCanvas
         int s = getConfigAttrib(config, EGL10.EGL_STENCIL_SIZE, 0);
 
         return (d >= depth_size && s >= stencil_size &&
-                r == red_size && g == green_size && b == blue_size);
+                r == red_size && g == green_size && b == blue_size &&
+                a == alpha_size);
     }
 
     private int getConfigAttrib(EGLConfig config, int attr, int defval)
