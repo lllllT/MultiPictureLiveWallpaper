@@ -659,7 +659,7 @@ public class MultiPictureRenderer
             int tw = getLeastPowerOf2GE(bw);
             int th = getLeastPowerOf2GE(bh);
             spinner.bmp = createBitmap(spinner_bmp, 0, 0, bw, bh,
-                                       null, tw, th, 1);
+                                       null, tw, th, 1, 0);
             spinner_bmp.recycle();
 
             spinner.bwidth = bw;
@@ -2120,17 +2120,8 @@ public class MultiPictureRenderer
         TextureInfo tex_info = loadTexture(
             content.getUri(), content.getOrientation(),
             pic_info.clip_ratio, pic_info.saturation,
+            pic_info.detect_bgcolor, pic_info.bgcolor,
             width, height);
-
-        if(tex_info != null) {
-            // background color
-            tex_info.bgcolor =
-                (pic_info.detect_bgcolor ?
-                 detectBackgroundColor(
-                     tex_info.bmp, tex_info.sratio, tex_info.tratio,
-                     tex_info.xratio, tex_info.yratio) :
-                 pic_info.bgcolor);
-        }
 
         synchronized(pic_whole_lock) {
             while(true) {
@@ -2214,6 +2205,7 @@ public class MultiPictureRenderer
 
     private TextureInfo loadTexture(Uri uri, int orientation,
                                     float clip_ratio, float saturation,
+                                    boolean detect_bgcolor, int bgcolor,
                                     int width, int height)
     {
         try {
@@ -2302,9 +2294,9 @@ public class MultiPictureRenderer
             float xratio = (cw < 0 ? bw * bscale / target_width : 1);
             float yratio = (ch < 0 ? bh * bscale / target_height : 1);
 
-            int tex_width = Math.min(getLeastPowerOf2GE(src_w),
+            int tex_width = Math.min(getLeastPowerOf2GE((int)(src_w * bscale)),
                                      max_texture_size);
-            int tex_height = Math.min(getLeastPowerOf2GE(src_h),
+            int tex_height = Math.min(getLeastPowerOf2GE((int)(src_h * bscale)),
                                       max_texture_size);
             while(max_screen_pixels > 0 &&
                   tex_width * tex_height > max_screen_pixels) {
@@ -2350,9 +2342,16 @@ public class MultiPictureRenderer
                 mat.preRotate(orientation);
             }
 
+            // background color
+            tex_info.bgcolor =
+                (detect_bgcolor ?
+                 detectBackgroundColor(bmp, tex_info.xratio, tex_info.yratio) :
+                 bgcolor);
+
+            // scale to texture size
             tex_info.bmp = createBitmap(
                 bmp, src_x, src_y, src_w, src_h,
-                mat, tw, th, saturation);
+                mat, tw, th, saturation, tex_info.bgcolor);
             bmp.recycle();
 
             tex_info.has_content = true;
@@ -2379,11 +2378,10 @@ public class MultiPictureRenderer
         return Math.min(1, Math.max(0, v));
     }
 
-    private int detectBackgroundColor(Bitmap bmp, float sratio, float tratio,
-                                      float xratio, float yratio)
+    private int detectBackgroundColor(Bitmap bmp, float xratio, float yratio)
     {
-        int w = (int)(bmp.getWidth() * sratio);
-        int h = (int)(bmp.getHeight() * tratio);
+        int w = bmp.getWidth();
+        int h = bmp.getHeight();
 
         // resize if larger than MAX_DETECT_PIXELS
         int ratio = 1;
@@ -2498,7 +2496,7 @@ public class MultiPictureRenderer
     private Bitmap createBitmap(Bitmap src,
                                 int x, int y, int width, int height,
                                 Matrix m, int dst_width, int dst_height,
-                                float saturation)
+                                float saturation, int bgcolor)
     {
         Canvas canvas = new Canvas();
         Bitmap bmp;
@@ -2526,7 +2524,9 @@ public class MultiPictureRenderer
         }
 
         bmp = Bitmap.createBitmap(dst_width, dst_height, format);
-        bmp.eraseColor(0);
+        bmp.eraseColor((has_alpha || format == Bitmap.Config.ARGB_8888) ?
+                       (bgcolor & 0x00ffffff) :
+                       (bgcolor | 0xff000000));
 
         // color filter
         if(saturation != 1.0f) {

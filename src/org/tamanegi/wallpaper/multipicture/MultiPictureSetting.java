@@ -77,7 +77,7 @@ public class MultiPictureSetting extends PreferenceActivity
     private static final int REQUEST_CODE_PICSOURCE = 1;
 
     private static final int MIN_MEMORY_CLASS = 16;
-    private static final int MAX_MEMORY_CLASS = 32;
+    private static final int MAX_MEMORY_CLASS = 24;
 
     private static final String TAG = "MultiPictureSetting";
 
