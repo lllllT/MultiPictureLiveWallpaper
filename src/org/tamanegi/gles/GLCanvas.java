@@ -21,13 +21,15 @@ import android.view.SurfaceHolder;
 
 public class GLCanvas
 {
-    private static final int EGL_CONFIG_ATTRS[] = {
-        EGL10.EGL_DEPTH_SIZE, 16,               // depth: at least 16bits
-        EGL10.EGL_NONE,                         // end of list
-    };
-
     private static final int FLOAT_SIZE = Float.SIZE / Byte.SIZE;
     private static final int SHORT_SIZE = Short.SIZE / Byte.SIZE;
+
+    private int red_size;
+    private int green_size;
+    private int blue_size;
+    private int alpha_size;
+    private int depth_size;
+    private int stencil_size;
 
     private SurfaceHolder holder;
     private float wratio = 1;
@@ -36,7 +38,6 @@ public class GLCanvas
 
     private EGL10 egl = null;
     private EGLDisplay egl_display = null;
-    private EGLConfig egl_config = null;
     private EGLContext egl_context = null;
     private EGLSurface egl_surface = null;
 
@@ -46,8 +47,15 @@ public class GLCanvas
     private FloatBuffer tex_list;
     private ShortBuffer index_list;
 
-    public GLCanvas()
+    public GLCanvas(int r, int g, int b, int a, int d, int s)
     {
+        red_size = r;
+        green_size = g;
+        blue_size = b;
+        alpha_size = a;
+        depth_size = d;
+        stencil_size = s;
+
         vertex_list = ByteBuffer.allocateDirect(FLOAT_SIZE * 3 * 4)
             .order(ByteOrder.nativeOrder())
             .asFloatBuffer();
@@ -95,8 +103,23 @@ public class GLCanvas
             return;
         }
 
+        initGLContext();
+    }
+
+    private void initGLContext()
+    {
+        int config_attrs[] = {
+            EGL10.EGL_RED_SIZE, red_size,
+            EGL10.EGL_GREEN_SIZE, green_size,
+            EGL10.EGL_BLUE_SIZE, blue_size,
+            EGL10.EGL_ALPHA_SIZE, alpha_size,
+            EGL10.EGL_DEPTH_SIZE, depth_size,
+            EGL10.EGL_STENCIL_SIZE, stencil_size,
+            EGL10.EGL_NONE
+        };
+
         int nconf[] = new int[1];
-        if(! egl.eglChooseConfig(egl_display, EGL_CONFIG_ATTRS,
+        if(! egl.eglChooseConfig(egl_display, config_attrs,
                                  null, 0, nconf)) {
             return;
         }
@@ -107,45 +130,41 @@ public class GLCanvas
         }
 
         EGLConfig configs[] = new EGLConfig[conf_cnt];
-        if(! egl.eglChooseConfig(egl_display, EGL_CONFIG_ATTRS,
+        if(! egl.eglChooseConfig(egl_display, config_attrs,
                                  configs, conf_cnt, nconf)) {
             return;
         }
 
-        egl_config = configs[0];
+        for(EGLConfig config : configs) {
+            if(! matchConfig(config)) {
+                continue;
+            }
 
-        initGLContext();
-    }
+            egl_context = egl.eglCreateContext(
+                egl_display, config, EGL10.EGL_NO_CONTEXT, null);
+            if(egl_context == EGL10.EGL_NO_CONTEXT) {
+                egl_context = null;
+                continue;
+            }
 
-    private int getConfigAttrib(EGLConfig config, int attr, int defval)
-    {
-        int val[] = new int[1];
-        if(egl.eglGetConfigAttrib(egl_display, config, attr, val)) {
-            return val[0];
+            try {
+                egl_surface = egl.eglCreateWindowSurface(
+                    egl_display, config, holder, null);
+            }
+            catch(Exception e) {
+                // ignore
+                egl_surface = EGL10.EGL_NO_SURFACE;
+            }
+            if(egl_surface == EGL10.EGL_NO_SURFACE) {
+                egl.eglDestroyContext(egl_display, egl_context);
+                egl_context = null;
+                egl_surface = null;
+                continue;
+            }
+
+            break;
         }
-
-        return defval;
-    }
-
-    private void initGLContext()
-    {
-        egl_context = egl.eglCreateContext(
-            egl_display, egl_config, EGL10.EGL_NO_CONTEXT, null);
-        if(egl_context == EGL10.EGL_NO_CONTEXT) {
-            egl_context = null;
-            return;
-        }
-
-        try {
-            egl_surface = egl.eglCreateWindowSurface(
-                egl_display, egl_config, holder, null);
-        }
-        catch(Exception e) {
-            // ignore
-            egl_surface = EGL10.EGL_NO_SURFACE;
-        }
-        if(egl_surface == EGL10.EGL_NO_SURFACE) {
-            egl_surface = null;
+        if(egl_context == null || egl_surface == null) {
             return;
         }
 
@@ -155,6 +174,28 @@ public class GLCanvas
         }
 
         gl = (GL10)egl_context.getGL();
+    }
+
+    private boolean matchConfig(EGLConfig config)
+    {
+        int r = getConfigAttrib(config, EGL10.EGL_RED_SIZE, 0);
+        int g = getConfigAttrib(config, EGL10.EGL_GREEN_SIZE, 0);
+        int b = getConfigAttrib(config, EGL10.EGL_BLUE_SIZE, 0);
+        int a = getConfigAttrib(config, EGL10.EGL_ALPHA_SIZE, 0);
+        int d = getConfigAttrib(config, EGL10.EGL_DEPTH_SIZE, 0);
+        int s = getConfigAttrib(config, EGL10.EGL_STENCIL_SIZE, 0);
+
+        return (d >= depth_size && s >= stencil_size &&
+                r == red_size && g == green_size && b == blue_size);
+    }
+
+    private int getConfigAttrib(EGLConfig config, int attr, int defval)
+    {
+        int val[] = new int[1];
+        if(egl.eglGetConfigAttrib(egl_display, config, attr, val)) {
+            return val[0];
+        }
+        return defval;
     }
 
     private void initState()

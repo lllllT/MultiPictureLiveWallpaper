@@ -400,8 +400,10 @@ public class MultiPictureRenderer
 
     public void onCreate(SurfaceHolder holder, boolean is_preview)
     {
-        holder.setFormat(PixelFormat.OPAQUE);
+        holder.setFormat(PixelFormat.RGB_565);
         holder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
+
+        glcanvas = new GLCanvas(5, 6, 5, 0, 16, 0);
 
         int priority = (is_preview ?
                         Process.THREAD_PRIORITY_DEFAULT :
@@ -434,10 +436,6 @@ public class MultiPictureRenderer
     public void onSurfaceChanged(SurfaceHolder sh, int format,
                                  int width, int height)
     {
-        if(this.width == width && this.height == height) {
-            return;
-        }
-
         SurfaceInfo info = new SurfaceInfo(sh, format, width, height);
         drawer_handler.obtainMessage(MSG_SURFACE_CHANGED, info).sendToTarget();
     }
@@ -641,7 +639,6 @@ public class MultiPictureRenderer
         // init conf
         pic_whole_lock = new Object();
         synchronized(pic_whole_lock) {
-            glcanvas = new GLCanvas();
             clearPictureSetting();
             loadGlobalSetting();
         }
@@ -2294,9 +2291,11 @@ public class MultiPictureRenderer
             float xratio = (cw < 0 ? bw * bscale / target_width : 1);
             float yratio = (ch < 0 ? bh * bscale / target_height : 1);
 
-            int tex_width = Math.min(getLeastPowerOf2GE((int)(src_w * bscale)),
+            int tex_width = Math.min(getLeastPowerOf2GE(
+                                         (int)(src_w * Math.min(1, bscale))),
                                      max_texture_size);
-            int tex_height = Math.min(getLeastPowerOf2GE((int)(src_h * bscale)),
+            int tex_height = Math.min(getLeastPowerOf2GE(
+                                          (int)(src_h * Math.min(1, bscale))),
                                       max_texture_size);
             while(max_screen_pixels > 0 &&
                   tex_width * tex_height > max_screen_pixels) {
@@ -2524,9 +2523,6 @@ public class MultiPictureRenderer
         }
 
         bmp = Bitmap.createBitmap(dst_width, dst_height, format);
-        bmp.eraseColor((has_alpha || format == Bitmap.Config.ARGB_8888) ?
-                       (bgcolor & 0x00ffffff) :
-                       (bgcolor | 0xff000000));
 
         // color filter
         if(saturation != 1.0f) {
@@ -2539,6 +2535,7 @@ public class MultiPictureRenderer
 
         bmp.setDensity(src.getDensity());
         canvas.setBitmap(bmp);
+        canvas.drawColor(bgcolor | 0xff000000, PorterDuff.Mode.SRC);
         canvas.drawBitmap(src, src_rect, dst_rect, paint);
 
         return bmp;
