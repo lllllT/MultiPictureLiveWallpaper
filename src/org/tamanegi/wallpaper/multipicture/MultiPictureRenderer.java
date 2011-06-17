@@ -39,6 +39,7 @@ import android.graphics.PixelFormat;
 import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.RectF;
+import android.graphics.Region;
 import android.net.Uri;
 import android.os.Handler;
 import android.os.HandlerThread;
@@ -2535,8 +2536,11 @@ public class MultiPictureRenderer
 
         bmp.setDensity(src.getDensity());
         canvas.setBitmap(bmp);
-        canvas.drawColor(bgcolor | 0xff000000, PorterDuff.Mode.SRC);
+
         canvas.drawBitmap(src, src_rect, dst_rect, paint);
+
+        canvas.clipRect(dst_rect, Region.Op.XOR);
+        canvas.drawColor(bgcolor | 0xff000000, PorterDuff.Mode.SRC);
 
         return bmp;
     }
