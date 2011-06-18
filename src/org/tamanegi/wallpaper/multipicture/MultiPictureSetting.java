@@ -1,5 +1,6 @@
 package org.tamanegi.wallpaper.multipicture;
 
+import java.lang.reflect.Method;
 import java.util.IllegalFormatException;
 import java.util.List;
 
@@ -78,6 +79,7 @@ public class MultiPictureSetting extends PreferenceActivity
 
     private static final int MIN_MEMORY_CLASS = 16;
     private static final int MAX_MEMORY_CLASS = 24;
+    private static final int MAX_LARGE_MEMORY_CLASS = 48;
 
     private static final String TAG = "MultiPictureSetting";
 
@@ -123,11 +125,32 @@ public class MultiPictureSetting extends PreferenceActivity
 
     public static int getAutoMemoryClass(Context context)
     {
-        int mclass = ((ActivityManager)context.getSystemService(
-                          Context.ACTIVITY_SERVICE)).getMemoryClass();
-        mclass = Math.min(Math.max(mclass, MIN_MEMORY_CLASS),
-                          MAX_MEMORY_CLASS);
-        return mclass;
+        ActivityManager amgr = (ActivityManager)
+            context.getSystemService(Context.ACTIVITY_SERVICE);
+        int mclass = amgr.getMemoryClass();
+        int large_mclass = getLargeMemoryClass(amgr);
+
+        if(large_mclass > 0) {
+            return Math.min(Math.max(large_mclass, MIN_MEMORY_CLASS),
+                            MAX_LARGE_MEMORY_CLASS);
+        }
+        else {
+            return Math.min(Math.max(mclass, MIN_MEMORY_CLASS),
+                            MAX_MEMORY_CLASS);
+        }
+    }
+
+    private static int getLargeMemoryClass(ActivityManager amgr)
+    {
+        try {
+            Method m = ActivityManager.class.getMethod(
+                "getLargeMemoryClass", (Class[])null);
+            return (Integer)m.invoke(amgr);
+        }
+        catch(Exception e) {
+            // ignore
+            return -1;
+        }
     }
 
     /** Called when the activity is first created. */
@@ -321,9 +344,14 @@ public class MultiPictureSetting extends PreferenceActivity
         sb.append("Android ").append(Build.VERSION.RELEASE)
             .append(" ").append(Build.MODEL)
             .append(" Build/").append(Build.ID).append("\n");
+
+        ActivityManager amgr = (ActivityManager)
+            getSystemService(ACTIVITY_SERVICE);
+        int mclass = amgr.getMemoryClass();
+        int large_mclass = getLargeMemoryClass(amgr);
         sb.append("Memory class: ")
-            .append(((ActivityManager)getSystemService(
-                         ACTIVITY_SERVICE)).getMemoryClass())
+            .append(mclass)
+            .append(large_mclass > 0 ? ", " + large_mclass : "")
             .append("\n");
 
         // display info
