@@ -111,9 +111,13 @@
   <target name="svg-drawable">
     <svg2png-drawable src="${src.dir}/icon.svg"
                       pngname="icon.png" />
-    <svg2png-drawable src="${src.dir}/icon.svg"
-                      pngname="thumbnail.png"
-                      xhdpi="187.5" hdpi="140" mdpi="93.75" ldpi="70" />
+    <antcall target="svg2png-dpi">
+      <param name="svg2png.src" value="${src.dir}/icon.svg" />
+      <param name="svg2png.todir" value="${res.dir}/drawable-nodpi" />
+      <param name="svg2png.toname" value="thumbnail.png" />
+      <param name="svg2png.dpi" value="420" />
+      <param name="svg2png.args" value="--export-area=-18:0:90:72 --export-background=#ffffff --export-background-opacity=1" />
+    </antcall>
 
     <svg2png-drawable src="${src.dir}/ic_picsource_single.svg"
                       pngname="ic_picsource_single.png" />
