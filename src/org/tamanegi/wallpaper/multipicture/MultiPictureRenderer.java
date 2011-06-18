@@ -48,6 +48,7 @@ import android.os.SystemClock;
 import android.preference.PreferenceManager;
 import android.util.FloatMath;
 import android.view.SurfaceHolder;
+import android.view.WindowManager;
 
 public class MultiPictureRenderer
 {
@@ -356,7 +357,6 @@ public class MultiPictureRenderer
 
     private TextureInfo spinner = null;
 
-    private Paint paint;
     private Paint text_paint;
 
     private SharedPreferences pref;
@@ -400,10 +400,18 @@ public class MultiPictureRenderer
 
     public void onCreate(SurfaceHolder holder, boolean is_preview)
     {
-        holder.setFormat(PixelFormat.RGB_565);
+        int dpy_pfmt =
+            ((WindowManager)context.getSystemService(Context.WINDOW_SERVICE))
+            .getDefaultDisplay().getPixelFormat();
+        boolean use_8888 = (dpy_pfmt != PixelFormat.RGB_565);
+
+        holder.setFormat(
+            use_8888 ? PixelFormat.RGBA_8888 : PixelFormat.RGB_565);
         holder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
 
-        glcanvas = new GLCanvas(5, 6, 5, 0, 16, 0);
+        glcanvas = (use_8888 ?
+                    new GLCanvas(8, 8, 8, 8, 16, 0) :
+                    new GLCanvas(5, 6, 5, 0, 16, 0));
 
         int priority = (is_preview ?
                         Process.THREAD_PRIORITY_DEFAULT :
@@ -592,12 +600,6 @@ public class MultiPictureRenderer
         Process.setThreadPriority(priority);
 
         // paint
-        paint = new Paint();
-        paint.setFilterBitmap(true);
-        paint.setAntiAlias(true);
-        paint.setDither(true);
-        paint.setColor(0xff000000);
-
         text_paint = new Paint();
         text_paint.setAntiAlias(true);
         text_paint.setColor(0xffffffff);
