@@ -302,6 +302,7 @@ public class MultiPictureRenderer
 
     // renderer local values
     private Context context;
+    private int drawer_priority;
     private HandlerThread drawer_thread;
     private Handler drawer_handler;
     private HandlerThread loader_thread;
@@ -414,11 +415,10 @@ public class MultiPictureRenderer
                     new GLCanvas(8, 8, 8, 8, 16, 0) :
                     new GLCanvas(5, 6, 5, 0, 16, 0));
 
-        int priority = (is_preview ?
-                        Process.THREAD_PRIORITY_DEFAULT :
-                        Process.THREAD_PRIORITY_DISPLAY);
-        drawer_handler.obtainMessage(MSG_INIT, Integer.valueOf(priority))
-            .sendToTarget();
+        drawer_priority = (is_preview ?
+                           Process.THREAD_PRIORITY_DEFAULT :
+                           Process.THREAD_PRIORITY_FOREGROUND);
+        drawer_handler.sendEmptyMessage(MSG_INIT);
     }
 
     public void onDestroy()
@@ -463,7 +463,7 @@ public class MultiPictureRenderer
     {
         switch(msg.what) {
           case MSG_INIT:
-              init(((Integer)msg.obj).intValue());
+              init();
               break;
 
           case MSG_DESTROY:
@@ -480,6 +480,7 @@ public class MultiPictureRenderer
               break;
 
           case MSG_SHOW:
+              Process.setThreadPriority(drawer_priority);
               synchronized(pic_whole_lock) {
                   visible = true;
 
@@ -508,6 +509,7 @@ public class MultiPictureRenderer
               break;
 
           case MSG_HIDE:
+              Process.setThreadPriority(Process.THREAD_PRIORITY_LESS_FAVORABLE);
               synchronized(pic_whole_lock) {
                   visible = false;
               }
@@ -600,11 +602,8 @@ public class MultiPictureRenderer
         return true;
     }
 
-    private void init(int priority)
+    private void init()
     {
-        // thread priority
-        Process.setThreadPriority(priority);
-
         // paint
         text_paint = new Paint();
         text_paint.setAntiAlias(true);
