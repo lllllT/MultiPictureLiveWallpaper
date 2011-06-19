@@ -145,7 +145,7 @@ public abstract class AbstractMediaPickService
 
         private void shuffleIndexes()
         {
-            for(int i = 0; i < idx_list.length; i++) {
+            for(int i = 0; i < idx_list.length - 1; i++) {
                 int idx = i + random.nextInt(idx_list.length - i);
                 int v = idx_list[i];
                 idx_list[i] = idx_list[idx];
