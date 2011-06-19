@@ -59,6 +59,7 @@ public class MultiPictureRenderer
     private static final int MSG_HIDE = 4;
     private static final int MSG_DRAW = 10;
     private static final int MSG_DRAW_STEP = 11;
+    private static final int MSG_DRAW_DELAYED = 12;
     private static final int MSG_PREF_CHANGED = 20;
     private static final int MSG_PREF_CHANGED_NORELOAD = 21;
     private static final int MSG_OFFSET_CHANGED = 22;
@@ -471,6 +472,7 @@ public class MultiPictureRenderer
 
           case MSG_DRAW:
           case MSG_DRAW_STEP:
+          case MSG_DRAW_DELAYED:
               synchronized(pic_whole_lock) {
                   draw(msg.what == MSG_DRAW_STEP);
                   pic_whole_lock.notifyAll();
@@ -526,6 +528,10 @@ public class MultiPictureRenderer
           case MSG_OFFSET_CHANGED:
               changeOffsets((OffsetInfo)msg.obj);
               drawer_handler.sendEmptyMessage(MSG_DRAW);
+
+              // workaround
+              drawer_handler.removeMessages(MSG_DRAW_DELAYED);
+              drawer_handler.sendEmptyMessageDelayed(MSG_DRAW_DELAYED, 10);
               break;
 
           case MSG_SURFACE_CHANGED:
