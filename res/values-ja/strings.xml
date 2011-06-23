@@ -75,6 +75,9 @@
   <string name="pref_memory_max_summary">画質や性能に問題がある場合用。</string>
   <string name="pref_memory_max_confirm">メモリ使用量を増やすと機種や表示する画像によってはメモリ不足により強制終了する場合があります。\nその場合は少ないメモリ使用量を選択して下さい。</string>
 
+  <string name="pref_color_fullcolor_title">表示色数</string>
+  <string name="pref_color_fullcolor_summary">画質や性能に問題がある場合用。</string>
+
   <string name="pref_cat_other">その他</string>
   <string name="pref_other_dnt_title">Donation版</string>
   <string name="pref_other_dnt_summary">Donation版をダウンロード。</string>

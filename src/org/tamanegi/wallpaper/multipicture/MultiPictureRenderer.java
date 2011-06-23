@@ -313,6 +313,7 @@ public class MultiPictureRenderer
     private int height = 1;
     private float wratio = 1;
     private boolean visible = false;
+    private SurfaceHolder holder;
     private GLCanvas glcanvas;
 
     private int xcnt = 1;
@@ -341,6 +342,7 @@ public class MultiPictureRenderer
     private int change_duration;
     private LauncherWorkaroundType workaround_launcher;
     private int max_memory_size;
+    private boolean use_fullcolor;
 
     private int last_duration = 0;
     private boolean is_in_transition = false;
@@ -402,22 +404,12 @@ public class MultiPictureRenderer
 
     public void onCreate(SurfaceHolder holder, boolean is_preview)
     {
-        int dpy_pfmt =
-            ((WindowManager)context.getSystemService(Context.WINDOW_SERVICE))
-            .getDefaultDisplay().getPixelFormat();
-        boolean use_8888 = (dpy_pfmt != PixelFormat.RGB_565);
-
-        holder.setFormat(
-            use_8888 ? PixelFormat.RGBA_8888 : PixelFormat.RGB_565);
-        holder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
-
-        glcanvas = (use_8888 ?
-                    new GLCanvas(8, 8, 8, 8, 16, 0) :
-                    new GLCanvas(5, 6, 5, 0, 16, 0));
+        this.holder = holder;
+        glcanvas = new GLCanvas();
 
         drawer_priority = (is_preview ?
                            Process.THREAD_PRIORITY_DEFAULT :
-                           Process.THREAD_PRIORITY_FOREGROUND);
+                           Process.THREAD_PRIORITY_DISPLAY);
         drawer_handler.sendEmptyMessage(MSG_INIT);
     }
 
@@ -539,7 +531,14 @@ public class MultiPictureRenderer
           case MSG_SURFACE_CHANGED:
               SurfaceInfo info = (SurfaceInfo)msg.obj;
               synchronized(pic_whole_lock) {
-                  glcanvas.setSurface(info.holder, info.width, info.height);
+                  holder = info.holder;
+                  if(use_fullcolor) {
+                      glcanvas.setConfig(8, 8, 8, 8, 16, 0);
+                  }
+                  else {
+                      glcanvas.setConfig(5, 6, 5, 0, 16, 0);
+                  }
+                  glcanvas.setSurface(holder, info.width, info.height);
                   max_texture_size = glcanvas.getMaxTextureSize();
                   updateScreenSize(info);
                   clearPictureBitmap();
@@ -878,6 +877,19 @@ public class MultiPictureRenderer
         max_memory_size -= (max_memory_size > 0 ? MEMORY_SIZE_OFFSET : 0);
 
         updateScreenSize(null);
+
+        // full color or high color
+        int dpy_pfmt =
+            ((WindowManager)context.getSystemService(Context.WINDOW_SERVICE))
+            .getDefaultDisplay().getPixelFormat();
+        String fullcolor_str = pref.getString("color.fullcolor", "highcolor");
+
+        use_fullcolor = ("fullcolor".equals(fullcolor_str) &&
+                         dpy_pfmt != PixelFormat.RGB_565);
+
+        holder.setFormat(
+            use_fullcolor ? PixelFormat.RGBA_8888 : PixelFormat.RGB_565);
+        holder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
     }
 
     private void updateScreenSize(SurfaceInfo info)

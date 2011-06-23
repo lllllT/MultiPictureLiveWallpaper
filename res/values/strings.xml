@@ -80,6 +80,9 @@
   <string name="pref_memory_max_summary">For image quality and performance.</string>
   <string name="pref_memory_max_confirm">Increasing the memory usage may be causes force close by memory insufficient for some devices or some pictures.\nIn these cases, choose lower memory usage.</string>
 
+  <string name="pref_color_fullcolor_title">Color depth</string>
+  <string name="pref_color_fullcolor_summary">For image quality and performance.</string>
+
   <string name="pref_cat_other">Other</string>
   <string name="pref_other_dnt_title">Donation version</string>
   <string name="pref_other_dnt_summary">Get donation version.</string>

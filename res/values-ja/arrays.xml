@@ -178,4 +178,10 @@
     <item>大</item>
     <item>無制限</item>
   </string-array>
+
+  <!-- full color -->
+  <string-array name="pref_color_fullcolor_entries">
+    <item>ハイカラー (16ビット)</item>
+    <item>フルカラー (24ビット)</item>
+  </string-array>
 </resources>

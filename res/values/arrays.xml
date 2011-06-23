@@ -298,4 +298,15 @@
     <item>32</item>
     <item>-1</item>
   </string-array>
+
+  <!-- full color -->
+  <string-array name="pref_color_fullcolor_entries">
+    <item>High color (16-bit)</item>
+    <item>True color (24-bit)</item>
+  </string-array>
+
+  <string-array name="pref_color_fullcolor_entryvalues">
+    <item>highcolor</item>
+    <item>fullcolor</item>
+  </string-array>
 </resources>

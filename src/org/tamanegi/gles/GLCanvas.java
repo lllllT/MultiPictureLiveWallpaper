@@ -24,12 +24,12 @@ public class GLCanvas
     private static final int FLOAT_SIZE = Float.SIZE / Byte.SIZE;
     private static final int SHORT_SIZE = Short.SIZE / Byte.SIZE;
 
-    private int red_size;
-    private int green_size;
-    private int blue_size;
-    private int alpha_size;
-    private int depth_size;
-    private int stencil_size;
+    private int red_size = 5;
+    private int green_size = 6;
+    private int blue_size = 5;
+    private int alpha_size = 0;
+    private int depth_size = 16;
+    private int stencil_size = 0;
 
     private SurfaceHolder holder;
     private float wratio = 1;
@@ -47,15 +47,8 @@ public class GLCanvas
     private FloatBuffer tex_list;
     private ShortBuffer index_list;
 
-    public GLCanvas(int r, int g, int b, int a, int d, int s)
+    public GLCanvas()
     {
-        red_size = r;
-        green_size = g;
-        blue_size = b;
-        alpha_size = a;
-        depth_size = d;
-        stencil_size = s;
-
         vertex_list = ByteBuffer.allocateDirect(FLOAT_SIZE * 3 * 4)
             .order(ByteOrder.nativeOrder())
             .asFloatBuffer();
@@ -65,6 +58,16 @@ public class GLCanvas
         index_list = ByteBuffer.allocateDirect(SHORT_SIZE * 3 * 2)
             .order(ByteOrder.nativeOrder())
             .asShortBuffer();
+    }
+
+    public void setConfig(int r, int g, int b, int a, int d, int s)
+    {
+        red_size = r;
+        green_size = g;
+        blue_size = b;
+        alpha_size = a;
+        depth_size = d;
+        stencil_size = s;
     }
 
     public void setSurface(SurfaceHolder holder, int width, int height)

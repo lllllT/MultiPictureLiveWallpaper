@@ -150,6 +150,14 @@
        android:entryValues="@array/pref_memory_max_entryvalues"
        android:defaultValue="auto"
        />
+    <ListPreference
+       android:key="color.fullcolor"
+       android:title="@string/pref_color_fullcolor_title"
+       android:summary="@string/pref_color_fullcolor_summary"
+       android:entries="@array/pref_color_fullcolor_entries"
+       android:entryValues="@array/pref_color_fullcolor_entryvalues"
+       android:defaultValue="highcolor"
+       />
   </PreferenceCategory>
 
   <PreferenceCategory android:title="@string/pref_cat_other"
