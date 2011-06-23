@@ -40,6 +40,7 @@ import android.graphics.PorterDuff;
 import android.graphics.Rect;
 import android.graphics.RectF;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.HandlerThread;
 import android.os.Message;
@@ -1629,9 +1630,14 @@ public class MultiPictureRenderer
         EffectInfo effect = new EffectInfo();
 
         float wr = wratio * (wratio < 1 ? 1 : 0.8f);
+        float xang =
+            (dy < 1 ? -0.79f :
+             Build.VERSION.SDK_INT == Build.VERSION_CODES.HONEYCOMB ? +0.6f :
+             +0.64f) * 14;
+
         effect.matrix
             .translate(0, 0, 4)
-            .rotateX((dy < 1 ? -0.79f : +0.6f) * 14)
+            .rotateX(xang)
             .translate(dx * wr * 8.6f, 0, -28 + Math.abs(dx) * 2)
             .scale(0.8f, 0.8f, 2)
             .rotateY(dx * -32);
@@ -1742,7 +1748,9 @@ public class MultiPictureRenderer
             // workaround for Honeycomb Tablet's launcher
             if(context.getResources().getConfiguration().orientation ==
                Configuration.ORIENTATION_PORTRAIT) {
-                info.xoffset = (info.xoffset - 0.25f) * 2;
+                if(Build.VERSION.SDK_INT == Build.VERSION_CODES.HONEYCOMB) {
+                    info.xoffset = (info.xoffset - 0.25f) * 2;
+                }
             }
             else {
                 info.yoffset = (info.yoffset - 3f / 16f) * (16f / 10f);
