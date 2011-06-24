@@ -223,6 +223,7 @@ public class GLCanvas
 
         gl.glEnable(GL10.GL_BLEND);
         gl.glBlendFunc(GL10.GL_SRC_ALPHA, GL10.GL_ONE_MINUS_SRC_ALPHA);
+        gl.glColorMask(true, true, true, false);
 
         // projection matrix
         gl.glMatrixMode(GL10.GL_PROJECTION);
@@ -373,7 +374,7 @@ public class GLCanvas
 
         gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
 
-        gl.glColorMask(true, true, true, true);
+        gl.glColorMask(true, true, true, false);
         gl.glDepthMask(false);
         gl.glDepthFunc(GL10.GL_GEQUAL);
 
@@ -395,8 +396,10 @@ public class GLCanvas
             return;
         }
 
+        gl.glColorMask(true, true, true, true);
         gl.glClearColor(color.red, color.green, color.blue, color.alpha);
         gl.glClear(GL10.GL_COLOR_BUFFER_BIT);
+        gl.glColorMask(true, true, true, false);
     }
 
     public void drawRect(GLMatrix mat, GLColor fill_color, GLColor border_color)
@@ -458,7 +461,7 @@ public class GLCanvas
 
         // draw texture
         gl.glEnable(GL10.GL_TEXTURE_2D);
-        gl.glTexEnvx(GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE,
+        gl.glTexEnvf(GL10.GL_TEXTURE_ENV, GL10.GL_TEXTURE_ENV_MODE,
                      GL10.GL_MODULATE);
         gl.glActiveTexture(GL10.GL_TEXTURE0);
         gl.glBindTexture(GL10.GL_TEXTURE_2D, tex_id);

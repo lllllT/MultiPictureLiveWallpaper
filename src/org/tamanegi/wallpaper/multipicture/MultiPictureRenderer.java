@@ -1632,7 +1632,7 @@ public class MultiPictureRenderer
         float wr = wratio * (wratio < 1 ? 1 : 0.8f);
         float xang =
             (dy < 1 ? -0.79f :
-             Build.VERSION.SDK_INT == Build.VERSION_CODES.HONEYCOMB ? +0.6f :
+             Build.VERSION.SDK_INT == 11 ? +0.6f :
              +0.64f) * 14;
 
         effect.matrix
@@ -1748,7 +1748,7 @@ public class MultiPictureRenderer
             // workaround for Honeycomb Tablet's launcher
             if(context.getResources().getConfiguration().orientation ==
                Configuration.ORIENTATION_PORTRAIT) {
-                if(Build.VERSION.SDK_INT == Build.VERSION_CODES.HONEYCOMB) {
+                if(Build.VERSION.SDK_INT == 11) {
                     info.xoffset = (info.xoffset - 0.25f) * 2;
                 }
             }
