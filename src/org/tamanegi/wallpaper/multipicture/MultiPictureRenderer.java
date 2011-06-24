@@ -70,6 +70,7 @@ public class MultiPictureRenderer
     private static final int MSG_CHANGE_PIC_BY_TIME = 31;
     private static final int MSG_CHANGE_PACKAGE_AVAIL = 40;
     private static final int MSG_DELETE_TEXTURE = 50;
+    private static final int MSG_LOW_MEMORY = 60;
 
     // message id: for loader
     private static final int MSG_UPDATE_SCREEN = 1001;
@@ -421,8 +422,15 @@ public class MultiPictureRenderer
 
     public void onLowMemory()
     {
-        synchronized(pic_whole_lock) {
-            clearPictureBitmap();
+        Object lock = new Object();
+        synchronized(lock) {
+            drawer_handler.obtainMessage(MSG_LOW_MEMORY, lock).sendToTarget();
+            try {
+                lock.wait();
+            }
+            catch(Exception e) {
+                // ignore
+            }
         }
     }
 
@@ -579,6 +587,15 @@ public class MultiPictureRenderer
 
           case MSG_DELETE_TEXTURE:
               glcanvas.deleteTexture(msg.arg1);
+              break;
+
+          case MSG_LOW_MEMORY:
+              synchronized(pic_whole_lock) {
+                  clearPictureBitmap();
+              }
+              synchronized(msg.obj) {
+                  msg.obj.notifyAll();
+              }
               break;
 
           default:
