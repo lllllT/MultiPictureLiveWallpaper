@@ -109,7 +109,12 @@ public class MultiPictureService extends WallpaperService
         @Override
         public void onTouchEvent(MotionEvent ev)
         {
-            gdetector.onTouchEvent(ev);
+            try {
+                gdetector.onTouchEvent(ev);
+            }
+            catch(Exception e) {
+                // ignore
+            }
         }
 
         private class GestureListener

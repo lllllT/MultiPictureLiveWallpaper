@@ -406,6 +406,7 @@ public class MultiPictureRenderer
 
     public void onCreate(SurfaceHolder holder, boolean is_preview)
     {
+        holder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
         this.holder = holder;
         glcanvas = new GLCanvas();
 
@@ -907,7 +908,6 @@ public class MultiPictureRenderer
 
         holder.setFormat(
             use_fullcolor ? PixelFormat.RGBA_8888 : PixelFormat.RGB_565);
-        holder.setType(SurfaceHolder.SURFACE_TYPE_GPU);
     }
 
     private void updateScreenSize(SurfaceInfo info)
@@ -2299,6 +2299,7 @@ public class MultiPictureRenderer
             opt = new BitmapFactory.Options();
             opt.inDither = true;
             opt.inSampleSize = ratio;
+            opt.inPreferredConfig = Bitmap.Config.ARGB_8888;
 
             Bitmap bmp;
             instream = resolver.openInputStream(uri);
