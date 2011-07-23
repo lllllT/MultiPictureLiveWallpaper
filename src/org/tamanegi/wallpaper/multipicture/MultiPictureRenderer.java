@@ -2402,6 +2402,9 @@ public class MultiPictureRenderer
         catch(Exception e) {
             return null;
         }
+        catch(OutOfMemoryError e) {
+            return null;
+        }
     }
 
     private static int getLeastPowerOf2GE(int val)
