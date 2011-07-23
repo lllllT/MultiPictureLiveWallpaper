@@ -361,7 +361,7 @@ public class GLCanvas
         gl.glEnable(GL10.GL_DEPTH_TEST);
 
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vertex_list);
+        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vertex_list.position(0));
 
         gl.glColorMask(false, false, false, false);
         gl.glDepthMask(true);
@@ -370,7 +370,7 @@ public class GLCanvas
         gl.glClear(GL10.GL_DEPTH_BUFFER_BIT);
         gl.glColor4f(1, 1, 1, 1);
         gl.glDrawElements(GL10.GL_TRIANGLES, 6,
-                          GL10.GL_UNSIGNED_SHORT, index_list);
+                          GL10.GL_UNSIGNED_SHORT, index_list.position(0));
 
         gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
 
@@ -413,7 +413,7 @@ public class GLCanvas
         gl.glMultMatrixf(mat.get(), 0);
 
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vertex_list);
+        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vertex_list.position(0));
 
         // fill
         if(fill_color != null) {
@@ -421,7 +421,7 @@ public class GLCanvas
                 fill_color.red, fill_color.green, fill_color.blue,
                 fill_color.alpha);
             gl.glDrawElements(GL10.GL_TRIANGLES, 6,
-                              GL10.GL_UNSIGNED_SHORT, index_list);
+                              GL10.GL_UNSIGNED_SHORT, index_list.position(0));
         }
 
         // border
@@ -454,10 +454,10 @@ public class GLCanvas
         gl.glMultMatrixf(mat.get(), 0);
 
         gl.glEnableClientState(GL10.GL_VERTEX_ARRAY);
-        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vertex_list);
+        gl.glVertexPointer(3, GL10.GL_FLOAT, 0, vertex_list.position(0));
 
         gl.glEnableClientState(GL10.GL_TEXTURE_COORD_ARRAY);
-        gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, tex_list);
+        gl.glTexCoordPointer(2, GL10.GL_FLOAT, 0, tex_list.position(0));
 
         // draw texture
         gl.glEnable(GL10.GL_TEXTURE_2D);
@@ -468,7 +468,7 @@ public class GLCanvas
         gl.glColor4f(fade, fade, fade, alpha);
 
         gl.glDrawElements(GL10.GL_TRIANGLES, 6,
-                          GL10.GL_UNSIGNED_SHORT, index_list);
+                          GL10.GL_UNSIGNED_SHORT, index_list.position(0));
 
         gl.glDisable(GL10.GL_TEXTURE_2D);
         gl.glDisableClientState(GL10.GL_VERTEX_ARRAY);
