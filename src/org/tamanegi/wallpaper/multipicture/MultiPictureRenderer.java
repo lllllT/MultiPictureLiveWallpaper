@@ -2135,23 +2135,6 @@ public class MultiPictureRenderer
                 }
             }
 
-            // set status and progress
-            if(pic_info.status == PictureStatus.NOT_AVAILABLE ||
-               ! pic_info.tex_info.has_content) {
-                if(pic_info.status != PictureStatus.SPINNER) {
-                    pic_info.setStatus(PictureStatus.BLACKOUT);
-                }
-            }
-            else {
-                if(pic_info.status == PictureStatus.NORMAL ||
-                   pic_info.status == PictureStatus.FADEIN) {
-                    pic_info.setStatus(PictureStatus.FADEOUT);
-                }
-            }
-
-            // request to start redraw
-            drawer_handler.sendEmptyMessage(MSG_DRAW);
-
             // save current width/height
             width = this.width;
             height = this.height;
@@ -2188,6 +2171,21 @@ public class MultiPictureRenderer
                     }
                     sendUpdateScreen(idx, pic_info, content, force_reload);
                     return;
+                }
+
+                // set status and progress
+                if(pic_info.status == PictureStatus.NOT_AVAILABLE ||
+                   ! pic_info.tex_info.has_content) {
+                    if(pic_info.status != PictureStatus.SPINNER) {
+                        pic_info.setStatus(PictureStatus.BLACKOUT);
+                    }
+                }
+                else {
+                    if(pic_info.status == PictureStatus.NORMAL ||
+                       pic_info.status == PictureStatus.FADEIN) {
+                        pic_info.setStatus(PictureStatus.FADEOUT);
+                        drawer_handler.sendEmptyMessage(MSG_DRAW);
+                    }
                 }
 
                 if(pic_info.status != PictureStatus.BLACKOUT &&
