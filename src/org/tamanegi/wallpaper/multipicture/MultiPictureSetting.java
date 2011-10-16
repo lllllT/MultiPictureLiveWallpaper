@@ -54,6 +54,8 @@ public class MultiPictureSetting extends PreferenceActivity
         "screen.%s.picsource.desc";
     public static final String SCREEN_PICSOURCE_SERVICE_KEY =
         "screen.%s.picsource.service";
+    public static final String SCREEN_PICSOURCE_SERIAL_KEY =
+        "screen.picsource.serial";
     public static final String SCREEN_BGCOLOR_KEY = "screen.%s.bgcolor";
     public static final String SCREEN_BGCOLOR_CUSTOM_KEY =
         "screen.%s.bgcolor.custom";
@@ -637,11 +639,14 @@ public class MultiPictureSetting extends PreferenceActivity
         String desc_key = getKey(SCREEN_PICSOURCE_DESC_KEY, key);
         String service_key = getKey(SCREEN_PICSOURCE_SERVICE_KEY, key);
 
+        int serial = pref.getInt(SCREEN_PICSOURCE_SERIAL_KEY, 0);
+
         SharedPreferences.Editor editor = pref.edit();
         editor.putString(desc_key, desc);
         if(service != null) {
             editor.putString(service_key, service);
         }
+        editor.putInt(SCREEN_PICSOURCE_SERIAL_KEY, serial + 1);
         editor.commit();
     }
 
