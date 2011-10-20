@@ -279,44 +279,43 @@ public class MultiPictureSetting extends PreferenceActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
-        switch(item.getItemId()) {
-          case R.id.menu_share:
-              try {
-                  Intent intent = new Intent(Intent.ACTION_SEND);
-                  intent.setType("text/plain");
-                  intent.putExtra(Intent.EXTRA_TEXT,
-                                  getString(R.string.share_text));
-                  startActivity(Intent.createChooser(
-                                    intent, getString(R.string.menu_share)));
-              }
-              catch(Exception e) {
-                  e.printStackTrace();
-                  // ignore
-              }
-              return true;
-
-          case R.id.menu_qr:
-              startActivity(
-                  new Intent(getApplicationContext(), QRViewer.class));
-              return true;
-
-          case R.id.menu_report:
-              try {
-                  Intent intent = new Intent(
-                      Intent.ACTION_SENDTO,
-                      Uri.parse(getString(R.string.report_uri)));
-                  intent.putExtra(Intent.EXTRA_TEXT, getRuntimeInfo());
-                  intent.putExtra(Intent.EXTRA_SUBJECT,
-                                  getString(R.string.report_subject));
-                  startActivity(intent);
-              }
-              catch(Exception e) {
-                  e.printStackTrace();
-                  Toast.makeText(
-                      this, R.string.mailer_not_found, Toast.LENGTH_SHORT)
-                      .show();
-              }
-              return true;
+        if(item.getItemId() == R.id.menu_share) {
+            try {
+                Intent intent = new Intent(Intent.ACTION_SEND);
+                intent.setType("text/plain");
+                intent.putExtra(Intent.EXTRA_TEXT,
+                                getString(R.string.share_text));
+                startActivity(Intent.createChooser(
+                                  intent, getString(R.string.menu_share)));
+            }
+            catch(Exception e) {
+                e.printStackTrace();
+                // ignore
+            }
+            return true;
+        }
+        else if(item.getItemId() == R.id.menu_qr) {
+            startActivity(
+                new Intent(getApplicationContext(), QRViewer.class));
+            return true;
+        }
+        else if(item.getItemId() == R.id.menu_report) {
+            try {
+                Intent intent = new Intent(
+                    Intent.ACTION_SENDTO,
+                    Uri.parse(getString(R.string.report_uri)));
+                intent.putExtra(Intent.EXTRA_TEXT, getRuntimeInfo());
+                intent.putExtra(Intent.EXTRA_SUBJECT,
+                                getString(R.string.report_subject));
+                startActivity(intent);
+            }
+            catch(Exception e) {
+                e.printStackTrace();
+                Toast.makeText(
+                    this, R.string.mailer_not_found, Toast.LENGTH_SHORT)
+                    .show();
+            }
+            return true;
         }
 
         return super.onOptionsItemSelected(item);
