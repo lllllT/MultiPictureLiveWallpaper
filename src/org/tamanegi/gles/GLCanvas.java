@@ -298,7 +298,7 @@ public class GLCanvas
         gl = null;
     }
 
-    public int genTexture(Bitmap bmp)
+    public int genTexture(int tex_id, Bitmap bmp)
     {
         if(gl == null) {
             return 0;
@@ -306,9 +306,11 @@ public class GLCanvas
 
         gl.glEnable(GL10.GL_TEXTURE_2D);
 
-        int[] textures = new int[1];
-        gl.glGenTextures(1, textures, 0);
-        int tex_id = textures[0];
+        if(tex_id < 0) {
+            int[] textures = new int[1];
+            gl.glGenTextures(1, textures, 0);
+            tex_id = textures[0];
+        }
 
         gl.glActiveTexture(GL10.GL_TEXTURE0);
         gl.glBindTexture(GL10.GL_TEXTURE_2D, tex_id);

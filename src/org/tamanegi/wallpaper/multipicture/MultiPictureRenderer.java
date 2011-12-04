@@ -69,7 +69,6 @@ public class MultiPictureRenderer
     private static final int MSG_CHANGE_PIC_BY_TAP = 30;
     private static final int MSG_CHANGE_PIC_BY_TIME = 31;
     private static final int MSG_CHANGE_PACKAGE_AVAIL = 40;
-    private static final int MSG_DELETE_TEXTURE = 50;
     private static final int MSG_LOW_MEMORY = 60;
 
     // message id: for loader
@@ -522,6 +521,7 @@ public class MultiPictureRenderer
               synchronized(pic_whole_lock) {
                   if(msg.what != MSG_PREF_CHANGED_NORELOAD) {
                       clearPictureSetting();
+                      glcanvas.setSurface(holder, width, height); // re-create
                   }
 
                   loadGlobalSetting();
@@ -584,10 +584,6 @@ public class MultiPictureRenderer
                   changePackageAvailable((String[])msg.obj);
                   drawer_handler.sendEmptyMessage(MSG_DRAW);
               }
-              break;
-
-          case MSG_DELETE_TEXTURE:
-              glcanvas.deleteTexture(msg.arg1);
               break;
 
           case MSG_LOW_MEMORY:
@@ -923,10 +919,7 @@ public class MultiPictureRenderer
 
         // spinner texture
         if(spinner != null) {
-            if(spinner.tex_id >= 0) {
-                glcanvas.deleteTexture(spinner.tex_id);
-            }
-            spinner.tex_id = glcanvas.genTexture(spinner.bmp);
+            spinner.tex_id = glcanvas.genTexture(spinner.tex_id, spinner.bmp);
             spinner.xratio = (float)spinner.bwidth / width;
             spinner.yratio = (float)spinner.bheight / height;
         }
@@ -1101,7 +1094,8 @@ public class MultiPictureRenderer
                 if(info.tex_info.has_content &&
                    info.tex_info.bmp != null) {
                     info.tex_info.tex_id =
-                        glcanvas.genTexture(info.tex_info.bmp);
+                        glcanvas.genTexture(info.tex_info.tex_id,
+                                            info.tex_info.bmp);
                     info.tex_info.bmp.recycle();
                     info.tex_info.bmp = null;
                 }
@@ -1112,7 +1106,8 @@ public class MultiPictureRenderer
             if(keyguard_pic.tex_info.has_content &&
                keyguard_pic.tex_info.bmp != null) {
                 keyguard_pic.tex_info.tex_id =
-                    glcanvas.genTexture(keyguard_pic.tex_info.bmp);
+                    glcanvas.genTexture(keyguard_pic.tex_info.tex_id,
+                                        keyguard_pic.tex_info.bmp);
                 keyguard_pic.tex_info.bmp.recycle();
                 keyguard_pic.tex_info.bmp = null;
             }
@@ -2109,11 +2104,6 @@ public class MultiPictureRenderer
                         if(pic_info.tex_info.bmp != null) {
                             pic_info.tex_info.bmp.recycle();
                         }
-                        else if(pic_info.tex_info.tex_id >= 0) {
-                            drawer_handler.obtainMessage(
-                                MSG_DELETE_TEXTURE,
-                                pic_info.tex_info.tex_id, 0).sendToTarget();
-                        }
                     }
                     setNotAvailableStatus(pic_info, idx);
                     pic_info.loading_cnt -= 1;
@@ -2210,9 +2200,7 @@ public class MultiPictureRenderer
                         pic_info.tex_info.bmp.recycle();
                     }
                     else if(pic_info.tex_info.tex_id >= 0) {
-                        drawer_handler.obtainMessage(
-                            MSG_DELETE_TEXTURE,
-                            pic_info.tex_info.tex_id, 0).sendToTarget();
+                        tex_info.tex_id = pic_info.tex_info.tex_id;
                     }
                 }
 
