@@ -167,13 +167,17 @@ public class MultiPictureSetting extends PreferenceActivity
         handler = new Handler();
 
         if(! "org.tamanegi.wallpaper.multipicture".equals(getPackageName())) {
-            getPreferenceScreen().removePreference(
-                getPreferenceManager().findPreference("other.cat"));
+            ((PreferenceGroup)
+             getPreferenceManager().findPreference("other.cat"))
+                .removePreference(
+                    getPreferenceManager().findPreference("other.dnt"));
         }
         else {
             getPreferenceManager().findPreference("other.dnt")
                 .setOnPreferenceClickListener(new OnDntClickListener());
         }
+        getPreferenceManager().findPreference("other.wlist")
+            .setOnPreferenceClickListener(new OnWlistClickListener());
 
         // setup screen-N setting item
         pref_group = (PreferenceGroup)
@@ -966,6 +970,44 @@ public class MultiPictureSetting extends PreferenceActivity
             }
 
             return false;
+        }
+    }
+
+    private class OnWlistClickListener
+        implements  Preference.OnPreferenceClickListener
+    {
+        @Override
+        public boolean onPreferenceClick(Preference preference)
+        {
+            new AlertDialog.Builder(MultiPictureSetting.this)
+                .setTitle(R.string.pref_other_wlist_title)
+                .setMessage(getString(R.string.pref_other_wlist_description,
+                                      getString(R.string.wlist_uri)))
+                .setPositiveButton(
+                    android.R.string.ok,
+                    new DialogInterface.OnClickListener() {
+                        public void onClick(DialogInterface dialog, int btn) {
+                            openWlist();
+                        }
+                    })
+                .setNegativeButton(android.R.string.cancel, null)
+                .show();
+
+            return false;
+        }
+    }
+
+    private void openWlist()
+    {
+        Intent intent = new Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse(getString(R.string.wlist_uri)));
+
+        try {
+            startActivity(intent);
+        }
+        catch(ActivityNotFoundException e) {
+            // ignore
         }
     }
 }

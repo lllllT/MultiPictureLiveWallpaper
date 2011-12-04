@@ -86,6 +86,8 @@
   <string name="pref_cat_other">Other</string>
   <string name="pref_other_dnt_title">Donation version</string>
   <string name="pref_other_dnt_summary">Get donation version.</string>
+  <string name="pref_other_wlist_title">Send something to developer</string>
+  <string name="pref_other_wlist_description">If you like this application and you send something to developer, it maybe help the future development.\n\nPress OK to open following URL.\n%s</string>
 
   <string name="pref_single_picture_title">Single Picture</string>
 
@@ -145,4 +147,6 @@
   <string name="share_text">MultiPicture Live Wallpaper http://market.android.com/details?id=org.tamanegi.wallpaper.multipicture</string>
   <string name="report_uri">mailto:lllllT-mplr@tamanegi.org</string>
   <string name="report_subject">MultiPicture Live Wallpaper</string>
+
+  <string name="wlist_uri">http://www.amazon.co.jp/registry/wishlist/1V67BJUEPAP4V</string>
 </resources>
