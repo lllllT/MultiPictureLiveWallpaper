@@ -589,6 +589,8 @@ public class MultiPictureRenderer
           case MSG_LOW_MEMORY:
               synchronized(pic_whole_lock) {
                   clearPictureBitmap();
+                  glcanvas.setSurface(holder, width, height);
+                  updateScreenSize(null);
               }
               synchronized(msg.obj) {
                   msg.obj.notifyAll();
