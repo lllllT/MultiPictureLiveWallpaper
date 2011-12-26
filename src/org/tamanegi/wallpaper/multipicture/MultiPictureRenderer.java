@@ -2010,10 +2010,20 @@ public class MultiPictureRenderer
         int bw = getLeastPowerOf2GE(Math.max(rect1.width(), rect2.width()));
         int bh = getLeastPowerOf2GE(th * 4);
 
+        Bitmap bmp = null;
+        try {
+            bmp = Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_4444);
+        }
+        catch(OutOfMemoryError e) {
+            // ignore
+        }
+        if(bmp == null) {
+            return;
+        }
+
         info.tex_info.has_content = true;
         info.tex_info.enable_reflect = false;
-        info.tex_info.bmp =
-            Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_4444);
+        info.tex_info.bmp = bmp;
         info.tex_info.bgcolor = 0xff000000;
         info.tex_info.sratio = 1;
         info.tex_info.tratio = 1;
