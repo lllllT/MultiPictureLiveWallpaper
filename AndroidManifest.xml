@@ -2,7 +2,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           package="org.tamanegi.wallpaper.multipicture">
 
-  <uses-sdk android:minSdkVersion="7" />
+  <uses-sdk android:minSdkVersion="7"
+            android:targetSdkVersion="11" />
   <uses-feature android:name="android.software.live_wallpaper" />
 
   <application android:icon="@drawable/icon"
