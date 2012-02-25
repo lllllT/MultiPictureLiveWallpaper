@@ -2,7 +2,6 @@ package org.tamanegi.wallpaper.multipicture;
 
 import java.lang.reflect.Method;
 import java.util.IllegalFormatException;
-import java.util.List;
 
 import org.tamanegi.wallpaper.multipicture.picsource.AlbumSource;
 import org.tamanegi.wallpaper.multipicture.picsource.FolderSource;
@@ -19,13 +18,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.graphics.PixelFormat;
 import android.net.Uri;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Parcelable;
@@ -36,11 +29,9 @@ import android.preference.PreferenceGroup;
 import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 import android.util.Log;
-import android.view.Display;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.WindowManager;
 import android.widget.Toast;
 
 public class MultiPictureSetting extends PreferenceActivity
@@ -167,17 +158,13 @@ public class MultiPictureSetting extends PreferenceActivity
         handler = new Handler();
 
         if(! "org.tamanegi.wallpaper.multipicture".equals(getPackageName())) {
-            ((PreferenceGroup)
-             getPreferenceManager().findPreference("other.cat"))
-                .removePreference(
-                    getPreferenceManager().findPreference("other.dnt"));
+            getPreferenceScreen().removePreference(
+                    getPreferenceManager().findPreference("other.cat"));
         }
         else {
             getPreferenceManager().findPreference("other.dnt")
                 .setOnPreferenceClickListener(new OnDntClickListener());
         }
-        getPreferenceManager().findPreference("other.wlist")
-            .setOnPreferenceClickListener(new OnWlistClickListener());
 
         // setup screen-N setting item
         pref_group = (PreferenceGroup)
@@ -303,131 +290,8 @@ public class MultiPictureSetting extends PreferenceActivity
                 new Intent(getApplicationContext(), QRViewer.class));
             return true;
         }
-        else if(item.getItemId() == R.id.menu_report) {
-            try {
-                Intent intent = new Intent(
-                    Intent.ACTION_SENDTO,
-                    Uri.parse(getString(R.string.report_uri)));
-                intent.putExtra(Intent.EXTRA_TEXT, getRuntimeInfo());
-                intent.putExtra(Intent.EXTRA_SUBJECT,
-                                getString(R.string.report_subject));
-                startActivity(intent);
-            }
-            catch(Exception e) {
-                e.printStackTrace();
-                Toast.makeText(
-                    this, R.string.mailer_not_found, Toast.LENGTH_SHORT)
-                    .show();
-            }
-            return true;
-        }
 
         return super.onOptionsItemSelected(item);
-    }
-
-    private CharSequence getRuntimeInfo()
-    {
-        StringBuilder sb = new StringBuilder();
-        PackageManager pm = getPackageManager();
-
-        // header
-        sb.append("\n\n--- App and Device info ---\n");
-
-        // app info
-        try {
-            PackageInfo pinfo = pm.getPackageInfo(getPackageName(), 0);
-            sb.append(pinfo.applicationInfo.loadLabel(pm)).append(" (v")
-                .append(pinfo.versionName).append(", ")
-                .append(pinfo.versionCode).append(")");
-        }
-        catch(NameNotFoundException e) {
-            sb.append("MultiPicture Live Wallpaper (unknown, unknown)");
-        }
-        sb.append("\n");
-
-        // platform info
-        sb.append("Android ").append(Build.VERSION.RELEASE)
-            .append(" ").append(Build.MODEL)
-            .append(" Build/").append(Build.ID).append("\n");
-
-        ActivityManager amgr = (ActivityManager)
-            getSystemService(ACTIVITY_SERVICE);
-        int mclass = amgr.getMemoryClass();
-        int large_mclass = getLargeMemoryClass(amgr);
-        sb.append("Memory class: ")
-            .append(mclass)
-            .append(large_mclass > 0 ? ", " + large_mclass : "")
-            .append("\n");
-
-        // display info
-        WindowManager wm = (WindowManager)getSystemService(WINDOW_SERVICE);
-        Display dpy = wm.getDefaultDisplay();
-        int pfmt = dpy.getPixelFormat();
-        sb.append("Display: ")
-            .append(dpy.getWidth()).append("x").append(dpy.getHeight())
-            .append(", ")
-            .append(pfmt == PixelFormat.RGB_332 ? "RGB_332" :
-                    pfmt == PixelFormat.RGB_565 ? "RGB_565" :
-                    pfmt == PixelFormat.RGB_888 ? "RGB_888" :
-                    pfmt == PixelFormat.RGBA_4444 ? "RGBA_4444" :
-                    pfmt == PixelFormat.RGBA_5551 ? "RGBA_5551" :
-                    pfmt == PixelFormat.RGBA_8888 ? "RGBA_8888" :
-                    pfmt == PixelFormat.RGBX_8888 ? "RGBX_8888" :
-                    "format=" + pfmt)
-            .append(", ")
-            .append(dpy.getRefreshRate()).append("fps")
-            .append("\n");
-
-        // home app info
-        Intent home_intent = new Intent(Intent.ACTION_MAIN);
-        home_intent.addCategory(Intent.CATEGORY_HOME);
-        sb.append("Home app(s): ")
-            .append(getRuntimeApplicationInfo(home_intent))
-            .append("\n");
-
-        // image picker info
-        Intent picker_intent = new Intent(Intent.ACTION_GET_CONTENT);
-        picker_intent.addCategory(Intent.CATEGORY_OPENABLE);
-        picker_intent.setType("image/*");
-        sb.append("Image picker app(s): ")
-            .append(getRuntimeApplicationInfo(picker_intent));
-
-        Log.v(TAG, sb.toString());
-        return sb;
-    }
-
-    private CharSequence getRuntimeApplicationInfo(Intent intent)
-    {
-        StringBuilder sb = new StringBuilder();
-        PackageManager pm = getPackageManager();
-
-        ResolveInfo def_ri = pm.resolveActivity(intent, 0);
-
-        List<ResolveInfo> rlist = pm.queryIntentActivities(intent, 0);
-
-        sb.append(rlist.size());
-        for(ResolveInfo ri : rlist) {
-            sb.append("\n  ").append(ri.loadLabel(pm));
-            try {
-                PackageInfo pinfo = pm.getPackageInfo(
-                    ri.activityInfo.packageName, 0);
-                sb.append(" (v")
-                    .append(pinfo.versionName).append(", ")
-                    .append(pinfo.versionCode).append(")");
-                if(def_ri != null &&
-                   def_ri.activityInfo.packageName.equals(
-                       ri.activityInfo.packageName) &&
-                   def_ri.activityInfo.name.equals(
-                       ri.activityInfo.name)) {
-                    sb.append(", default");
-                }
-            }
-            catch(NameNotFoundException e) {
-                sb.append(" (unknown, unknown)");
-            }
-        }
-
-        return sb;
     }
 
     @Override
@@ -970,44 +834,6 @@ public class MultiPictureSetting extends PreferenceActivity
             }
 
             return false;
-        }
-    }
-
-    private class OnWlistClickListener
-        implements  Preference.OnPreferenceClickListener
-    {
-        @Override
-        public boolean onPreferenceClick(Preference preference)
-        {
-            new AlertDialog.Builder(MultiPictureSetting.this)
-                .setTitle(R.string.pref_other_wlist_title)
-                .setMessage(getString(R.string.pref_other_wlist_description,
-                                      getString(R.string.wlist_uri)))
-                .setPositiveButton(
-                    android.R.string.ok,
-                    new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int btn) {
-                            openWlist();
-                        }
-                    })
-                .setNegativeButton(android.R.string.cancel, null)
-                .show();
-
-            return false;
-        }
-    }
-
-    private void openWlist()
-    {
-        Intent intent = new Intent(
-            Intent.ACTION_VIEW,
-            Uri.parse(getString(R.string.wlist_uri)));
-
-        try {
-            startActivity(intent);
-        }
-        catch(ActivityNotFoundException e) {
-            // ignore
         }
     }
 }

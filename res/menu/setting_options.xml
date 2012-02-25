@@ -6,7 +6,4 @@
   <item android:title="@string/menu_qr"
 		android:id="@+id/menu_qr"
 		android:icon="@drawable/ic_menu_qr" />
-  <item android:title="@string/menu_report"
-		android:id="@+id/menu_report"
-		android:icon="@android:drawable/ic_menu_send" />
 </menu>

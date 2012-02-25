@@ -166,10 +166,6 @@
        android:key="other.dnt"
        android:title="@string/pref_other_dnt_title"
        android:summary="@string/pref_other_dnt_summary" />
-    <Preference
-       android:key="other.wlist"
-       android:title="@string/pref_other_wlist_title"
-       android:summary="@string/wlist_uri" />
   </PreferenceCategory>
 
 </PreferenceScreen>
