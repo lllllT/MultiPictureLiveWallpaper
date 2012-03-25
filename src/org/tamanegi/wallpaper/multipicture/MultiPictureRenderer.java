@@ -162,7 +162,7 @@ public class MultiPictureRenderer
         none,
             force_5screen, force_7screen,
             htc_sense, htc_sense_5screen,
-            honeycomb_launcher,
+            honeycomb_launcher, ics_mr1_launcher,
             no_vertical
     }
 
@@ -1772,6 +1772,23 @@ public class MultiPictureRenderer
 
             ycur_honeycomb = ((info.ystep <= 0 || info.ystep == 1) ? 1 :
                               info.yoffset / info.ystep);
+
+            info.ystep = 0;
+            info.yoffset = 0;
+        }
+        else if(workaround_launcher ==
+                LauncherWorkaroundType.ics_mr1_launcher) {
+            // workaround for ICS MR1 Tablet's strange launcher
+            if(context.getResources().getConfiguration().orientation ==
+               Configuration.ORIENTATION_PORTRAIT) {
+                info.xoffset = (info.xoffset - 0.2484375f) / 0.5026041f;
+            }
+            else if(info.xstep > 0) {
+                float xc = info.xoffset / info.xstep;
+                float xcn = FloatMath.floor(xc);
+                float xcd = ratioRange((xc - xcn - 0.0209f) / 0.9582f);
+                info.xoffset = (xcn + xcd) * info.xstep;
+            }
 
             info.ystep = 0;
             info.yoffset = 0;

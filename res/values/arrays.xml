@@ -269,6 +269,7 @@
     <item>For HTC Sense (5 screens)</item>
     <item>For HTC Sense (7 screens)</item>
     <item>For Honeycomb Tablet</item>
+    <item>For ICS MR1 Tablet</item>
     <item>Ignore vertical movement</item>
   </string-array>
 
@@ -279,6 +280,7 @@
     <item>htc_sense_5screen</item>
     <item>htc_sense</item>
     <item>honeycomb_launcher</item>
+    <item>ics_mr1_launcher</item>
     <item>no_vertical</item>
   </string-array>
 
