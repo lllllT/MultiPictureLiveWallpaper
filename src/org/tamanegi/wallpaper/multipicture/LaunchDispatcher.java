@@ -4,6 +4,7 @@ import android.app.Activity;
 import android.app.WallpaperInfo;
 import android.app.WallpaperManager;
 import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
@@ -30,8 +31,18 @@ public class LaunchDispatcher extends Activity
         else {
             PackageManager pm = getPackageManager();
 
-            intent = new Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER);
-            if(pm.resolveActivity(intent, 0) != null) {
+            Intent intent_a16 =
+                new Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER)
+                .putExtra(WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
+                          new ComponentName(this, MultiPictureService.class));
+            Intent intent_a7 =
+                new Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER);
+
+            if(pm.resolveActivity(intent_a16, 0) != null) {
+                intent = intent_a16;
+            }
+            else if(pm.resolveActivity(intent_a7, 0) != null) {
+                intent = intent_a7;
                 msg = getString(R.string.chooser_navigation);
             }
             else {
