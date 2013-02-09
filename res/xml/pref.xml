@@ -19,14 +19,14 @@
          android:summary="@string/pref_screen_bgcolor_summary"
          android:entries="@array/pref_screen_default_bgcolor_entries"
          android:entryValues="@array/pref_screen_bgcolor_entryvalues"
-         android:defaultValue="black" />
+         android:defaultValue="auto_detect" />
       <ListPreference
          android:key="draw.clipratio"
          android:title="@string/pref_screen_clipratio_title"
          android:summary="@string/pref_screen_clipratio_summary"
          android:entries="@array/pref_screen_default_clipratio_entries"
          android:entryValues="@array/pref_screen_clipratio_entryvalues"
-         android:defaultValue="1.0" />
+         android:defaultValue="0.5" />
       <ListPreference
          android:key="screen.default.saturation"
          android:title="@string/pref_screen_saturation_title"

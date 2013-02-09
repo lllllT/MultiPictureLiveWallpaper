@@ -815,7 +815,7 @@ public class MultiPictureRenderer
         {
             String bgcolor = pref.getString(
                 MultiPictureSetting.getKey(
-                    MultiPictureSetting.SCREEN_BGCOLOR_KEY, -1), "black");
+                    MultiPictureSetting.SCREEN_BGCOLOR_KEY, -1), "auto_detect");
             if("auto_detect".equals(bgcolor)) {
                 default_detect_bgcolor = true;
             }
@@ -841,7 +841,7 @@ public class MultiPictureRenderer
         default_clip_ratio = Float.valueOf(
             pref.getString(
                 MultiPictureSetting.getKey(
-                    MultiPictureSetting.SCREEN_CLIP_KEY, -1), "1.0"));
+                    MultiPictureSetting.SCREEN_CLIP_KEY, -1), "0.5"));
         default_saturation = Float.valueOf(
             pref.getString(
                 MultiPictureSetting.getKey(
