@@ -69,7 +69,7 @@ public class AlbumSource extends PreferenceActivity
         String rescan_key = MultiPictureSetting.getKey(
             MultiPictureSetting.SCREEN_RESCAN_KEY, key);
         boolean rescan_val =
-            (need_clear ? true : pref.getBoolean(rescan_key, true));
+            (need_clear ? false : pref.getBoolean(rescan_key, false));
 
         CheckBoxPreference rescan = (CheckBoxPreference)
             getPreferenceManager().findPreference("rescan");

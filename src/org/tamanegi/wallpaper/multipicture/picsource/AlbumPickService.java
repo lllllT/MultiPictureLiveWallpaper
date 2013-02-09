@@ -39,7 +39,7 @@ public class AlbumPickService extends AbstractMediaPickService
                     MultiPictureSetting.SCREEN_ORDER_KEY, key), "");
             rescan = pref.getBoolean(
                 MultiPictureSetting.getKey(
-                    MultiPictureSetting.SCREEN_RESCAN_KEY, key), true);
+                    MultiPictureSetting.SCREEN_RESCAN_KEY, key), false);
 
             buckets = bucket.split(" ");
 
