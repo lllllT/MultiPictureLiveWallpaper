@@ -70,6 +70,18 @@ public class AlbumPickService extends AbstractMediaPickService
         {
             ContentResolver resolver = getContentResolver();
 
+            // use all buckets if no buckets selected
+            if(buckets.length == 1 && buckets[0].equals("")) {
+                PictureUtils.BucketItem[] items =
+                    PictureUtils.getAvailBuckets(getContentResolver());
+                if(items != null) {
+                    buckets = new String[items.length];
+                    for(int i = 0; i < items.length; i++) {
+                        buckets[i] = items[i].getId();
+                    }
+                }
+            }
+
             // prepare query params
             String selection = null;
             String selection_arg = null;

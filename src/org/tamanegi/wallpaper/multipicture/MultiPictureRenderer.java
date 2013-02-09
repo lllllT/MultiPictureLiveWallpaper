@@ -792,7 +792,7 @@ public class MultiPictureRenderer
             ScreenType default_type = ScreenType.valueOf(
                 pref.getString(
                     MultiPictureSetting.getKey(
-                        MultiPictureSetting.SCREEN_TYPE_KEY, -1), "file"));
+                        MultiPictureSetting.SCREEN_TYPE_KEY, -1), "buckets"));
 
             if(default_type == ScreenType.file) {
                 // single file
