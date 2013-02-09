@@ -833,7 +833,7 @@ public class MultiPictureRenderer
 
         // draw setting
         screen_transition = TransitionType.valueOf(
-            pref.getString("draw.transition", "slide"));
+            pref.getString("draw.transition", "random"));
         cur_transition = screen_transition;
         show_reflection_top = pref.getBoolean("draw.reflection.top", false);
         show_reflection_bottom = pref.getBoolean("draw.reflection", true);

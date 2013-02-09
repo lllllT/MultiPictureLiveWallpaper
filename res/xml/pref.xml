@@ -106,7 +106,7 @@
        android:summary="@string/pref_draw_transition_summary"
        android:entries="@array/pref_draw_transition_entries"
        android:entryValues="@array/pref_draw_transition_entryvalues"
-       android:defaultValue="slide" />
+       android:defaultValue="random" />
     <CheckBoxPreference
        android:key="draw.reflection.top"
        android:title="@string/pref_draw_reflection_top_title"
