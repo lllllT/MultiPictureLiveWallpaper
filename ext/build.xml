@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project default="all">
   <property name="inkscape.path"
-            location="D:\Program Files\Inkscape\inkscape.exe" />
+            location="C:\Program Files (x86)\Inkscape\inkscape.exe" />
   <property name="imagemagick.convert.path"
             location="D:\cygwin\bin\convert.exe" />
 
@@ -14,6 +14,7 @@
   <property name="icon.180x120.path"
             location="${ext.dir}/icon-180x120.png" />
 
+  <property name="dpi.xxhdpi" value="180" />
   <property name="dpi.xhdpi" value="120" />
   <property name="dpi.hdpi" value="90" /> <!-- base dpi -->
   <property name="dpi.mdpi" value="60" />
@@ -70,11 +71,19 @@
     <attribute name="pngname" />
     <attribute name="resdir" default="${res.dir}" />
     <attribute name="args" default="" />
+    <attribute name="xxhdpi" default="${dpi.xxhdpi}" />
     <attribute name="xhdpi" default="${dpi.xhdpi}" />
     <attribute name="hdpi" default="${dpi.hdpi}" />
     <attribute name="mdpi" default="${dpi.mdpi}" />
     <attribute name="ldpi" default="${dpi.ldpi}" />
     <sequential>
+      <antcall target="svg2png-dpi">
+        <param name="svg2png.src" value="@{src}" />
+        <param name="svg2png.todir" value="@{resdir}/drawable-xxhdpi" />
+        <param name="svg2png.toname" value="@{pngname}" />
+        <param name="svg2png.dpi" value="@{xxhdpi}" />
+        <param name="svg2png.args" value="@{args}" />
+      </antcall>
       <antcall target="svg2png-dpi">
         <param name="svg2png.src" value="@{src}" />
         <param name="svg2png.todir" value="@{resdir}/drawable-xhdpi" />
