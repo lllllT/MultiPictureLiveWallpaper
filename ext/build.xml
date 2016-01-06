@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project default="all">
   <property name="inkscape.path"
-            location="C:\Program Files (x86)\Inkscape\inkscape.exe" />
-  <property name="imagemagick.convert.path"
-            location="D:\cygwin\bin\convert.exe" />
+            location="C:\Program Files\Inkscape\inkscape.exe" />
+  <property name="imagemagick.convert.path" value="gm" />
+  <property name="imagemagick.convert.arg" value="convert" />
 
   <property name="src.dir" location="." />
   <property name="res.dir" location="../res" />
@@ -13,6 +13,8 @@
             location="${ext.dir}/icon-512x512.png" />
   <property name="icon.180x120.path"
             location="${ext.dir}/icon-180x120.png" />
+  <property name="icon.1024x500.path"
+            location="${ext.dir}/icon-1024x500.png" />
 
   <property name="dpi.xxhdpi" value="180" />
   <property name="dpi.xhdpi" value="120" />
@@ -115,7 +117,7 @@
     </sequential>
   </macrodef>
 
-  <target name="all" depends="svg-drawable, icon.512x512, icon.180x120" />
+  <target name="all" depends="svg-drawable, icons" />
 
   <target name="svg-drawable">
     <svg2png-drawable src="${src.dir}/icon.svg"
@@ -156,49 +158,52 @@
     -->
   </target>
 
-  <uptodate property="icon.512x512.updated"
-            srcfile="${src.dir}/icon.svg"
-            targetfile="${icon.512x512.path}" />
-  <target name="icon.512x512" unless="icon.512x512.updated">
-    <svg2png-size src="${src.dir}/icon.svg"
-                  dst="${icon.512x512.path}.tmp"
-                  width="512" height="512">
-      <exec-args>
-        <arg value="--export-background-opacity=1" />
-      </exec-args>
-    </svg2png-size>
-    <exec executable="${imagemagick.convert.path}"
-          failonerror="true">
-      <arg value="${icon.512x512.path}.tmp" />
-      <arg value="-alpha" />
-      <arg value="off" />
-      <arg value="${icon.512x512.path}" />
-    </exec>
-    <delete file="${icon.512x512.path}.tmp" />
+  <target name="icons">
+    <icon-scale width="512" height="512" extent="512"
+                dst="${icon.512x512.path}" />
+    <icon-scale width="120" height="120" extent="180x120-30"
+                dst="${icon.180x120.path}" />
+    <icon-scale width="500" height="500" extent="1024x500-262"
+                dst="${icon.1024x500.path}" />
   </target>
 
-  <uptodate property="icon.180x120.updated"
+  <macrodef name="icon-scale">
+    <attribute name="width" />
+    <attribute name="height" />
+    <attribute name="extent" />
+    <attribute name="dst" />
+    <sequential>
+      <antcall target="icon-scale">
+        <param name="icon.scale.width" value="@{width}" />
+        <param name="icon.scale.height" value="@{height}" />
+        <param name="icon.scale.extent" value="@{extent}" />
+        <param name="icon.scale.dst" value="@{dst}" />
+      </antcall>
+    </sequential>
+  </macrodef>
+
+  <uptodate property="icon.scale.updated"
             srcfile="${src.dir}/icon.svg"
-            targetfile="${icon.180x120.path}" />
-  <target name="icon.180x120" unless="icon.180x120.updated">
+            targetfile="${icon.scale.dst}" />
+  <target name="icon-scale" unless="icon.scale.updated">
     <svg2png-size src="${src.dir}/icon.svg"
-                  dst="${icon.180x120.path}.tmp"
-                  width="120" height="120">
+                  dst="${icon.scale.dst}.tmp"
+                  width="${icon.scale.width}" height="${icon.scale.height}">
       <exec-args>
         <arg value="--export-background-opacity=1" />
       </exec-args>
     </svg2png-size>
     <exec executable="${imagemagick.convert.path}"
           failonerror="true">
-      <arg value="${icon.180x120.path}.tmp" />
+      <arg value="${imagemagick.convert.arg}" />
+      <arg value="${icon.scale.dst}.tmp" />
       <arg value="-extent" />
-      <arg value="180x120-30" />
+      <arg value="${icon.scale.extent}" />
       <arg value="-depth" />
       <arg value="8" />
-      <arg value="-alpha" />
-      <arg value="off" />
-      <arg value="${icon.180x120.path}" />
+      <arg value="+matte" />
+      <arg value="${icon.scale.dst}" />
     </exec>
-    <delete file="${icon.180x120.path}.tmp" />
+    <delete file="${icon.scale.dst}.tmp" />
   </target>
 </project>
